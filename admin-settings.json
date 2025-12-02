@@ -1,5 +1,4 @@
 {
-  "admin_username": "admin",
-  "admin_password": "galardro123",
-  "github_token": "ваш_github_token_здесь"
+    "admin_username": "admin",
+    "admin_password": "galardro123"
 }
