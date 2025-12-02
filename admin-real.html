@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - Управление</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            padding: 20px;
+            font-family: Arial;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        th {
+            background: #334155;
+            padding: 15px;
+            text-align: left;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        input, select {
+            padding: 8px;
+            background: #475569;
+            border: 1px solid #3b82f6;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👑 Админ панель</h1>
+            <button onclick="logout()" style="background:#dc2626; color:white; padding:10px 20px; border:none; border-radius:5px;">
+                Выйти
+            </button>
+        </div>
+        
+        <div id="usersTable"></div>
+        
+        <div style="margin-top:20px; padding:20px; background:#1e293b; border-radius:10px;">
+            <h3>💾 Сохранить изменения</h3>
+            <button onclick="saveChanges()" style="background:#10b981; color:white; padding:15px 30px; border:none; border-radius:5px; font-size:18px;">
+                Сохранить на GitHub
+            </button>
+            <div id="status" style="margin-top:10px;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Конфигурация
+        const GITHUB_TOKEN = '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'; // Вставьте токен!
+        const GITHUB_USERNAME = 'reduk000002-afk';
+        const GITHUB_REPO = 'terminal1';
+        
+        let usersData = {};
+        
+        // Загрузка пользователей
+        async function loadUsers() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/reduk000002-afk/terminal1/main/users.json');
+                usersData = await response.json();
+                renderTable();
+            } catch (error) {
+                document.getElementById('usersTable').innerHTML = '<p style="color:red;">Ошибка загрузки данных</p>';
+            }
+        }
+        
+        // Отображение таблицы
+        function renderTable() {
+            let html = '<table>';
+            html += '<tr><th>Логин</th><th>Баланс</th><th>Уровень</th><th>Тип вывода</th></tr>';
+            
+            for (const [username, data] of Object.entries(usersData)) {
+                html += `
+                    <tr>
+                        <td>${username}</td>
+                        <td><input value="${data.balance}" onchange="updateUser('${username}', 'balance', this.value)"></td>
+                        <td>
+                            <select onchange="updateUser('${username}', 'level', this.value)">
+                                <option ${data.level === 'Стандарт' ? 'selected' : ''}>Стандарт</option>
+                                <option ${data.level === 'VIP 1' ? 'selected' : ''}>VIP 1</option>
+                                <option ${data.level === 'VIP 2' ? 'selected' : ''}>VIP 2</option>
+                                <option ${data.level === 'VIP 3' ? 'selected' : ''}>VIP 3</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select onchange="updateUser('${username}', 'withdrawType', this.value)">
+                                <option value="normal" ${data.withdrawType === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="request" ${data.withdrawType === 'request' ? 'selected' : ''}>Request</option>
+                                <option value="commission" ${data.withdrawType === 'commission' ? 'selected' : ''}>Commission</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            html += '</table>';
+            document.getElementById('usersTable').innerHTML = html;
+        }
+        
+        // Обновление пользователя
+        function updateUser(username, field, value) {
+            usersData[username][field] = value;
+        }
+        
+        // Сохранение на GitHub
+        async function saveChanges() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Сохранение...';
+            status.style.color = 'yellow';
+            
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/users.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Обновление из админки',
+                        content: btoa(JSON.stringify(usersData, null, 2))
+                    })
+                });
+                
+                if (response.ok) {
+                    status.innerHTML = '✅ Успешно сохранено!';
+                    status.style.color = 'lightgreen';
+                } else {
+                    status.innerHTML = '❌ Ошибка сохранения';
+                    status.style.color = 'red';
+                }
+            } catch (error) {
+                status.innerHTML = `❌ Ошибка: ${error.message}`;
+                status.style.color = 'red';
+            }
+        }
+        
+        // Выход
+        function logout() {
+            if (confirm('Выйти из админки?')) {
+                window.location.href = 'admin-simple.html';
+            }
+        }
+        
+        // Автозагрузка при старте
+        window.onload = loadUsers;
+    </script>
+</body>
+</html>
