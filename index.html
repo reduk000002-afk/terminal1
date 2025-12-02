@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Фьючерсный терминал</title>
   <style>
+    /* ВСЕ СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
     * {
       box-sizing: border-box;
     }
@@ -2621,237 +2622,303 @@
 // ЦЕНТРАЛИЗОВАННАЯ СИСТЕМА УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
 // =============================================
 
-const usersData = {
-    // ========================
-    // БАЛАНСЫ ПОЛЬЗОВАТЕЛЕЙ
-    // ========================
-    
-    // Редук 1 - основной аккаунт (ТИП NORMAL)
-    "reduk1": { 
-        password: "12345", 
-        balance: "256.17",
-        level: "VIP 1",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk1@galardro.org"
-    },
-    
-    // Редук 2 - тестовый (ТИП COMMISSION)
-    "dimapetrochenko156@gmail.com": { 
-        password: "WX1284TR", 
-        balance: "904.25",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "dimapetrochenko156@gmail.com"
-    },
-    
-    // Редук 3 - дополнительный (ТИП REQUEST)
-    "e_son@internet.ru": { 
-        password: "Yk-8357009729", 
-        balance: "286.08",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "e_son@internet.ru"
-    },
-    
-    // Редук 4 - резервный (ТИП NORMAL)
-    "khusainov_11@icloud.com": { 
-        password: "Khusa1197Mirale", 
-        balance: "268.9",
-        level: "Стандарт",
-        withdrawType: "request",  // ← НОВЫЙ ТИП
-        email: "khusainov_11@icloud.com"
-    },
-    
-    // Редук 5 - запасной (ТИП REQUEST)
-    "reduk5": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "reduk5@galardro.org"
-    },
-    
-    // Редук 6 - дополнительный (ТИП COMMISSION)
-    "reduk6": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk6@galardro.org"
-    },
-    
-    // ========================
-    // ДОПОЛНИТЕЛЬНЫЕ ПОЛЬЗОВАТЕЛИ
-    // ========================
-    
-    "reduk7": { 
-        password: "12345", 
-        balance: "150.00",
-        level: "Стандарт",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk7@galardro.org"
-    },
-    
-    "reduk8": { 
-        password: "12345", 
-        balance: "75.50",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk8@galardro.org"
-    },
-    
-    "reduk9": { 
-        password: "12345", 
-        balance: "320.25",
-        level: "VIP 1",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk9@galardro.org"
-    },
-    
-    "reduk10": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk10@galardro.org"
-    },
-    
-    "reduk11": { 
-        password: "12345", 
-        balance: "500.00",
-        level: "VIP 2",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk11@galardro.org"
-    },
-    
-    "reduk12": { 
-        password: "12345", 
-        balance: "45.75",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk12@galardro.org"
-    },
-    
-    "reduk13": { 
-        password: "12345", 
-        balance: "180.30",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "reduk13@galardro.org"
-    },
-    
-    "reduk14": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk14@galardro.org"
-    },
-    
-    "reduk15": { 
-        password: "12345", 
-        balance: "750.80",
-        level: "VIP 2",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk15@galardro.org"
-    },
-    
-    "reduk16": { 
-        password: "12345", 
-        balance: "25.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk16@galardro.org"
-    },
-    
-    "reduk17": { 
-        password: "12345", 
-        balance: "420.60",
-        level: "VIP 1",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk17@galardro.org"
-    },
-    
-    "reduk18": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk18@galardro.org"
-    },
-    
-    "reduk19": { 
-        password: "12345", 
-        balance: "95.25",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "reduk19@galardro.org"
-    },
-    
-    "reduk20": { 
-        password: "12345", 
-        balance: "1200.50",
-        level: "VIP 3",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk20@galardro.org"
-    },
-    
-    "reduk21": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk21@galardro.org"
-    },
-    
-    "reduk22": { 
-        password: "12345", 
-        balance: "65.80",
-        level: "Стандарт",
-        withdrawType: "request",
-        email: "reduk22@galardro.org"
-    },
-    
-    "reduk23": { 
-        password: "12345", 
-        balance: "280.40",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk23@galardro.org"
-    },
-    
-    "reduk24": { 
-        password: "12345", 
-        balance: "0.00",
-        level: "Стандарт",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk24@galardro.org"
-    },
-    
-    "reduk25": { 
-        password: "12345", 
-        balance: "1500.75",
-        level: "VIP 3",
-        withdrawType: "normal",  // ← НОВЫЙ ТИП
-        email: "reduk25@galardro.org"
-    },
-    
-    "reduk26": { 
-        password: "12345", 
-        balance: "35.20",
-        level: "Стандарт",
-        withdrawType: "commission",
-        email: "reduk26@galardro.org"
+// ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ (загружаются из GitHub)
+let usersData = {}; // Начнем с пустого объекта
+
+// URL для загрузки данных
+const GITHUB_USERNAME = 'reduk000002-afk';
+const GITHUB_REPO = 'terminal1';
+const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/`;
+
+// Функция загрузки данных из GitHub
+async function loadUsersData() {
+    try {
+        const response = await fetch(`${BASE_URL}users.json`);
+        if (response.ok) {
+            usersData = await response.json();
+            console.log('Данные пользователей загружены из GitHub');
+        } else {
+            throw new Error('Не удалось загрузить данные');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки данных из GitHub:', error);
+        // Используем локальные данные как резерв
+        usersData = {
+            "reduk1": { 
+                password: "12345", 
+                balance: "256.17",
+                level: "VIP 1",
+                withdrawType: "normal",  // ← НОВЫЙ ТИП
+                email: "reduk1@galardro.org"
+            },
+            
+            // Редук 2 - тестовый (ТИП COMMISSION)
+            "dimapetrochenko156@gmail.com": { 
+                password: "WX1284TR", 
+                balance: "904.25",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "dimapetrochenko156@gmail.com"
+            },
+            
+            // Редук 3 - дополнительный (ТИП REQUEST)
+            "e_son@internet.ru": { 
+                password: "Yk-8357009729", 
+                balance: "286.08",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "e_son@internet.ru"
+            },
+            
+            // Редук 4 - резервный (ТИП NORMAL)
+            "khusainov_11@icloud.com": { 
+                password: "Khusa1197Mirale", 
+                balance: "268.9",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "khusainov_11@icloud.com"
+            },
+            
+            // Редук 5 - запасной (ТИП REQUEST)
+            "reduk5": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk5@galardro.org"
+            },
+            
+            // Редук 6 - дополнительный (ТИП COMMISSION)
+            "reduk6": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk6@galardro.org"
+            },
+            
+            // ========================
+            // ДОПОЛНИТЕЛЬНЫЕ ПОЛЬЗОВАТЕЛИ
+            // ========================
+            
+            "reduk7": { 
+                password: "12345", 
+                balance: "150.00",
+                level: "Стандарт",
+                withdrawType: "normal",
+                email: "reduk7@galardro.org"
+            },
+            
+            "reduk8": { 
+                password: "12345", 
+                balance: "75.50",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk8@galardro.org"
+            },
+            
+            "reduk9": { 
+                password: "12345", 
+                balance: "320.25",
+                level: "VIP 1",
+                withdrawType: "normal",
+                email: "reduk9@galardro.org"
+            },
+            
+            "reduk10": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk10@galardro.org"
+            },
+            
+            "reduk11": { 
+                password: "12345", 
+                balance: "500.00",
+                level: "VIP 2",
+                withdrawType: "normal",
+                email: "reduk11@galardro.org"
+            },
+            
+            "reduk12": { 
+                password: "12345", 
+                balance: "45.75",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk12@galardro.org"
+            },
+            
+            "reduk13": { 
+                password: "12345", 
+                balance: "180.30",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk13@galardro.org"
+            },
+            
+            "reduk14": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk14@galardro.org"
+            },
+            
+            "reduk15": { 
+                password: "12345", 
+                balance: "750.80",
+                level: "VIP 2",
+                withdrawType: "normal",
+                email: "reduk15@galardro.org"
+            },
+            
+            "reduk16": { 
+                password: "12345", 
+                balance: "25.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk16@galardro.org"
+            },
+            
+            "reduk17": { 
+                password: "12345", 
+                balance: "420.60",
+                level: "VIP 1",
+                withdrawType: "normal",
+                email: "reduk17@galardro.org"
+            },
+            
+            "reduk18": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk18@galardro.org"
+            },
+            
+            "reduk19": { 
+                password: "12345", 
+                balance: "95.25",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk19@galardro.org"
+            },
+            
+            "reduk20": { 
+                password: "12345", 
+                balance: "1200.50",
+                level: "VIP 3",
+                withdrawType: "normal",
+                email: "reduk20@galardro.org"
+            },
+            
+            "reduk21": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk21@galardro.org"
+            },
+            
+            "reduk22": { 
+                password: "12345", 
+                balance: "65.80",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk22@galardro.org"
+            },
+            
+            "reduk23": { 
+                password: "12345", 
+                balance: "280.40",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk23@galardro.org"
+            },
+            
+            "reduk24": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "normal",
+                email: "reduk24@galardro.org"
+            },
+            
+            "reduk25": { 
+                password: "12345", 
+                balance: "1500.75",
+                level: "VIP 3",
+                withdrawType: "normal",
+                email: "reduk25@galardro.org"
+            },
+            
+            "reduk26": { 
+                password: "12345", 
+                balance: "35.20",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk26@galardro.org"
+            }
+        };
     }
-    
-    // ========================
-    // КОНЕЦ НАСТРОЕК БАЛАНСОВ
-    // ========================
+}
+
+// Загружаем настройки
+let SYSTEM_CONFIG = {
+    ADMIN_SECRET: 'galardro_admin_2024',
+    UPDATE_INTERVAL: 300,
+    FEES: {
+        normal: 1,
+        commission: 40
+    }
 };
+
+async function loadSettings() {
+    try {
+        const response = await fetch(`${BASE_URL}settings.json`);
+        if (response.ok) {
+            SYSTEM_CONFIG = await response.json();
+        }
+    } catch (error) {
+        console.warn('Не удалось загрузить настройки:', error);
+    }
+}
+
+// Загружаем данные при старте
+window.addEventListener('DOMContentLoaded', async function() {
+    await loadSettings();
+    await loadUsersData();
+    
+    // Остальной ваш код авторизации...
+});
 
 // Текущий пользователь
 let currentUser = null;
 let countdownInterval = null;
+
+// Загружаем данные при старте
+window.addEventListener('DOMContentLoaded', async function() {
+    await loadUsersData();
+    
+    // Проверяем авторизацию
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const savedUser = localStorage.getItem('currentUser');
+    
+    if (isLoggedIn && savedUser && usersData[savedUser]) {
+        currentUser = savedUser;
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        updateUserData();
+        updateAllBalances();
+        initWatchlist();
+        updateCurrentTime();
+        initCompanyList();
+    } else {
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContent').style.display = 'none';
+    }
+});
 
 // Функция для переключения меню
 function toggleMenu() {
@@ -2946,6 +3013,12 @@ function updateAllBalances() {
 
 // Проверка входа
 function checkLogin() {
+    // Проверяем загружены ли данные
+    if (Object.keys(usersData).length === 0) {
+        alert('Данные загружаются... Попробуйте снова через секунду');
+        return;
+  }
+  
   const login = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const errorElement = document.getElementById('loginError');
@@ -2961,7 +3034,6 @@ function checkLogin() {
     updateAllBalances();
     initWatchlist();
     updateCurrentTime();
-    // Инициализируем список компаний при входе
     initCompanyList();
   } else {
     errorElement.style.display = 'block';
@@ -3543,7 +3615,7 @@ function showNormalModal() {
   const walletAddress = document.getElementById('wallet-address').value || '0x742d35Cc6634C0532925a3b8D...';
   
   // Рассчитываем комиссию (1% для нормального вывода)
-  const networkFee = (parseFloat(amount) * 0.01).toFixed(2);
+  const networkFee = (parseFloat(amount) * (SYSTEM_CONFIG.FEES.normal / 100)).toFixed(2);
   const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
   
   // Обновляем данные в модальном окне
