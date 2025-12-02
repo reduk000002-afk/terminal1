@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка - простой вариант</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            padding: 20px;
+        }
+        .login {
+            max-width: 400px;
+            margin: 100px auto;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #334155;
+            border: 2px solid #3b82f6;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <h2>🔐 Админ панель</h2>
+        <input type="password" id="password" placeholder="Введите пароль (admin123)">
+        <button onclick="login()">Войти</button>
+        <div id="error" style="color:red; margin-top:10px; display:none;">Неверный пароль!</div>
+    </div>
+    
+    <script>
+        function login() {
+            const password = document.getElementById('password').value;
+            const error = document.getElementById('error');
+            
+            if (password === 'admin123') {
+                // Показываем успешный вход
+                document.body.innerHTML = `
+                    <h1>✅ Успешный вход!</h1>
+                    <p>Админка работает. Теперь загружаем основную админку...</p>
+                    <script>
+                        setTimeout(() => {
+                            window.location.href = 'https://reduk000002-afk.github.io/terminal1/admin-real.html';
+                        }, 2000);
+                    <\/script>
+                `;
+            } else {
+                error.style.display = 'block';
+            }
+        }
+        
+        // Автовход при нажатии Enter
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
