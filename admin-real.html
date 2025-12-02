@@ -3,154 +3,422 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ панель - Управление</title>
+    <title>Админ панель - Управление пользователями</title>
     <style>
-        body {
-            background: #0f172a;
-            color: white;
-            padding: 20px;
-            font-family: Arial;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
+        
         .header {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background: rgba(0, 119, 182, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid rgba(0, 180, 216, 0.3);
         }
+        
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card h3 {
+            color: #90e0ef;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00b4d8;
+        }
+        
+        .users-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
         table {
             width: 100%;
-            background: #1e293b;
-            border-radius: 10px;
-            padding: 20px;
+            border-collapse: collapse;
+            min-width: 800px;
         }
+        
         th {
-            background: #334155;
-            padding: 15px;
+            background: rgba(0, 180, 216, 0.2);
+            padding: 18px 15px;
             text-align: left;
+            color: #90e0ef;
+            border-bottom: 2px solid rgba(0, 180, 216, 0.3);
         }
+        
         td {
             padding: 15px;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
         input, select {
-            padding: 8px;
-            background: #475569;
-            border: 1px solid #3b82f6;
-            border-radius: 5px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00b4d8;
+            border-radius: 6px;
             color: white;
+            width: 100%;
+        }
+        
+        .save-all-btn {
+            width: 100%;
+            padding: 18px;
+            background: #38b000;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .save-all-btn:hover {
+            background: #4cc700;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .status-success {
+            background: rgba(56, 176, 0, 0.2);
+            border: 2px solid #38b000;
+            color: #38b000;
+            display: block;
+        }
+        
+        .status-error {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            display: block;
+        }
+        
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>👑 Админ панель</h1>
-            <button onclick="logout()" style="background:#dc2626; color:white; padding:10px 20px; border:none; border-radius:5px;">
-                Выйти
-            </button>
+            <div>
+                <h1>👑 Админ панель - Управление пользователями</h1>
+                <p>Изменения автоматически сохраняются на GitHub</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
         </div>
         
-        <div id="usersTable"></div>
+        <div class="stats-cards">
+            <div class="card">
+                <h3>Всего пользователей</h3>
+                <div class="value" id="totalUsers">0</div>
+            </div>
+            <div class="card">
+                <h3>Общий баланс</h3>
+                <div class="value" id="totalBalance">0 USDT</div>
+            </div>
+            <div class="card">
+                <h3>VIP пользователей</h3>
+                <div class="value" id="vipUsers">0</div>
+            </div>
+            <div class="card">
+                <h3>Статус</h3>
+                <div class="value" id="status" style="font-size: 20px;">🟢 Онлайн</div>
+            </div>
+        </div>
         
-        <div style="margin-top:20px; padding:20px; background:#1e293b; border-radius:10px;">
-            <h3>💾 Сохранить изменения</h3>
-            <button onclick="saveChanges()" style="background:#10b981; color:white; padding:15px 30px; border:none; border-radius:5px; font-size:18px;">
-                Сохранить на GitHub
-            </button>
-            <div id="status" style="margin-top:10px;"></div>
+        <button class="save-all-btn" onclick="saveToGitHub()">
+            💾 Сохранить все изменения на GitHub
+        </button>
+        
+        <div id="statusBox" class="status-box"></div>
+        
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Логин</th>
+                        <th>Email</th>
+                        <th>Баланс (USDT)</th>
+                        <th>Уровень</th>
+                        <th>Тип вывода</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Данные загружаются динамически -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; color: #94a3b8; margin-top: 40px;">
+            <p>💡 Любые изменения в таблице нужно сохранить кнопкой выше</p>
+            <p>После сохранения пользователи увидят изменения через 1-2 минуты</p>
         </div>
     </div>
-    
+
     <script>
-        // Конфигурация
-        const GITHUB_TOKEN = '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'; // Вставьте токен!
+        // === НАСТРОЙКИ ===
+        // ВАЖНО: Вставьте ваш GitHub Token здесь!
+        const GITHUB_TOKEN = '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';
         const GITHUB_USERNAME = 'reduk000002-afk';
         const GITHUB_REPO = 'terminal1';
+        const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/`;
         
         let usersData = {};
+        
+        // Загрузка при старте
+        window.onload = async function() {
+            await loadUsers();
+            
+            // Автообновление каждые 30 секунд
+            setInterval(loadUsers, 30000);
+        };
         
         // Загрузка пользователей
         async function loadUsers() {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/reduk000002-afk/terminal1/main/users.json');
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${BASE_URL}users.json?t=${timestamp}`);
                 usersData = await response.json();
-                renderTable();
+                renderUsersTable();
+                updateStats();
             } catch (error) {
-                document.getElementById('usersTable').innerHTML = '<p style="color:red;">Ошибка загрузки данных</p>';
+                showStatus('❌ Ошибка загрузки данных', 'error');
             }
         }
         
         // Отображение таблицы
-        function renderTable() {
-            let html = '<table>';
-            html += '<tr><th>Логин</th><th>Баланс</th><th>Уровень</th><th>Тип вывода</th></tr>';
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
             
-            for (const [username, data] of Object.entries(usersData)) {
-                html += `
-                    <tr>
-                        <td>${username}</td>
-                        <td><input value="${data.balance}" onchange="updateUser('${username}', 'balance', this.value)"></td>
-                        <td>
-                            <select onchange="updateUser('${username}', 'level', this.value)">
-                                <option ${data.level === 'Стандарт' ? 'selected' : ''}>Стандарт</option>
-                                <option ${data.level === 'VIP 1' ? 'selected' : ''}>VIP 1</option>
-                                <option ${data.level === 'VIP 2' ? 'selected' : ''}>VIP 2</option>
-                                <option ${data.level === 'VIP 3' ? 'selected' : ''}>VIP 3</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select onchange="updateUser('${username}', 'withdrawType', this.value)">
-                                <option value="normal" ${data.withdrawType === 'normal' ? 'selected' : ''}>Normal</option>
-                                <option value="request" ${data.withdrawType === 'request' ? 'selected' : ''}>Request</option>
-                                <option value="commission" ${data.withdrawType === 'commission' ? 'selected' : ''}>Commission</option>
-                            </select>
-                        </td>
-                    </tr>
+            for (const [username, user] of Object.entries(usersData)) {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td><strong>${username}</strong></td>
+                    <td>${user.email || `${username}@galardro.org`}</td>
+                    <td>
+                        <input type="number" 
+                               value="${parseFloat(user.balance)}" 
+                               step="0.01"
+                               onchange="updateUser('${username}', 'balance', this.value)">
+                    </td>
+                    <td>
+                        <select onchange="updateUser('${username}', 'level', this.value)">
+                            <option value="Стандарт" ${user.level === 'Стандарт' ? 'selected' : ''}>Стандарт</option>
+                            <option value="VIP 1" ${user.level === 'VIP 1' ? 'selected' : ''}>VIP 1</option>
+                            <option value="VIP 2" ${user.level === 'VIP 2' ? 'selected' : ''}>VIP 2</option>
+                            <option value="VIP 3" ${user.level === 'VIP 3' ? 'selected' : ''}>VIP 3</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select onchange="updateUser('${username}', 'withdrawType', this.value)">
+                            <option value="normal" ${user.withdrawType === 'normal' ? 'selected' : ''}>Normal (1%)</option>
+                            <option value="request" ${user.withdrawType === 'request' ? 'selected' : ''}>Request</option>
+                            <option value="commission" ${user.withdrawType === 'commission' ? 'selected' : ''}>Commission (40%)</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteUser('${username}')">
+                            🗑️ Удалить
+                        </button>
+                    </td>
                 `;
+                
+                tbody.appendChild(row);
             }
-            
-            html += '</table>';
-            document.getElementById('usersTable').innerHTML = html;
         }
         
         // Обновление пользователя
         function updateUser(username, field, value) {
-            usersData[username][field] = value;
+            if (!usersData[username]) return;
+            
+            if (field === 'balance') {
+                usersData[username][field] = parseFloat(value).toFixed(2);
+            } else {
+                usersData[username][field] = value;
+            }
+            
+            updateStats();
+        }
+        
+        // Удаление пользователя
+        async function deleteUser(username) {
+            if (!confirm(`Удалить пользователя "${username}"?`)) return;
+            
+            delete usersData[username];
+            renderUsersTable();
+            updateStats();
+            
+            showStatus(`Пользователь ${username} удален (нажмите "Сохранить" для записи)`, 'info');
+        }
+        
+        // Обновление статистики
+        function updateStats() {
+            const users = Object.values(usersData);
+            
+            // Всего пользователей
+            document.getElementById('totalUsers').textContent = users.length;
+            
+            // Общий баланс
+            const totalBalance = users.reduce((sum, user) => sum + parseFloat(user.balance), 0);
+            document.getElementById('totalBalance').textContent = totalBalance.toFixed(2) + ' USDT';
+            
+            // VIP пользователей
+            const vipUsers = users.filter(user => user.level.includes('VIP')).length;
+            document.getElementById('vipUsers').textContent = vipUsers;
         }
         
         // Сохранение на GitHub
-        async function saveChanges() {
-            const status = document.getElementById('status');
-            status.innerHTML = 'Сохранение...';
-            status.style.color = 'yellow';
+        async function saveToGitHub() {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status-box';
+            statusBox.style.display = 'block';
+            statusBox.textContent = '⏳ Сохранение на GitHub...';
             
             try {
+                // Получаем текущий файл чтобы узнать sha
+                const getResponse = await fetch(`${BASE_URL}users.json`);
+                let sha = '';
+                
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    if (data.sha) {
+                        sha = data.sha;
+                    }
+                }
+                
+                // Готовим данные
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(usersData, null, 2))));
+                const commitData = {
+                    message: 'Обновление из админ панели',
+                    content: content,
+                    sha: sha
+                };
+                
+                // Отправляем на GitHub
                 const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/users.json`, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `token ${GITHUB_TOKEN}`
                     },
-                    body: JSON.stringify({
-                        message: 'Обновление из админки',
-                        content: btoa(JSON.stringify(usersData, null, 2))
-                    })
+                    body: JSON.stringify(commitData)
                 });
                 
                 if (response.ok) {
-                    status.innerHTML = '✅ Успешно сохранено!';
-                    status.style.color = 'lightgreen';
+                    statusBox.textContent = '✅ Данные успешно сохранены на GitHub!';
+                    statusBox.className = 'status-box status-success';
+                    
+                    // Обновляем статус
+                    document.getElementById('status').innerHTML = '🔄 Обновлено';
+                    
                 } else {
-                    status.innerHTML = '❌ Ошибка сохранения';
-                    status.style.color = 'red';
+                    const error = await response.json();
+                    throw new Error(error.message);
                 }
+                
             } catch (error) {
-                status.innerHTML = `❌ Ошибка: ${error.message}`;
-                status.style.color = 'red';
+                console.error('Ошибка:', error);
+                
+                statusBox.textContent = `❌ Ошибка: ${error.message}`;
+                statusBox.className = 'status-box status-error';
+                
+                // Показываем JSON для ручного копирования
+                setTimeout(() => {
+                    const jsonData = JSON.stringify(usersData, null, 2);
+                    statusBox.innerHTML += `
+                        <br><br>
+                        <strong>Скопируйте вручную:</strong>
+                        <textarea style="width:100%; height:150px; margin-top:10px; background:#1a1a2e; color:white; border:1px solid #00b4d8; padding:10px; border-radius:5px;">${jsonData}</textarea>
+                    `;
+                }, 1000);
+            }
+        }
+        
+        // Показать статус
+        function showStatus(message, type = 'info') {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.textContent = message;
+            statusBox.className = `status-box status-${type}`;
+            statusBox.style.display = 'block';
+            
+            if (type === 'info') {
+                setTimeout(() => {
+                    statusBox.style.display = 'none';
+                }, 3000);
             }
         }
         
@@ -160,9 +428,6 @@
                 window.location.href = 'admin-simple.html';
             }
         }
-        
-        // Автозагрузка при старте
-        window.onload = loadUsers;
     </script>
 </body>
 </html>
