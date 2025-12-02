@@ -1,1 +1,8 @@
-
+{
+  "ADMIN_SECRET": "galardro_admin_2024",
+  "UPDATE_INTERVAL": 300,
+  "FEES": {
+    "normal": 1,
+    "commission": 40
+  }
+}
