@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ панель - Торговый терминал</title>
+    <title>Админ панель | Автосохранение</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
         
         body {
-            font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
             color: white;
             min-height: 100vh;
@@ -24,62 +24,54 @@
             margin: 0 auto;
         }
         
+        /* Логин */
         .login-box {
-            max-width: 400px;
-            margin: 100px auto;
+            max-width: 500px;
+            margin: 50px auto;
             background: rgba(255, 255, 255, 0.1);
             padding: 40px;
             border-radius: 15px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
         }
         
         .login-box h2 {
-            text-align: center;
-            margin-bottom: 30px;
             color: #00b4d8;
+            margin-bottom: 30px;
         }
         
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #ade8f4;
-        }
-        
-        .form-group input {
+        .password-input {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
+            margin: 20px 0;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #00b4d8;
-            border-radius: 8px;
+            border: 2px solid #00b4d8;
+            border-radius: 10px;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
+            text-align: center;
         }
         
-        .btn {
+        .login-btn {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             background: #0077b6;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: 0.3s;
         }
         
-        .btn:hover {
+        .login-btn:hover {
             background: #0096c7;
         }
         
         .error {
             color: #ff6b6b;
-            text-align: center;
             margin-top: 15px;
             display: none;
         }
@@ -87,25 +79,28 @@
         /* Админ панель */
         .admin-panel {
             display: none;
+            animation: fadeIn 0.5s;
         }
         
         .header {
             background: rgba(0, 119, 182, 0.2);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 25px;
+            border-radius: 15px;
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 2px solid rgba(0, 180, 216, 0.3);
         }
         
         .logout-btn {
             background: #ff6b6b;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 12px 25px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
         }
         
         .stats-cards {
@@ -117,15 +112,16 @@
         
         .card {
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 25px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .card h3 {
             color: #90e0ef;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 16px;
         }
         
         .card .value {
@@ -135,40 +131,57 @@
         }
         
         .users-table {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
             margin-bottom: 30px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .users-table table {
+        table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px;
         }
         
-        .users-table th {
-            background: rgba(0, 119, 182, 0.3);
-            padding: 15px;
+        th {
+            background: rgba(0, 180, 216, 0.2);
+            padding: 18px 15px;
             text-align: left;
             color: #90e0ef;
+            border-bottom: 2px solid rgba(0, 180, 216, 0.3);
         }
         
-        .users-table td {
+        td {
             padding: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        input, select {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00b4d8;
+            border-radius: 6px;
+            color: white;
+            width: 100%;
         }
         
         .action-btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             margin: 2px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
         
-        .edit-btn {
-            background: #4ecdc4;
+        .save-btn {
+            background: #38b000;
             color: white;
         }
         
@@ -177,68 +190,77 @@
             color: white;
         }
         
-        /* Модальные окна */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
+        .save-all-btn {
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: #1a1a2e;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            border: 2px solid #00b4d8;
-        }
-        
-        .modal h3 {
-            color: #00b4d8;
-            margin-bottom: 20px;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .btn-success {
+            padding: 18px;
             background: #38b000;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
-        .btn-cancel {
-            background: #6c757d;
+        .save-all-btn:hover {
+            background: #4cc700;
+        }
+        
+        .status-box {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .status-success {
+            background: rgba(56, 176, 0, 0.2);
+            border: 2px solid #38b000;
+            color: #38b000;
+        }
+        
+        .status-error {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+        }
+        
+        .auto-save {
+            background: rgba(0, 180, 216, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Форма входа -->
+        <!-- Логин -->
         <div id="loginBox" class="login-box">
-            <h2>🔐 Вход в админ панель</h2>
-            <div class="form-group">
-                <label>Логин админа:</label>
-                <input type="text" id="adminLogin" placeholder="admin">
-            </div>
-            <div class="form-group">
-                <label>Пароль админа:</label>
-                <input type="password" id="adminPassword" placeholder="••••••••">
-            </div>
-            <button class="btn" onclick="login()">Войти</button>
-            <div id="loginError" class="error">❌ Неверный логин или пароль</div>
+            <h2>🔐 Админ панель</h2>
+            <p>Введите пароль администратора:</p>
+            <input type="password" id="adminPassword" class="password-input" placeholder="••••••••">
+            <button class="login-btn" onclick="login()">Войти</button>
+            <div id="loginError" class="error">❌ Неверный пароль</div>
             
-            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 107, 107, 0.1); border-radius: 8px;">
-                <p style="font-size: 14px; color: #ffd166;">
-                    <strong>Важно:</strong> Данные для входа находятся в файле admin-settings.json
+            <div style="margin-top: 30px; padding: 20px; background: rgba(255, 215, 102, 0.1); border-radius: 10px;">
+                <p style="color: #ffd166;">
+                    <strong>Важно:</strong> Изменения автоматически сохраняются на GitHub
                 </p>
             </div>
         </div>
@@ -247,8 +269,8 @@
         <div id="adminPanel" class="admin-panel">
             <div class="header">
                 <div>
-                    <h1>👨‍💼 Админ панель</h1>
-                    <p>Управление пользователями торгового терминала</p>
+                    <h1>👑 Админ панель</h1>
+                    <p>Автоматическое сохранение на GitHub</p>
                 </div>
                 <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
             </div>
@@ -263,18 +285,24 @@
                     <div class="value" id="totalBalance">0 USDT</div>
                 </div>
                 <div class="card">
-                    <h3>Средний баланс</h3>
-                    <div class="value" id="avgBalance">0 USDT</div>
-                </div>
-                <div class="card">
                     <h3>VIP пользователей</h3>
                     <div class="value" id="vipUsers">0</div>
                 </div>
+                <div class="card">
+                    <h3>Последнее обновление</h3>
+                    <div class="value" id="lastUpdate" style="font-size: 20px;">-</div>
+                </div>
             </div>
             
-            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h2>👥 Управление пользователями</h2>
-                <button class="btn" onclick="showAddUserModal()" style="width: auto; padding: 10px 20px;">➕ Добавить пользователя</button>
+            <button class="save-all-btn" onclick="saveAllChanges()">
+                💾 Сохранить все изменения на GitHub
+            </button>
+            
+            <div id="statusBox" class="status-box"></div>
+            
+            <div class="auto-save">
+                <input type="checkbox" id="autoSave" checked>
+                <label for="autoSave">Автосохранение при изменении</label>
             </div>
             
             <div class="users-table">
@@ -283,115 +311,21 @@
                         <tr>
                             <th>Логин</th>
                             <th>Email</th>
-                            <th>Баланс</th>
+                            <th>Баланс (USDT)</th>
                             <th>Уровень</th>
                             <th>Тип вывода</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <!-- Данные загружаются через JS -->
+                        <!-- Данные загружаются динамически -->
                     </tbody>
                 </table>
             </div>
             
-            <div style="background: rgba(0, 180, 216, 0.1); padding: 20px; border-radius: 10px;">
-                <h3 style="color: #00b4d8; margin-bottom: 15px;">📋 Инструкция по обновлению данных:</h3>
-                <p>1. Внесите изменения в таблице выше</p>
-                <p>2. Нажмите "Сохранить изменения"</p>
-                <p>3. Файл users.json будет обновлен в репозитории GitHub</p>
-                <button class="btn" onclick="saveChanges()" style="background: #38b000; margin-top: 15px;">
-                    💾 Сохранить изменения на GitHub
-                </button>
-                <div id="saveStatus" style="margin-top: 10px; font-size: 14px;"></div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно добавления пользователя -->
-    <div id="addUserModal" class="modal">
-        <div class="modal-content">
-            <h3>➕ Добавить нового пользователя</h3>
-            <div class="form-group">
-                <label>Логин:</label>
-                <input type="text" id="newUserLogin" placeholder="user123">
-            </div>
-            <div class="form-group">
-                <label>Пароль:</label>
-                <input type="text" id="newUserPassword" placeholder="пароль">
-            </div>
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" id="newUserEmail" placeholder="user@example.com">
-            </div>
-            <div class="form-group">
-                <label>Баланс (USDT):</label>
-                <input type="number" id="newUserBalance" value="100.00" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>Уровень:</label>
-                <select id="newUserLevel">
-                    <option value="Стандарт">Стандарт</option>
-                    <option value="VIP 1">VIP 1</option>
-                    <option value="VIP 2">VIP 2</option>
-                    <option value="VIP 3">VIP 3</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тип вывода:</label>
-                <select id="newUserWithdrawType">
-                    <option value="normal">Normal (1% комиссия)</option>
-                    <option value="request">Request (одобрение поддержки)</option>
-                    <option value="commission">Commission (40% комиссия)</option>
-                </select>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-success" onclick="addUser()">Добавить</button>
-                <button class="btn btn-cancel" onclick="hideAddUserModal()">Отмена</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Модальное окно редактирования -->
-    <div id="editUserModal" class="modal">
-        <div class="modal-content">
-            <h3>✏️ Редактирование пользователя</h3>
-            <div class="form-group">
-                <label>Логин:</label>
-                <input type="text" id="editUserLogin" readonly>
-            </div>
-            <div class="form-group">
-                <label>Новый пароль (оставьте пустым, чтобы не менять):</label>
-                <input type="text" id="editUserPassword" placeholder="Новый пароль">
-            </div>
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" id="editUserEmail">
-            </div>
-            <div class="form-group">
-                <label>Баланс (USDT):</label>
-                <input type="number" id="editUserBalance" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>Уровень:</label>
-                <select id="editUserLevel">
-                    <option value="Стандарт">Стандарт</option>
-                    <option value="VIP 1">VIP 1</option>
-                    <option value="VIP 2">VIP 2</option>
-                    <option value="VIP 3">VIP 3</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тип вывода:</label>
-                <select id="editUserWithdrawType">
-                    <option value="normal">Normal</option>
-                    <option value="request">Request</option>
-                    <option value="commission">Commission</option>
-                </select>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-success" onclick="saveUserEdit()">Сохранить</button>
-                <button class="btn btn-cancel" onclick="hideEditUserModal()">Отмена</button>
+            <div style="text-align: center; color: #94a3b8; margin-top: 40px;">
+                <p>💡 Любые изменения в таблице автоматически сохраняются</p>
+                <p>Обновление на сайте пользователей происходит в течение 1-2 минут</p>
             </div>
         </div>
     </div>
@@ -401,70 +335,75 @@
         const GITHUB_USERNAME = 'reduk000002-afk';
         const GITHUB_REPO = 'terminal1';
         const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/`;
+        const ADMIN_PASSWORD = 'admin123'; // Поменяйте на свой пароль
         
         let usersData = {};
-        let currentEditUser = null;
+        let isAutoSave = true;
+        let lastSaveTime = null;
         
-        // Загрузка данных при старте
+        // Инициализация
         async function init() {
-            // Пробуем загрузить настройки админа
-            try {
-                const response = await fetch(`${BASE_URL}admin-settings.json`);
-                const settings = await response.json();
-                // Сохраняем настройки в localStorage для проверки логина
-                localStorage.setItem('admin_username', settings.admin_username);
-                localStorage.setItem('admin_password', settings.admin_password);
-            } catch (error) {
-                console.log('Не удалось загрузить настройки админа');
+            // Проверяем, авторизован ли админ
+            const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+            if (isLoggedIn) {
+                showAdminPanel();
+                loadUsers();
             }
+            
+            // Настройка автосохранения
+            document.getElementById('autoSave').addEventListener('change', function(e) {
+                isAutoSave = e.target.checked;
+            });
         }
         
-        // Функция входа
+        // Вход
         function login() {
-            const username = document.getElementById('adminLogin').value;
             const password = document.getElementById('adminPassword').value;
             const errorElement = document.getElementById('loginError');
             
-            const savedUsername = localStorage.getItem('admin_username') || 'admin';
-            const savedPassword = localStorage.getItem('admin_password') || 'galardro123';
-            
-            if (username === savedUsername && password === savedPassword) {
-                // Успешный вход
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                loadUsersData();
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                showAdminPanel();
+                loadUsers();
             } else {
                 errorElement.style.display = 'block';
-                setTimeout(() => {
-                    errorElement.style.display = 'none';
-                }, 3000);
+                setTimeout(() => errorElement.style.display = 'none', 3000);
             }
+        }
+        
+        // Показать админ панель
+        function showAdminPanel() {
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
         }
         
         // Выход
         function logout() {
-            document.getElementById('loginBox').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('adminLogin').value = '';
-            document.getElementById('adminPassword').value = '';
+            localStorage.removeItem('isAdminLoggedIn');
+            location.reload();
         }
         
         // Загрузка пользователей
-        async function loadUsersData() {
+        async function loadUsers() {
             try {
-                const response = await fetch(`${BASE_URL}users.json`);
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${BASE_URL}users.json?t=${timestamp}`);
                 usersData = await response.json();
                 renderUsersTable();
                 updateStats();
+                
+                // Сохраняем время последней загрузки
+                lastSaveTime = new Date();
+                document.getElementById('lastUpdate').textContent = 
+                    lastSaveTime.toLocaleTimeString('ru-RU');
+                    
             } catch (error) {
-                console.error('Ошибка загрузки пользователей:', error);
-                // Если файла нет, создаем пустой
-                usersData = {};
-                renderUsersTable();
+                showStatus('❌ Ошибка загрузки данных: ' + error.message, 'error');
+                console.error('Ошибка загрузки:', error);
             }
         }
         
-        // Отображение таблицы пользователей
+        // Отображение таблицы
         function renderUsersTable() {
             const tbody = document.getElementById('usersTableBody');
             tbody.innerHTML = '';
@@ -478,13 +417,12 @@
                     <td>
                         <input type="number" 
                                value="${parseFloat(user.balance)}" 
-                               step="0.01" 
-                               style="width: 100px; padding: 5px;"
-                               onchange="updateUserProperty('${username}', 'balance', this.value)">
+                               step="0.01"
+                               onchange="updateUser('${username}', 'balance', this.value)"
+                               onblur="autoSaveIfEnabled()">
                     </td>
                     <td>
-                        <select onchange="updateUserProperty('${username}', 'level', this.value)" 
-                                style="padding: 5px;">
+                        <select onchange="updateUser('${username}', 'level', this.value)">
                             <option value="Стандарт" ${user.level === 'Стандарт' ? 'selected' : ''}>Стандарт</option>
                             <option value="VIP 1" ${user.level === 'VIP 1' ? 'selected' : ''}>VIP 1</option>
                             <option value="VIP 2" ${user.level === 'VIP 2' ? 'selected' : ''}>VIP 2</option>
@@ -492,17 +430,13 @@
                         </select>
                     </td>
                     <td>
-                        <select onchange="updateUserProperty('${username}', 'withdrawType', this.value)"
-                                style="padding: 5px;">
-                            <option value="normal" ${user.withdrawType === 'normal' ? 'selected' : ''}>Normal</option>
+                        <select onchange="updateUser('${username}', 'withdrawType', this.value)">
+                            <option value="normal" ${user.withdrawType === 'normal' ? 'selected' : ''}>Normal (1%)</option>
                             <option value="request" ${user.withdrawType === 'request' ? 'selected' : ''}>Request</option>
-                            <option value="commission" ${user.withdrawType === 'commission' ? 'selected' : ''}>Commission</option>
+                            <option value="commission" ${user.withdrawType === 'commission' ? 'selected' : ''}>Commission (40%)</option>
                         </select>
                     </td>
                     <td>
-                        <button class="action-btn edit-btn" onclick="showEditModal('${username}')">
-                            ✏️ Изменить
-                        </button>
                         <button class="action-btn delete-btn" onclick="deleteUser('${username}')">
                             🗑️ Удалить
                         </button>
@@ -513,15 +447,49 @@
             });
         }
         
-        // Обновление свойства пользователя
-        function updateUserProperty(username, property, value) {
-            if (usersData[username]) {
-                if (property === 'balance') {
-                    usersData[username][property] = parseFloat(value).toFixed(2);
-                } else {
-                    usersData[username][property] = value;
-                }
-                updateStats();
+        // Обновление пользователя
+        function updateUser(username, field, value) {
+            if (!usersData[username]) return;
+            
+            if (field === 'balance') {
+                usersData[username][field] = parseFloat(value).toFixed(2);
+            } else {
+                usersData[username][field] = value;
+            }
+            
+            updateStats();
+            
+            // Автосохранение
+            if (isAutoSave) {
+                autoSaveIfEnabled();
+            }
+        }
+        
+        // Автосохранение
+        async function autoSaveIfEnabled() {
+            if (!isAutoSave) return;
+            
+            // Задержка 1.5 секунды перед сохранением
+            clearTimeout(window.autoSaveTimer);
+            window.autoSaveTimer = setTimeout(async () => {
+                await saveToGitHub('Автосохранение');
+            }, 1500);
+            
+            showStatus('⏳ Изменения будут сохранены через 1.5 секунды...', 'info');
+        }
+        
+        // Удаление пользователя
+        async function deleteUser(username) {
+            if (!confirm(`Удалить пользователя "${username}"?`)) return;
+            
+            delete usersData[username];
+            renderUsersTable();
+            updateStats();
+            
+            if (isAutoSave) {
+                await saveToGitHub(`Удален пользователь: ${username}`);
+            } else {
+                showStatus('✅ Пользователь удален (нажмите "Сохранить" для записи на GitHub)', 'success');
             }
         }
         
@@ -536,162 +504,114 @@
             const totalBalance = users.reduce((sum, user) => sum + parseFloat(user.balance), 0);
             document.getElementById('totalBalance').textContent = totalBalance.toFixed(2) + ' USDT';
             
-            // Средний баланс
-            const avgBalance = users.length > 0 ? totalBalance / users.length : 0;
-            document.getElementById('avgBalance').textContent = avgBalance.toFixed(2) + ' USDT';
-            
             // VIP пользователей
             const vipUsers = users.filter(user => user.level.includes('VIP')).length;
             document.getElementById('vipUsers').textContent = vipUsers;
         }
         
-        // Показать модальное окно добавления пользователя
-        function showAddUserModal() {
-            document.getElementById('addUserModal').style.display = 'flex';
-        }
-        
-        function hideAddUserModal() {
-            document.getElementById('addUserModal').style.display = 'none';
-        }
-        
-        // Показать модальное окно редактирования
-        function showEditModal(username) {
-            currentEditUser = username;
-            const user = usersData[username];
-            
-            document.getElementById('editUserLogin').value = username;
-            document.getElementById('editUserEmail').value = user.email || '';
-            document.getElementById('editUserBalance').value = parseFloat(user.balance);
-            document.getElementById('editUserLevel').value = user.level;
-            document.getElementById('editUserWithdrawType').value = user.withdrawType;
-            
-            document.getElementById('editUserModal').style.display = 'flex';
-        }
-        
-        function hideEditUserModal() {
-            document.getElementById('editUserModal').style.display = 'none';
-            currentEditUser = null;
-        }
-        
-        // Добавить пользователя
-        function addUser() {
-            const username = document.getElementById('newUserLogin').value.trim();
-            const password = document.getElementById('newUserPassword').value.trim();
-            const email = document.getElementById('newUserEmail').value.trim();
-            const balance = parseFloat(document.getElementById('newUserBalance').value);
-            const level = document.getElementById('newUserLevel').value;
-            const withdrawType = document.getElementById('newUserWithdrawType').value;
-            
-            if (!username) {
-                alert('Введите логин пользователя');
-                return;
-            }
-            
-            if (!password) {
-                alert('Введите пароль');
-                return;
-            }
-            
-            if (usersData[username]) {
-                alert('Пользователь с таким логином уже существует');
-                return;
-            }
-            
-            // Добавляем пользователя
-            usersData[username] = {
-                password: password,
-                balance: balance.toFixed(2),
-                level: level,
-                withdrawType: withdrawType,
-                email: email || `${username}@galardro.org`,
-                created: new Date().toISOString()
-            };
-            
-            // Обновляем таблицу
-            renderUsersTable();
-            updateStats();
-            
-            // Очищаем форму и закрываем модалку
-            document.getElementById('newUserLogin').value = '';
-            document.getElementById('newUserPassword').value = '';
-            document.getElementById('newUserEmail').value = '';
-            document.getElementById('newUserBalance').value = '100.00';
-            
-            hideAddUserModal();
-            showNotification('Пользователь успешно добавлен!');
-        }
-        
-        // Сохранить редактирование
-        function saveUserEdit() {
-            if (!currentEditUser) return;
-            
-            const user = usersData[currentEditUser];
-            const newPassword = document.getElementById('editUserPassword').value.trim();
-            const email = document.getElementById('editUserEmail').value.trim();
-            const balance = parseFloat(document.getElementById('editUserBalance').value);
-            const level = document.getElementById('editUserLevel').value;
-            const withdrawType = document.getElementById('editUserWithdrawType').value;
-            
-            if (newPassword) {
-                user.password = newPassword;
-            }
-            
-            user.email = email || `${currentEditUser}@galardro.org`;
-            user.balance = balance.toFixed(2);
-            user.level = level;
-            user.withdrawType = withdrawType;
-            
-            renderUsersTable();
-            updateStats();
-            hideEditUserModal();
-            showNotification('Изменения сохранены!');
-        }
-        
-        // Удалить пользователя
-        function deleteUser(username) {
-            if (!confirm(`Удалить пользователя ${username}?`)) return;
-            
-            delete usersData[username];
-            renderUsersTable();
-            updateStats();
-            showNotification('Пользователь удален!');
-        }
-        
-        // Сохранить изменения на GitHub
-        async function saveChanges() {
-            const statusElement = document.getElementById('saveStatus');
-            statusElement.innerHTML = '⏳ Сохранение...';
-            statusElement.style.color = '#ffd166';
+        // Сохранение на GitHub (ГЛАВНАЯ ФУНКЦИЯ)
+        async function saveToGitHub(message = 'Обновление данных') {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.className = 'status-box';
+            statusBox.style.display = 'block';
+            statusBox.textContent = '⏳ Сохранение на GitHub...';
             
             try {
-                // Здесь будет код для сохранения на GitHub
-                // Пока что просто сохраняем в localStorage для демо
-                localStorage.setItem('users_backup', JSON.stringify(usersData));
+                // Получаем текущий файл чтобы узнать sha
+                const getResponse = await fetch(`${BASE_URL}users.json`);
+                let sha = '';
                 
-                statusElement.innerHTML = '✅ Данные сохранены локально';
-                statusElement.style.color = '#38b000';
+                if (getResponse.ok) {
+                    // Пытаемся получить sha из заголовков
+                    const data = await getResponse.json();
+                    if (data.sha) {
+                        sha = data.sha;
+                    }
+                }
                 
-                // Инструкция для ручного сохранения на GitHub
-                setTimeout(() => {
-                    statusElement.innerHTML = `
-                        <strong>Инструкция для сохранения на GitHub:</strong><br>
-                        1. Откройте файл users.json в вашем репозитории<br>
-                        2. Замените содержимое на этот JSON:<br>
-                        <textarea style="width:100%; height:100px; margin-top:10px;">${JSON.stringify(usersData, null, 2)}</textarea><br>
-                        3. Сохраните файл и закоммитьте изменения
-                    `;
-                }, 2000);
+                // Готовим данные для сохранения
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(usersData, null, 2))));
+                const commitData = {
+                    message: `Admin: ${message}`,
+                    content: content,
+                    sha: sha
+                };
+                
+                // Сохраняем через GitHub API
+                // ВАЖНО: Для работы нужен GitHub Token!
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/users.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                        'Authorization': 'token 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'
+                    },
+                    body: JSON.stringify(commitData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    lastSaveTime = new Date();
+                    document.getElementById('lastUpdate').textContent = 
+                        lastSaveTime.toLocaleTimeString('ru-RU');
+                    
+                    statusBox.textContent = '✅ Данные успешно сохранены на GitHub!';
+                    statusBox.className = 'status-box status-success';
+                    
+                    // Пользователи увидят изменения через 1-2 минуты
+                    setTimeout(() => {
+                        statusBox.textContent += ' (Пользователи увидят изменения через 1-2 минуты)';
+                    }, 1000);
+                    
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Ошибка сохранения');
+                }
                 
             } catch (error) {
-                statusElement.innerHTML = '❌ Ошибка сохранения: ' + error.message;
-                statusElement.style.color = '#ff6b6b';
+                console.error('Ошибка сохранения:', error);
+                
+                statusBox.textContent = `❌ Ошибка: ${error.message}`;
+                statusBox.className = 'status-box status-error';
+                
+                // Предлагаем альтернативный способ
+                setTimeout(() => {
+                    const jsonData = JSON.stringify(usersData, null, 2);
+                    statusBox.innerHTML += `
+                        <br><br>
+                        <strong>Альтернативный способ:</strong>
+                        <textarea style="width:100%; height:100px; margin-top:10px; background:#1a1a2e; color:white; border:1px solid #00b4d8; padding:10px; border-radius:5px;">${jsonData}</textarea>
+                        <p>Скопируйте этот JSON и вставьте в файл users.json на GitHub вручную</p>
+                    `;
+                }, 2000);
             }
         }
         
-        // Показать уведомление
-        function showNotification(message) {
-            alert(message); // Простое уведомление
+        // Сохранить все изменения
+        async function saveAllChanges() {
+            await saveToGitHub('Массовое обновление пользователей');
         }
+        
+        // Показать статус
+        function showStatus(message, type = 'info') {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.textContent = message;
+            statusBox.className = `status-box status-${type}`;
+            statusBox.style.display = 'block';
+            
+            if (type === 'info') {
+                setTimeout(() => {
+                    statusBox.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Автоматическая перезагрузка данных каждые 30 секунд
+        setInterval(() => {
+            if (document.getElementById('adminPanel').style.display !== 'none') {
+                loadUsers();
+            }
+        }, 30000);
         
         // Инициализация при загрузке
         window.onload = init;
