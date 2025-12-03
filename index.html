@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Фьючерсный терминал</title>
-  <!-- Подключение Supabase SDK -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     /* ВСЕ СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
     * {
@@ -2621,233 +2619,264 @@
 
 <script>
 // =============================================
-// КОНФИГУРАЦИЯ SUPABASE
-// =============================================
-const SUPABASE_CONFIG = {
-  url: 'https://wkukgnkfbxgpvlraczeu.supabase.co', // ЗАМЕНИТЕ НА ВАШ URL ИЗ SUPABASE
-  anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i', // ЗАМЕНИТЕ НА ВАШ ANON KEY ИЗ SUPABASE
-  tableName: 'app_users'
-};
-
-// Инициализация Supabase клиента
-let supabase = null;
-try {
-  supabase = window.supabase.createClient(
-    SUPABASE_CONFIG.url,
-    SUPABASE_CONFIG.anonKey
-  );
-  console.log('Supabase клиент инициализирован');
-} catch (error) {
-  console.error('Ошибка инициализации Supabase:', error);
-  alert('Ошибка подключения к базе данных. Проверьте конфигурацию Supabase.');
-}
-
-// =============================================
 // ЦЕНТРАЛИЗОВАННАЯ СИСТЕМА УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
 // =============================================
-let usersData = {}; // Кэш пользователей
-let currentUser = null;
-let countdownInterval = null;
-let realtimeSubscription = null;
+
+// ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ (загружаются из GitHub)
+let usersData = {}; // Начнем с пустого объекта
+
+// Функция загрузки данных из GitHub
+async function loadUsersData() {
+    try {
+        const response = await fetch('https://raw.githubusercontent.com/reduk000002-afk/terminal1/main/users.json');
+        usersData = await response.json();
+        console.log('Данные пользователей загружены из GitHub');
+    } catch (error) {
+        console.error('Ошибка загрузки данных из GitHub:', error);
+        // Используем локальные данные как резерв
+        usersData = {
+            // ========================
+            // БАЛАНСЫ ПОЛЬЗОВАТЕЛЕЙ
+            // ========================
+            
+            // Редук 1 - основной аккаунт (ТИП NORMAL)
+            "reduk1": { 
+                password: "12345", 
+                balance: "256.17",
+                level: "VIP 1",
+                withdrawType: "normal",  // ← НОВЫЙ ТИП
+                email: "reduk1@galardro.org"
+            },
+            
+            // Редук 2 - тестовый (ТИП COMMISSION)
+            "dimapetrochenko156@gmail.com": { 
+                password: "WX1284TR", 
+                balance: "904.25",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "dimapetrochenko156@gmail.com"
+            },
+            
+            // Редук 3 - дополнительный (ТИП REQUEST)
+            "e_son@internet.ru": { 
+                password: "Yk-8357009729", 
+                balance: "286.08",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "e_son@internet.ru"
+            },
+            
+            // Редук 4 - резервный (ТИП NORMAL)
+            "khusainov_11@icloud.com": { 
+                password: "Khusa1197Mirale", 
+                balance: "268.9",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "khusainov_11@icloud.com"
+            },
+            
+            // Редук 5 - запасной (ТИП REQUEST)
+            "reduk5": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk5@galardro.org"
+            },
+            
+            // Редук 6 - дополнительный (ТИП COMMISSION)
+            "reduk6": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk6@galardro.org"
+            },
+            
+            // ========================
+            // ДОПОЛНИТЕЛЬНЫЕ ПОЛЬЗОВАТЕЛИ
+            // ========================
+            
+            "reduk7": { 
+                password: "12345", 
+                balance: "150.00",
+                level: "Стандарт",
+                withdrawType: "normal",
+                email: "reduk7@galardro.org"
+            },
+            
+            "reduk8": { 
+                password: "12345", 
+                balance: "75.50",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk8@galardro.org"
+            },
+            
+            "reduk9": { 
+                password: "12345", 
+                balance: "320.25",
+                level: "VIP 1",
+                withdrawType: "normal",
+                email: "reduk9@galardro.org"
+            },
+            
+            "reduk10": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk10@galardro.org"
+            },
+            
+            "reduk11": { 
+                password: "12345", 
+                balance: "500.00",
+                level: "VIP 2",
+                withdrawType: "normal",
+                email: "reduk11@galardro.org"
+            },
+            
+            "reduk12": { 
+                password: "12345", 
+                balance: "45.75",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk12@galardro.org"
+            },
+            
+            "reduk13": { 
+                password: "12345", 
+                balance: "180.30",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk13@galardro.org"
+            },
+            
+            "reduk14": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk14@galardro.org"
+            },
+            
+            "reduk15": { 
+                password: "12345", 
+                balance: "750.80",
+                level: "VIP 2",
+                withdrawType: "normal",
+                email: "reduk15@galardro.org"
+            },
+            
+            "reduk16": { 
+                password: "12345", 
+                balance: "25.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk16@galardro.org"
+            },
+            
+            "reduk17": { 
+                password: "12345", 
+                balance: "420.60",
+                level: "VIP 1",
+                withdrawType: "normal",
+                email: "reduk17@galardro.org"
+            },
+            
+            "reduk18": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk18@galardro.org"
+            },
+            
+            "reduk19": { 
+                password: "12345", 
+                balance: "95.25",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk19@galardro.org"
+            },
+            
+            "reduk20": { 
+                password: "12345", 
+                balance: "1200.50",
+                level: "VIP 3",
+                withdrawType: "normal",
+                email: "reduk20@galardro.org"
+            },
+            
+            "reduk21": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk21@galardro.org"
+            },
+            
+            "reduk22": { 
+                password: "12345", 
+                balance: "65.80",
+                level: "Стандарт",
+                withdrawType: "request",
+                email: "reduk22@galardro.org"
+            },
+            
+            "reduk23": { 
+                password: "12345", 
+                balance: "280.40",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk23@galardro.org"
+            },
+            
+            "reduk24": { 
+                password: "12345", 
+                balance: "0.00",
+                level: "Стандарт",
+                withdrawType: "normal",
+                email: "reduk24@galardro.org"
+            },
+            
+            "reduk25": { 
+                password: "12345", 
+                balance: "1500.75",
+                level: "VIP 3",
+                withdrawType: "normal",
+                email: "reduk25@galardro.org"
+            },
+            
+            "reduk26": { 
+                password: "12345", 
+                balance: "35.20",
+                level: "Стандарт",
+                withdrawType: "commission",
+                email: "reduk26@galardro.org"
+            }
+        };
+    }
+}
 
 // НАСТРОЙКИ СИСТЕМЫ
 const SYSTEM_CONFIG = {
-  ADMIN_SECRET: 'galardro_admin_2024',
-  UPDATE_INTERVAL: 300,
-  FEES: {
-    normal: 1,
-    commission: 40
-  }
+    ADMIN_SECRET: 'galardro_admin_2024',
+    UPDATE_INTERVAL: 300,
+    FEES: {
+        normal: 1,
+        commission: 40
+    }
 };
 
-// =============================================
-// ОСНОВНЫЕ ФУНКЦИИ ДЛЯ SUPABASE
-// =============================================
-
-// 1. Загрузка всех пользователей из Supabase
-async function loadUsersDataFromSupabase() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        usersData = {};
-        return usersData;
-    }
-    
-    try {
-        console.log('Загрузка пользователей из Supabase...');
-        
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .select('*');
-            
-        if (error) {
-            console.error('Ошибка загрузки из Supabase:', error);
-            throw error;
-        }
-        
-        // Преобразуем данные в формат, который ожидает ваше приложение
-        usersData = {};
-        if (data && data.length > 0) {
-            data.forEach(user => {
-                usersData[user.user_key] = {
-                    password: user.password,
-                    balance: user.balance ? user.balance.toString() : "0.00",
-                    level: user.level || 'Стандарт',
-                    withdrawType: user.withdraw_type || 'normal',
-                    email: user.email || `${user.user_key}@galardro.org`,
-                    id: user.id
-                };
-            });
-        }
-        
-        console.log(`Загружено ${Object.keys(usersData).length} пользователей из Supabase`);
-        return usersData;
-        
-    } catch (error) {
-        console.error('Критическая ошибка загрузки из Supabase:', error);
-        usersData = {};
-        return usersData;
-    }
-}
-
-// 2. Настройка Real-time подписки на обновления
-function setupRealtimeSubscription() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован для real-time');
-        return;
-    }
-    
-    try {
-        // Отписываемся от старой подписки, если есть
-        if (realtimeSubscription) {
-            supabase.removeChannel(realtimeSubscription);
-        }
-        
-        // Создаем новую подписку
-        realtimeSubscription = supabase
-            .channel('app_users_updates')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*', // INSERT, UPDATE, DELETE
-                    schema: 'public',
-                    table: SUPABASE_CONFIG.tableName
-                },
-                (payload) => {
-                    console.log('Получено обновление из Supabase:', payload);
-                    
-                    // Обновляем локальные данные
-                    if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                        const user = payload.new;
-                        usersData[user.user_key] = {
-                            password: user.password,
-                            balance: user.balance ? user.balance.toString() : "0.00",
-                            level: user.level || 'Стандарт',
-                            withdrawType: user.withdraw_type || 'normal',
-                            email: user.email || `${user.user_key}@galardro.org`,
-                            id: user.id
-                        };
-                        
-                        // Если обновлен текущий пользователь - обновляем UI
-                        if (currentUser === user.user_key) {
-                            console.log('Обновлен текущий пользователь, обновляю UI...');
-                            updateAllBalances();
-                            updateUserData();
-                        }
-                    } else if (payload.eventType === 'DELETE') {
-                        delete usersData[payload.old.user_key];
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log('Статус real-time подписки:', status);
-            });
-            
-        return realtimeSubscription;
-        
-    } catch (error) {
-        console.error('Ошибка настройки real-time подписки:', error);
-        return null;
-    }
-}
-
-// 3. Функция обновления баланса пользователя в Supabase
-async function updateUserBalanceInSupabase(userKey, newBalance) {
-    if (!supabase || !userKey) {
-        console.error('Нет подключения к Supabase или userKey');
-        return false;
-    }
-    
-    try {
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .update({ 
-                balance: parseFloat(newBalance),
-                updated_at: new Date().toISOString(),
-                updated_by: 'system'
-            })
-            .eq('user_key', userKey)
-            .select();
-            
-        if (error) {
-            console.error('Ошибка обновления баланса в Supabase:', error);
-            return false;
-        }
-        
-        console.log('Баланс обновлен в Supabase для пользователя', userKey, 'новый баланс:', newBalance);
-        return true;
-        
-    } catch (error) {
-        console.error('Ошибка при обновлении баланса:', error);
-        return false;
-    }
-}
-
-// 4. Функция прямого запроса пользователя из Supabase
-async function getUserFromSupabase(userKey, password) {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        return null;
-    }
-    
-    try {
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .select('*')
-            .eq('user_key', userKey)
-            .eq('password', password)
-            .single();
-            
-        if (error) {
-            console.error('Ошибка запроса пользователя из Supabase:', error);
-            return null;
-        }
-        
-        return data;
-        
-    } catch (error) {
-        console.error('Ошибка при запросе пользователя:', error);
-        return null;
-    }
-}
-
-// =============================================
-// ОСНОВНЫЕ ФУНКЦИИ ПРИЛОЖЕНИЯ (ОБНОВЛЕННЫЕ)
-// =============================================
+// Текущий пользователь
+let currentUser = null;
+let countdownInterval = null;
 
 // Загружаем данные при старте
 window.addEventListener('DOMContentLoaded', async function() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        document.getElementById('loginContainer').style.display = 'flex';
-        document.getElementById('mainContent').style.display = 'none';
-        return;
-    }
-    
-    // Загружаем данные из Supabase
-    await loadUsersDataFromSupabase();
-    
-    // Настраиваем real-time подписку
-    setupRealtimeSubscription();
+    await loadUsersData();
     
     // Проверяем авторизацию
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -2935,45 +2964,22 @@ function showPage(page) {
 
 // Обновление всех балансов на страницах
 function updateAllBalances() {
-  if (!currentUser || !usersData[currentUser]) {
-    console.log('Нет текущего пользователя для обновления балансов');
-    return;
-  }
+  if (!currentUser) return;
   
   const user = usersData[currentUser];
-  const balance = user.balance || "0.00";
-  
-  console.log('Обновление балансов для пользователя:', currentUser, 'баланс:', balance);
+  const balance = user.balance;
   
   // Хедер
   document.getElementById('balanceValue').textContent = balance + ' USDT';
   
   // Депозит страница
-  const depositTotalBalance = document.getElementById('depositTotalBalance');
-  if (depositTotalBalance) {
-    depositTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  }
-  
-  const availableBalance = document.getElementById('availableBalance');
-  if (availableBalance) {
-    availableBalance.textContent = balance + ' USDT';
-  }
+  document.getElementById('depositTotalBalance').innerHTML = balance + '<span class="balance-currency">USDT</span>';
+  document.getElementById('availableBalance').textContent = balance + ' USDT';
   
   // Вывод страница
-  const withdrawTotalBalance = document.getElementById('withdrawTotalBalance');
-  if (withdrawTotalBalance) {
-    withdrawTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  }
-  
-  const withdrawBalanceTotal = document.getElementById('withdrawBalanceTotal');
-  if (withdrawBalanceTotal) {
-    withdrawBalanceTotal.textContent = balance + ' USDT';
-  }
-  
-  const withdrawBalanceAvailable = document.getElementById('withdrawBalanceAvailable');
-  if (withdrawBalanceAvailable) {
-    withdrawBalanceAvailable.textContent = balance + ' USDT';
-  }
+  document.getElementById('withdrawTotalBalance').innerHTML = balance + '<span class="balance-currency">USDT</span>';
+  document.getElementById('withdrawBalanceTotal').textContent = balance + ' USDT';
+  document.getElementById('withdrawBalanceAvailable').textContent = balance + ' USDT';
   
   // Торговля страница
   const availableElement = document.querySelector('.info-line:nth-child(2)');
@@ -2982,63 +2988,31 @@ function updateAllBalances() {
   }
 }
 
-// Проверка входа (ОБНОВЛЕННАЯ ДЛЯ SUPABASE)
-async function checkLogin() {
-  if (!supabase) {
-    alert('Ошибка подключения к базе данных');
+// Проверка входа
+function checkLogin() {
+  // Проверяем загружены ли данные
+  if (Object.keys(usersData).length === 0) {
+    alert('Данные загружаются... Попробуйте снова через секунду');
     return;
   }
   
-  const login = document.getElementById('loginEmail').value.trim();
+  const login = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const errorElement = document.getElementById('loginError');
   
-  if (!login || !password) {
-    errorElement.style.display = 'block';
-    return;
-  }
-  
-  try {
-    // Прямой запрос к Supabase для проверки логина
-    const userData = await getUserFromSupabase(login, password);
-    
-    if (userData) {
-      // Логин успешен
-      currentUser = login;
-      
-      // Обновляем локальный кэш
-      usersData[login] = {
-        password: userData.password,
-        balance: userData.balance ? userData.balance.toString() : "0.00",
-        level: userData.level || 'Стандарт',
-        withdrawType: userData.withdraw_type || 'normal',
-        email: userData.email || `${login}@galardro.org`,
-        id: userData.id
-      };
-      
-      // Сохраняем в localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('currentUser', login);
-      
-      // Обновляем UI
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      updateUserData();
-      updateAllBalances();
-      initWatchlist();
-      updateCurrentTime();
-      initCompanyList();
-      
-      // Скрываем ошибку
-      errorElement.style.display = 'none';
-      
-      console.log('Пользователь успешно вошел:', login);
-    } else {
-      // Пользователь не найден или неверный пароль
-      errorElement.style.display = 'block';
-    }
-  } catch (error) {
-    console.error('Ошибка при входе:', error);
+  // Проверяем по нашим пользователям
+  if (usersData[login] && usersData[login].password === password) {
+    currentUser = login;
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', login);
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    updateUserData();
+    updateAllBalances();
+    initWatchlist();
+    updateCurrentTime();
+    initCompanyList();
+  } else {
     errorElement.style.display = 'block';
   }
 }
@@ -3058,16 +3032,14 @@ function initCompanyList() {
 
 // Обновление данных пользователя
 function updateUserData() {
-  if (!currentUser || !usersData[currentUser]) return;
+  if (!currentUser) return;
   
   const user = usersData[currentUser];
   const levelElement = document.getElementById('userLevel');
   const emailElement = document.getElementById('userEmail');
   
   // Обновляем уровень
-  if (levelElement) {
-    levelElement.textContent = `Уровень: ${user.level}`;
-  }
+  levelElement.textContent = `Уровень: ${user.level}`;
   
   // Обновляем почту
   if (emailElement) {
@@ -3077,7 +3049,7 @@ function updateUserData() {
 
 // Обновление информации в хедере
 function updateBalanceInfo() {
-  if (!currentUser || !usersData[currentUser]) return;
+  if (!currentUser) return;
   
   const balanceElement = document.getElementById('balanceValue');
   const pnlElement = document.getElementById('pnlValue');
@@ -3098,13 +3070,30 @@ function updateCurrentTime() {
   const timeString = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
   const dateString = now.toLocaleDateString('ru-RU');
   
-  const currentTimeElement = document.getElementById('currentTime');
-  if (currentTimeElement) {
-    currentTimeElement.textContent = `${timeString} ${dateString} | ${timeString} – ${timeString} (+0.01%)`;
-  }
-  
+  document.getElementById('currentTime').textContent = `${timeString} ${dateString} | ${timeString} – ${timeString} (+0.01%)`;
   setTimeout(updateCurrentTime, 1000);
 }
+
+// Проверяем, был ли пользователь уже авторизован
+window.addEventListener('DOMContentLoaded', function() {
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const savedUser = localStorage.getItem('currentUser');
+  
+  if (isLoggedIn && savedUser && usersData[savedUser]) {
+    currentUser = savedUser;
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    updateUserData();
+    updateAllBalances();
+    initWatchlist();
+    updateCurrentTime();
+    // Инициализируем список компаний
+    initCompanyList();
+  } else {
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+  }
+});
 
 // Проверка доступности localStorage
 let storageAvailable = true;
@@ -3129,8 +3118,6 @@ function initWatchlist() {
   ];
   
   const watchlistContainer = document.getElementById('watchlist');
-  if (!watchlistContainer) return;
-  
   watchlistContainer.innerHTML = '';
   
   watchlist.forEach(asset => {
@@ -3186,7 +3173,7 @@ function updateMarketData() {
   const changeElement = document.getElementById('dailyChange');
   
   if (priceElement) {
-    const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]) || 100;
+    const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]);
     const newPrice = (currentPrice + (Math.random() * 0.5 - 0.25)).toFixed(2);
     priceElement.textContent = `${newPrice} USD`;
     priceElement.style.color = newPrice > currentPrice ? '#16c784' : '#ea3943';
@@ -3194,13 +3181,13 @@ function updateMarketData() {
   }
   
   if (volumeElement) {
-    const currentVolume = parseFloat(volumeElement.textContent) || 1000;
+    const currentVolume = parseFloat(volumeElement.textContent);
     const newVolume = (currentVolume + (Math.random() * 100 - 50)).toFixed(0);
     volumeElement.textContent = `${Math.abs(newVolume)} BTC`;
   }
   
   if (changeElement) {
-    const currentChange = parseFloat(changeElement.textContent) || 0;
+    const currentChange = parseFloat(changeElement.textContent);
     const newChange = (currentChange + (Math.random() * 0.5 - 0.25)).toFixed(2);
     changeElement.textContent = `${newChange}%`;
     changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
@@ -3212,13 +3199,13 @@ function updateMarketData() {
   const volume24h = document.getElementById('volume24h');
   
   if (btcDominance) {
-    const currentBtcDom = parseFloat(btcDominance.textContent) || 42.8;
+    const currentBtcDom = parseFloat(btcDominance.textContent);
     const newBtcDom = (currentBtcDom + (Math.random() * 0.2 - 0.1)).toFixed(1);
     btcDominance.textContent = `${newBtcDom}%`;
   }
   
   if (fearGreed) {
-    const currentFearGreed = parseInt(fearGreed.textContent) || 72;
+    const currentFearGreed = parseInt(fearGreed.textContent);
     const newFearGreed = Math.max(0, Math.min(100, currentFearGreed + Math.floor(Math.random() * 5 - 2)));
     fearGreed.textContent = newFearGreed;
     fearGreed.style.color = newFearGreed > 50 ? '#16c784' : newFearGreed > 25 ? '#ffcc00' : '#ea3943';
@@ -3326,43 +3313,13 @@ document.addEventListener("click", function(e) {
   }
 });
 
-// Функция открытия позиции (ОБНОВЛЕНА ДЛЯ ОБНОВЛЕНИЯ БАЛАНСА В SUPABASE)
-async function openPosition(type) {
-  if (!currentUser) {
-    alert('Сначала войдите в систему');
-    return;
-  }
-  
-  if (!usersData[currentUser]) {
-    alert('Данные пользователя не загружены');
-    return;
-  }
+function openPosition(type) {
+  if (!currentUser) return;
   
   const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
   const company = document.getElementById("selectedCompany").textContent;
   const leverage = document.getElementById("leverage").value;
   const amountInput = document.querySelector('input[type="number"]').value || 0;
-  const amount = parseFloat(amountInput);
-
-  // Проверяем достаточно ли средств
-  const currentBalance = parseFloat(usersData[currentUser].balance);
-  if (amount > currentBalance) {
-    showToast('Недостаточно средств');
-    return;
-  }
-
-  // Вычитаем сумму из баланса
-  const newBalance = (currentBalance - amount).toFixed(2);
-  usersData[currentUser].balance = newBalance;
-  
-  // Обновляем баланс в Supabase
-  const updateSuccess = await updateUserBalanceInSupabase(currentUser, newBalance);
-  
-  if (!updateSuccess) {
-    showToast('Ошибка обновления баланса');
-    usersData[currentUser].balance = currentBalance.toString(); // Возвращаем старый баланс
-    return;
-  }
 
   const dealBlock = document.createElement("div");
   dealBlock.className = "deal-block";
@@ -3376,7 +3333,7 @@ async function openPosition(type) {
         <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
       </div>
       <div class="deal-column">
-        <div>Всего открыто: <span>${amount.toFixed(2)}</span> USDT</div>
+        <div>Всего открыто: <span>${parseFloat(amountInput).toFixed(2)}</span> USDT</div>
       </div>
       <div class="deal-column">
         <div>П/У позиции: <span class="profit">—</span> USDT</div>
@@ -3412,7 +3369,7 @@ async function openPosition(type) {
     company,
     leverage,
     type,
-    amount: amount.toFixed(2),
+    amount: parseFloat(amountInput).toFixed(2),
     openPrice: (Math.random() * 5 + 1).toFixed(4),
     tp,
     sl,
@@ -3437,11 +3394,7 @@ async function openPosition(type) {
   mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
   desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
 
-  // Обновляем UI баланса
-  updateAllBalances();
   updateBalanceInfo();
-  
-  showToast(`Позиция открыта! Списано ${amount} USDT`);
 }
 
 function toggleTPSL(checkbox, targetId) {
@@ -3456,11 +3409,8 @@ window.addEventListener("load", () => {
     savedDeals = savedDeals.slice(0, 5);
     
     // Очищаем оба контейнера
-    const positionsContainer = document.getElementById("positionsContainer");
-    const desktopPositionsContainer = document.getElementById("desktopPositionsContainer");
-    
-    if (positionsContainer) positionsContainer.innerHTML = "";
-    if (desktopPositionsContainer) desktopPositionsContainer.innerHTML = "";
+    document.getElementById("positionsContainer").innerHTML = "";
+    document.getElementById("desktopPositionsContainer").innerHTML = "";
     
     // Восстанавливаем позиции в оба контейнера
     savedDeals.forEach(deal => {
@@ -3495,8 +3445,6 @@ function restorePosition(deal) {
   // Добавляем в оба контейнера
   const mobileContainer = document.getElementById("positionsContainer");
   const desktopContainer = document.getElementById("desktopPositionsContainer");
-  
-  if (!mobileContainer || !desktopContainer) return;
   
   const mobileDealBlock = dealBlock.cloneNode(true);
   const desktopDealBlock = dealBlock.cloneNode(true);
@@ -3542,22 +3490,13 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       const walletId = this.getAttribute('data-wallet');
-      const walletElement = document.getElementById(`${walletId}-wallet`);
-      if (walletElement) {
-        walletElement.classList.add('active');
-      }
+      document.getElementById(`${walletId}-wallet`).classList.add('active');
     });
   });
 
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      const container = this.closest('.qr-code-container');
-      if (!container) return;
-      
-      const addressElement = container.querySelector('.wallet-address');
-      if (!addressElement) return;
-      
-      const address = addressElement.textContent;
+      const address = this.closest('.qr-code-container').querySelector('.wallet-address').textContent;
       navigator.clipboard.writeText(address)
         .then(() => {
           const originalText = this.textContent;
@@ -3599,11 +3538,8 @@ function switchWithdrawTab(type) {
   document.querySelectorAll('.withdraw-tab').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
 
-  const tabElement = document.querySelector(`.withdraw-tab[onclick*="${type}"]`);
-  const sectionElement = document.getElementById(type);
-  
-  if (tabElement) tabElement.classList.add('active');
-  if (sectionElement) sectionElement.classList.add('active');
+  document.querySelector(`.withdraw-tab[onclick="switchWithdrawTab('${type}')"]`).classList.add('active');
+  document.getElementById(type).classList.add('active');
 }
 
 function showVipModal() {
@@ -3618,10 +3554,7 @@ function closeVipModal() {
 
 // ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА С УЧЕТОМ ТРЕХ ТИПОВ ПОЛЬЗОВАТЕЛЯ
 function showCommissionModal() {
-  if (!currentUser || !usersData[currentUser]) {
-    alert('Сначала войдите в систему');
-    return;
-  }
+  if (!currentUser) return;
   
   const user = usersData[currentUser];
   
@@ -3637,68 +3570,42 @@ function showCommissionModal() {
 
 // СТАРАЯ ФУНКЦИЯ КОМИССИИ (переименована)
 function showCommissionModalOld() {
-  const modal = document.getElementById('commissionModal');
-  if (!modal) return;
-  
-  modal.classList.add('active');
+  document.getElementById('commissionModal').classList.add('active');
   document.body.style.overflow = 'hidden';
-  
-  const checkbox = document.getElementById('agreeCheckbox');
-  const continueBtn = document.getElementById('continueBtn');
-  const supportMessage = document.getElementById('supportMessage');
-  
-  if (checkbox) checkbox.checked = false;
-  if (continueBtn) continueBtn.disabled = true;
-  if (supportMessage) supportMessage.style.display = 'none';
-  
-  const checkboxContainer = document.querySelector('.checkbox-container');
-  const modalFooter = document.querySelector('.modal-footer');
-  
-  if (checkboxContainer) checkboxContainer.style.display = 'flex';
-  if (modalFooter) modalFooter.style.display = 'flex';
+  document.getElementById('agreeCheckbox').checked = false;
+  document.getElementById('continueBtn').disabled = true;
+  document.getElementById('supportMessage').style.display = 'none';
+  document.querySelector('.checkbox-container').style.display = 'flex';
+  document.querySelector('.modal-footer').style.display = 'flex';
 }
 
 // ФУНКЦИЯ ДЛЯ ТИПА REQUEST
 function showRequestModal() {
-  const modal = document.getElementById('requestModal');
-  if (!modal) return;
-  
-  modal.classList.add('active');
+  document.getElementById('requestModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
 // НОВАЯ ФУНКЦИЯ ДЛЯ ТИПА NORMAL (обычный вывод)
 function showNormalModal() {
   // Получаем данные из формы
-  const amountInput = document.getElementById('withdraw-amount-crypto');
-  const walletInput = document.getElementById('wallet-address');
-  
-  const amount = amountInput ? amountInput.value || '100.00' : '100.00';
-  const walletAddress = walletInput ? walletInput.value || '0x742d35Cc6634C0532925a3b8D...' : '0x742d35Cc6634C0532925a3b8D...';
+  const amount = document.getElementById('withdraw-amount-crypto').value || '100.00';
+  const walletAddress = document.getElementById('wallet-address').value || '0x742d35Cc6634C0532925a3b8D...';
   
   // Рассчитываем комиссию (1% для нормального вывода)
   const networkFee = (parseFloat(amount) * (SYSTEM_CONFIG.FEES.normal / 100)).toFixed(2);
   const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
   
   // Обновляем данные в модальном окне
-  const withdrawAmount = document.getElementById('withdrawAmount');
-  const networkFeeElement = document.getElementById('networkFee');
-  const receiveAmountElement = document.getElementById('receiveAmount');
-  const walletAddressDisplay = document.getElementById('walletAddressDisplay');
-  
-  if (withdrawAmount) withdrawAmount.textContent = amount + ' USDT';
-  if (networkFeeElement) networkFeeElement.textContent = networkFee + ' USDT';
-  if (receiveAmountElement) receiveAmountElement.textContent = receiveAmount + ' USDT';
-  if (walletAddressDisplay) walletAddressDisplay.textContent = walletAddress;
+  document.getElementById('withdrawAmount').textContent = amount + ' USDT';
+  document.getElementById('networkFee').textContent = networkFee + ' USDT';
+  document.getElementById('receiveAmount').textContent = receiveAmount + ' USDT';
+  document.getElementById('walletAddressDisplay').textContent = walletAddress;
   
   // Запускаем таймер обратного отсчета
   startCountdownTimer();
   
   // Показываем модальное окно
-  const modal = document.getElementById('normalModal');
-  if (!modal) return;
-  
-  modal.classList.add('active');
+  document.getElementById('normalModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
@@ -3710,16 +3617,13 @@ function startCountdownTimer() {
     clearInterval(countdownInterval);
   }
   
-  const timerElement = document.getElementById('timerValue');
-  if (!timerElement) return;
-  
   countdownInterval = setInterval(() => {
     timeLeft--;
     
     if (timeLeft <= 0) {
       clearInterval(countdownInterval);
-      timerElement.textContent = 'Завершено';
-      timerElement.style.color = '#16c784';
+      document.getElementById('timerValue').textContent = 'Завершено';
+      document.getElementById('timerValue').style.color = '#16c784';
       return;
     }
     
@@ -3727,7 +3631,7 @@ function startCountdownTimer() {
     const minutes = Math.floor((timeLeft % 3600) / 60);
     const seconds = timeLeft % 60;
     
-    timerElement.textContent = 
+    document.getElementById('timerValue').textContent = 
       `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, 1000);
 }
@@ -3742,52 +3646,34 @@ function cancelNormalWithdraw() {
 }
 
 function closeNormalModal() {
-  const modal = document.getElementById('normalModal');
-  if (!modal) return;
-  
-  modal.classList.remove('active');
+  document.getElementById('normalModal').classList.remove('active');
   document.body.style.overflow = 'auto';
 }
 
 function closeRequestModal() {
-  const modal = document.getElementById('requestModal');
-  if (!modal) return;
-  
-  modal.classList.remove('active');
+  document.getElementById('requestModal').classList.remove('active');
   document.body.style.overflow = 'auto';
 }
 
 function closeCommissionModal() {
-  const modal = document.getElementById('commissionModal');
-  if (!modal) return;
-  
-  modal.classList.remove('active');
+  document.getElementById('commissionModal').classList.remove('active');
   document.body.style.overflow = 'auto';
 }
 
 function toggleContinueButton() {
   const checkbox = document.getElementById('agreeCheckbox');
   const continueBtn = document.getElementById('continueBtn');
-  
-  if (checkbox && continueBtn) {
-    continueBtn.disabled = !checkbox.checked;
-  }
+  continueBtn.disabled = !checkbox.checked;
 }
 
 function showSupportMessage() {
-  const checkboxContainer = document.querySelector('.checkbox-container');
-  const modalFooter = document.querySelector('.modal-footer');
-  const supportMessage = document.getElementById('supportMessage');
-  
-  if (checkboxContainer) checkboxContainer.style.display = 'none';
-  if (modalFooter) modalFooter.style.display = 'none';
-  if (supportMessage) supportMessage.style.display = 'block';
+  document.querySelector('.checkbox-container').style.display = 'none';
+  document.querySelector('.modal-footer').style.display = 'none';
+  document.getElementById('supportMessage').style.display = 'block';
 }
 
 function showError() {
   const toast = document.getElementById("toast");
-  if (!toast) return;
-  
   toast.style.display = "block";
   setTimeout(() => {
     toast.style.display = "none";
@@ -3796,8 +3682,6 @@ function showError() {
 
 function showToast(message) {
   const toast = document.getElementById("toast");
-  if (!toast) return;
-  
   toast.textContent = message;
   toast.style.display = "block";
   setTimeout(() => {
