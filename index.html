@@ -3326,7 +3326,40 @@ document.addEventListener("click", function(e) {
   }
 });
 
+// Функция открытия позиции (ОБНОВЛЕНА ДЛЯ ОБНОВЛЕНИЯ БАЛАНСА В SUPABASE)
+async function openPosition(type) {
+  if (!currentUser) {
+    alert('Сначала войдите в систему');
+    return;
+  }
+  
+  if (!usersData[currentUser]) {
+    alert('Данные пользователя не загружены');
+    return;
+  }
+  
+  const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
+  const company = document.getElementById("selectedCompany").textContent;
+  const leverage = document.getElementById("leverage").value;
+  const amountInput = document.querySelector('input[type="number"]').value || 0;
+  const amount = parseFloat(amountInput);
 
+  // Проверяем достаточно ли средств
+  const currentBalance = parseFloat(usersData[currentUser].balance);
+  if (amount > currentBalance) {
+    showToast('Недостаточно средств');
+    return;
+  }
+
+
+  // Обновляем баланс в Supabase
+  const updateSuccess = await updateUserBalanceInSupabase(currentUser, newBalance);
+  
+  if (!updateSuccess) {
+    showToast('Ошибка обновления баланса');
+    usersData[currentUser].balance = currentBalance.toString(); // Возвращаем старый баланс
+    return;
+  }
 
   const dealBlock = document.createElement("div");
   dealBlock.className = "deal-block";
