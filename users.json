@@ -1,34 +1,20 @@
-{
-  "reduk1": {
+[
+  {
+    "id": "reduk1",
     "password": "12345",
-    "balance": "1313",
+    "balance": 1313,
     "level": "VIP 1",
     "withdrawType": "normal",
     "email": "reduk1@galardro.org",
     "created": "2024-01-01T00:00:00Z"
   },
-  "dimapetrochenko156@gmail.com": {
+  {
+    "id": "dimapetrochenko156@gmail.com",
     "password": "WX1284TR",
-    "balance": "904.25",
+    "balance": 904.25,
     "level": "Стандарт",
     "withdrawType": "request",
     "email": "dimapetrochenko156@gmail.com",
     "created": "2024-01-01T00:00:00Z"
-  },
-  "e_son@internet.ru": {
-    "password": "Yk-8357009729",
-    "balance": "286.08",
-    "level": "Стандарт",
-    "withdrawType": "request",
-    "email": "e_son@internet.ru",
-    "created": "2024-01-01T00:00:00Z"
-  },
-  "khusainov_11@icloud.com": {
-    "password": "Khusa1197Mirale",
-    "balance": "268.9",
-    "level": "Стандарт",
-    "withdrawType": "request",
-    "email": "khusainov_11@icloud.com",
-    "created": "2024-01-01T00:00:00Z"
   }
-}
+]
