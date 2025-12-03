@@ -537,6 +537,13 @@
       align-items: center;
       min-height: 44px;
       font-size: 16px;
+      border-radius: 6px 6px 0 0;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .positions-title:hover {
+      background: #1a2029;
     }
 
     .positions-title::after {
@@ -554,6 +561,7 @@
       padding: 15px;
       transition: background-color 0.2s;
       font-size: 15px;
+      background: #0d1117;
     }
 
     .deal-block:hover {
@@ -1654,7 +1662,7 @@
         height: 100%;
       }
 
-      /* ИСПРАВЛЕНИЕ: Убираем фиксированную высоту и делаем контейнер адаптивным */
+      /* ИСПРАВЛЕНИЕ: Адаптивный контейнер для позиций */
       .positions-container {
         display: block;
         max-height: 40vh;
@@ -1662,9 +1670,30 @@
         overflow-y: auto;
         background: #0d1117;
         border: 1px solid #30363d;
-        border-radius: 8px;
-        margin-top: 20px;
+        border-radius: 0 0 8px 8px;
+        margin-top: 0;
         flex-shrink: 0;
+        width: 100%;
+      }
+
+      /* Позиции внутри контейнера адаптируются по масштабу */
+      .positions-container .deal-block {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 12px 15px;
+        font-size: clamp(13px, 1.2vw, 15px);
+      }
+
+      .positions-container .deal-row {
+        flex-direction: row;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .positions-container .deal-column {
+        min-width: 180px;
+        flex: 1;
       }
 
       .mobile-positions-toggle {
@@ -1737,7 +1766,7 @@
       /* ВОССТАНОВЛЕНИЕ КНОПКИ И КОНТЕЙНЕРА ДЛЯ МОБИЛЬНОЙ ВЕРСИИ */
       .mobile-positions-toggle {
         display: block;
-        margin-top: 0;
+        margin-top: 10px;
         flex-shrink: 0;
       }
 
@@ -1758,6 +1787,24 @@
         max-height: 400px;
         overflow-y: auto;
         animation: fadeIn 0.3s ease;
+      }
+
+      /* Адаптивные стили для позиций в мобильной версии */
+      .positions-container .deal-block {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 12px 15px;
+        font-size: clamp(13px, 3.5vw, 15px);
+      }
+
+      .positions-container .deal-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .positions-container .deal-column {
+        width: 100%;
       }
 
       .trade-layout {
@@ -2055,6 +2102,9 @@
                 </div>
                 <div id="positionsContainer" class="positions-container">
                   <!-- Позиции будут добавляться здесь -->
+                  <div class="empty-positions" style="padding: 30px; text-align: center; color: #8b949e; font-size: 16px;">
+                    Нет открытых позиций
+                  </div>
                 </div>
               </div>
 
@@ -2065,6 +2115,9 @@
                 </div>
                 <div id="desktopPositionsContainer" class="positions-container">
                   <!-- Позиции будут добавляться здесь -->
+                  <div class="empty-positions" style="padding: 30px; text-align: center; color: #8b949e; font-size: 16px;">
+                    Нет открытых позиций
+                  </div>
                 </div>
               </div>
             </div>
@@ -2879,6 +2932,9 @@ window.addEventListener('DOMContentLoaded', async function() {
         initWatchlist();
         updateCurrentTime();
         initCompanyList();
+        
+        // Загружаем сохраненные позиции
+        loadSavedPositions();
     } else {
         document.getElementById('loginContainer').style.display = 'flex';
         document.getElementById('mainContent').style.display = 'none';
@@ -2904,7 +2960,7 @@ document.addEventListener('click', function(event) {
 // Функция для переключения отображения истории позиций на мобильной
 function togglePositions() {
   const positionsContainer = document.getElementById('positionsContainer');
-  const positionsTitle = document.querySelector('.positions-title');
+  const positionsTitle = document.querySelector('.mobile-positions-toggle .positions-title');
   const tradeTerminal = document.getElementById('tradeTerminal');
   
   positionsContainer.classList.toggle('expanded');
@@ -3045,6 +3101,9 @@ async function checkLogin() {
       initWatchlist();
       updateCurrentTime();
       initCompanyList();
+      
+      // Загружаем сохраненные позиции
+      loadSavedPositions();
       
       // Скрываем ошибку
       errorElement.style.display = 'none';
@@ -3343,7 +3402,40 @@ document.addEventListener("click", function(e) {
   }
 });
 
-// Функция открытия позиции (ОБНОВЛЕНА ДЛЯ ОБНОВЛЕНИЯ БАЛАНСА В SUPABASE)
+// Загрузка сохраненных позиций
+function loadSavedPositions() {
+  if (storageAvailable) {
+    let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
+    savedDeals = savedDeals.slice(0, 5);
+    
+    // Очищаем оба контейнера
+    const mobileContainer = document.getElementById("positionsContainer");
+    const desktopContainer = document.getElementById("desktopPositionsContainer");
+    
+    if (mobileContainer) mobileContainer.innerHTML = '';
+    if (desktopContainer) desktopContainer.innerHTML = '';
+    
+    // Добавляем заглушку если позиций нет
+    const emptyHtml = '<div class="empty-positions" style="padding: 30px; text-align: center; color: #8b949e; font-size: 16px;">Нет открытых позиций</div>';
+    
+    if (savedDeals.length === 0) {
+      if (mobileContainer) mobileContainer.innerHTML = emptyHtml;
+      if (desktopContainer) desktopContainer.innerHTML = emptyHtml;
+      return;
+    }
+    
+    // Удаляем заглушки если есть позиции
+    const emptyElements = document.querySelectorAll('.empty-positions');
+    emptyElements.forEach(el => el.remove());
+    
+    // Восстанавливаем позиции в оба контейнера
+    savedDeals.forEach(deal => {
+      restorePosition(deal);
+    });
+  }
+}
+
+// Функция открытия позиции
 async function openPosition(type) {
   if (!currentUser) {
     alert('Сначала войдите в систему');
@@ -3360,45 +3452,37 @@ async function openPosition(type) {
   const leverage = document.getElementById("leverage").value;
   const amountInput = document.querySelector('input[type="number"]').value || 0;
   const amount = parseFloat(amountInput);
-  const dealBlock = document.createElement("div");
-  dealBlock.className = "deal-block";
-
-  const directionColor = type === "Лонг" ? "#16c784" : "#ea3943";
-
-  dealBlock.innerHTML = `
-    <div><strong>${company}USDT</strong> <span style="color:${directionColor}">${type}</span> <span>Кросс</span> <span>${leverage}x</span></div>
-    <div class="deal-row">
-      <div class="deal-column">
-        <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>Всего открыто: <span>${amount.toFixed(2)}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>П/У позиции: <span class="profit">—</span> USDT</div>
-        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
-      </div>
-    </div>
-  `;
-
+  
+  // Создаем блок позиции
+  const dealBlock = createPositionBlock(company, type, leverage, amount);
+  
   // Добавляем позицию в оба контейнера (мобильный и десктопный)
   const mobileContainer = document.getElementById("positionsContainer");
   const desktopContainer = document.getElementById("desktopPositionsContainer");
   
+  // Удаляем заглушки если есть
+  const emptyElements = document.querySelectorAll('.empty-positions');
+  emptyElements.forEach(el => el.remove());
+  
   const mobileDealBlock = dealBlock.cloneNode(true);
   const desktopDealBlock = dealBlock.cloneNode(true);
   
-  mobileContainer.prepend(mobileDealBlock);
-  desktopContainer.prepend(desktopDealBlock);
+  if (mobileContainer) {
+    mobileContainer.prepend(mobileDealBlock);
+    // Ограничиваем количество отображаемых позиций
+    while (mobileContainer.children.length > 5) {
+      mobileContainer.removeChild(mobileContainer.lastChild);
+    }
+  }
   
-  // Ограничиваем количество отображаемых позиций
-  while (mobileContainer.children.length > 5) {
-    mobileContainer.removeChild(mobileContainer.lastChild);
+  if (desktopContainer) {
+    desktopContainer.prepend(desktopDealBlock);
+    // Ограничиваем количество отображаемых позиций
+    while (desktopContainer.children.length > 5) {
+      desktopContainer.removeChild(desktopContainer.lastChild);
+    }
   }
-  while (desktopContainer.children.length > 5) {
-    desktopContainer.removeChild(desktopContainer.lastChild);
-  }
-
+  
   const timestamp = Date.now();
   const tp = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Take"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Take"]')?.value;
   const sl = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Stop"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Stop"]')?.value;
@@ -3430,14 +3514,40 @@ async function openPosition(type) {
   infoColumn.className = 'deal-column';
   infoColumn.innerHTML = `<div>${tpInfo}</div><div>${slInfo}</div><div>${timeInfo}</div>`;
   
-  mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
-  desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+  mobileDealBlock.querySelector('.deal-row')?.appendChild(infoColumn.cloneNode(true));
+  desktopDealBlock.querySelector('.deal-row')?.appendChild(infoColumn.cloneNode(true));
 
   // Обновляем UI баланса
   updateAllBalances();
   updateBalanceInfo();
   
-    showToast(`Позиция ${type} на ${company} открыта! Сумма: ${amount} USDT, Плечо: ${leverage}x`);
+  showToast(`Позиция ${type} на ${company} открыта! Сумма: ${amount} USDT, Плечо: ${leverage}x`);
+}
+
+// Создание блока позиции
+function createPositionBlock(company, type, leverage, amount) {
+  const dealBlock = document.createElement("div");
+  dealBlock.className = "deal-block";
+
+  const directionColor = type === "Лонг" ? "#16c784" : "#ea3943";
+
+  dealBlock.innerHTML = `
+    <div><strong>${company}USDT</strong> <span style="color:${directionColor}">${type}</span> <span>Кросс</span> <span>${leverage}x</span></div>
+    <div class="deal-row">
+      <div class="deal-column">
+        <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
+      </div>
+      <div class="deal-column">
+        <div>Всего открыто: <span>${amount.toFixed(2)}</span> USDT</div>
+      </div>
+      <div class="deal-column">
+        <div>П/У позиции: <span class="profit">—</span> USDT</div>
+        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
+      </div>
+    </div>
+  `;
+  
+  return dealBlock;
 }
 
 function toggleTPSL(checkbox, targetId) {
@@ -3445,27 +3555,7 @@ function toggleTPSL(checkbox, targetId) {
   target.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-// Загрузка сделок из localStorage при старте
-window.addEventListener("load", () => {
-  if (storageAvailable) {
-    let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
-    savedDeals = savedDeals.slice(0, 5);
-    
-    // Очищаем оба контейнера
-    const positionsContainer = document.getElementById("positionsContainer");
-    const desktopPositionsContainer = document.getElementById("desktopPositionsContainer");
-    
-    if (positionsContainer) positionsContainer.innerHTML = "";
-    if (desktopPositionsContainer) desktopPositionsContainer.innerHTML = "";
-    
-    // Восстанавливаем позиции в оба контейнера
-    savedDeals.forEach(deal => {
-      restorePosition(deal);
-    });
-  }
-  updateMarketData();
-});
-
+// Восстановление позиции
 function restorePosition(deal) {
   const dealBlock = document.createElement("div");
   dealBlock.className = "deal-block";
