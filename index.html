@@ -1654,15 +1654,18 @@
         height: 100%;
       }
 
+      /* ИСПРАВЛЕНИЕ: Убираем фиксированную высоту и делаем контейнер адаптивным */
       .positions-container {
-    display: block;
-    height: calc(40vh); /* занимает 40% экрана */
-    overflow-y: auto;
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    margin-top: 20px;
-}
+        display: block;
+        max-height: 40vh;
+        min-height: 200px;
+        overflow-y: auto;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        margin-top: 20px;
+        flex-shrink: 0;
+      }
 
       .mobile-positions-toggle {
         display: none;
@@ -1670,6 +1673,10 @@
 
       .desktop-positions {
         display: block;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
       }
 
       .mobile-bottom-nav {
@@ -1715,13 +1722,23 @@
       }
 
       .chart-section {
-        height: 35vh;
+        height: 40vh;
         min-height: 250px;
         margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
       }
 
       .chart-section iframe {
         min-height: 200px;
+        flex: 1;
+      }
+
+      /* ВОССТАНОВЛЕНИЕ КНОПКИ И КОНТЕЙНЕРА ДЛЯ МОБИЛЬНОЙ ВЕРСИИ */
+      .mobile-positions-toggle {
+        display: block;
+        margin-top: 0;
+        flex-shrink: 0;
       }
 
       .positions-container {
@@ -1729,6 +1746,11 @@
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.3s ease;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        margin-top: 0;
       }
 
       .positions-container.expanded {
@@ -1736,11 +1758,6 @@
         max-height: 400px;
         overflow-y: auto;
         animation: fadeIn 0.3s ease;
-      }
-
-      .mobile-positions-toggle {
-        display: block;
-        margin-top: 20px;
       }
 
       .trade-layout {
@@ -2624,8 +2641,8 @@
 // КОНФИГУРАЦИЯ SUPABASE
 // =============================================
 const SUPABASE_CONFIG = {
-  url: 'https://wkukgnkfbxgpvlraczeu.supabase.co', // ЗАМЕНИТЕ НА ВАШ URL ИЗ SUPABASE
-  anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i', // ЗАМЕНИТЕ НА ВАШ ANON KEY ИЗ SUPABASE
+  url: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
+  anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i',
   tableName: 'app_users'
 };
 
