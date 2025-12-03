@@ -1,0 +1,32 @@
+name: Update Users from Admin Panel
+
+on:
+  repository_dispatch:
+    types: [update_users]
+
+jobs:
+  update-users:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Validate secret
+        run: |
+          if [ "${{ github.event.client_payload.secret }}" != "${{ secrets.ADMIN_WEBHOOK_SECRET }}" ]; then
+            echo "❌ Invalid secret"
+            exit 1
+          fi
+      
+      - name: Update users.json
+        run: |
+          echo '${{ github.event.client_payload.users_data }}' > users.json
+          echo "✅ Users data updated"
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add users.json
+          git commit -m "Admin: Update users data"
+          git push
