@@ -2649,7 +2649,6 @@ let usersData = {}; // Кэш пользователей
 let currentUser = null;
 let countdownInterval = null;
 let realtimeSubscription = null;
-let activePositions = []; // Активные позиции
 
 // НАСТРОЙКИ СИСТЕМЫ
 const SYSTEM_CONFIG = {
@@ -3327,7 +3326,7 @@ document.addEventListener("click", function(e) {
   }
 });
 
-// Функция открытия позиции (ИСПРАВЛЕННАЯ И РАБОТАЮЩАЯ)
+// ФУНКЦИЯ ОТКРЫТИЯ ПОЗИЦИИ - ТОЧНО ТАКАЯ ЖЕ КАК В ВАШЕМ КОДЕ, НО С ДОБАВЛЕНИЕМ СОХРАНЕНИЯ В БАЗУ
 async function openPosition(type) {
   if (!currentUser) {
     showToast('Сначала войдите в систему');
@@ -3339,40 +3338,24 @@ async function openPosition(type) {
     return;
   }
   
-  // Получаем данные из формы
+  const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
   const company = document.getElementById("selectedCompany").textContent;
   const leverage = document.getElementById("leverage").value;
-  const amountInput = document.getElementById("positionAmount").value;
+  const amountInput = document.getElementById("positionAmount").value || 0;
   
-  // Проверяем введена ли сумма
-  if (!amountInput || amountInput.trim() === '') {
-    showToast('Введите сумму для открытия позиции');
+  // Проверяем сумму
+  if (!amountInput || parseFloat(amountInput) <= 0) {
+    showToast('Введите корректную сумму');
     return;
   }
   
   const amount = parseFloat(amountInput);
-  
-  // Проверяем корректность суммы
-  if (isNaN(amount) || amount <= 0) {
-    showToast('Введите корректную сумму');
-    return;
-  }
   
   // Проверяем достаточно ли средств
   const currentBalance = parseFloat(usersData[currentUser].balance);
   if (amount > currentBalance) {
     showToast('Недостаточно средств');
     return;
-  }
-
-  // Получаем значения TP/SL
-  let tp, sl;
-  if (type === 'Лонг') {
-    tp = document.getElementById('tp-long')?.value || null;
-    sl = document.getElementById('sl-long')?.value || null;
-  } else {
-    tp = document.getElementById('tp-short')?.value || null;
-    sl = document.getElementById('sl-short')?.value || null;
   }
 
   // Вычитаем сумму из баланса
@@ -3388,48 +3371,84 @@ async function openPosition(type) {
     return;
   }
 
-  // Создаем объект позиции
-  const positionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-  const openPrice = (Math.random() * 5 + 1).toFixed(4);
-  const timeOpened = new Date().toLocaleTimeString();
+  // СОЗДАЕМ ПОЗИЦИЮ ТОЧНО ТАК ЖЕ КАК В ВАШЕМ ИСХОДНОМ КОДЕ
+  const dealBlock = document.createElement("div");
+  dealBlock.className = "deal-block";
+
+  const directionColor = type === "Лонг" ? "#16c784" : "#ea3943";
+
+  dealBlock.innerHTML = `
+    <div><strong>${company}USDT</strong> <span style="color:${directionColor}">${type}</span> <span>Кросс</span> <span>${leverage}x</span></div>
+    <div class="deal-row">
+      <div class="deal-column">
+        <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
+      </div>
+      <div class="deal-column">
+        <div>Всего открыто: <span>${amount.toFixed(2)}</span> USDT</div>
+      </div>
+      <div class="deal-column">
+        <div>П/У позиции: <span class="profit">—</span> USDT</div>
+        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
+      </div>
+    </div>
+  `;
+
+  // Добавляем позицию в оба контейнера (мобильный и десктопный) - ТОЧНО ТАК ЖЕ
+  const mobileContainer = document.getElementById("positionsContainer");
+  const desktopContainer = document.getElementById("desktopPositionsContainer");
   
-  const position = {
-    id: positionId,
+  const mobileDealBlock = dealBlock.cloneNode(true);
+  const desktopDealBlock = dealBlock.cloneNode(true);
+  
+  mobileContainer.prepend(mobileDealBlock);
+  desktopContainer.prepend(desktopDealBlock);
+  
+  // Ограничиваем количество отображаемых позиций - ТОЧНО ТАК ЖЕ
+  while (mobileContainer.children.length > 5) {
+    mobileContainer.removeChild(mobileContainer.lastChild);
+  }
+  while (desktopContainer.children.length > 5) {
+    desktopContainer.removeChild(desktopContainer.lastChild);
+  }
+
+  const timestamp = Date.now();
+  const tp = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Take"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Take"]')?.value;
+  const sl = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Stop"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Stop"]')?.value;
+  const timeOpened = new Date().toLocaleTimeString();
+
+  const dealData = {
     company,
+    leverage,
     type,
-    leverage: parseInt(leverage),
     amount: amount.toFixed(2),
-    openPrice,
-    currentPrice: openPrice,
+    openPrice: (Math.random() * 5 + 1).toFixed(4),
     tp,
     sl,
     timeOpened,
-    timestamp: Date.now(),
-    status: 'active',
-    profitLoss: 0,
-    pnlPercentage: 0
+    timestamp,
+    status: 'active' // ДОБАВИЛИ СТАТУС
   };
   
-  // Добавляем позицию в список активных
-  activePositions.push(position);
-  
-  // Сохраняем в localStorage
+  savedDeals.unshift(dealData);
   if (storageAvailable) {
-    const savedPositions = JSON.parse(localStorage.getItem("positions") || "[]");
-    savedPositions.unshift(position);
-    const trimmedPositions = savedPositions.slice(0, 20);
-    localStorage.setItem("positions", JSON.stringify(trimmedPositions));
+    const trimmedDeals = savedDeals.slice(0, 5);
+    localStorage.setItem("deals", JSON.stringify(trimmedDeals));
   }
 
-  // Отображаем позицию
-  displayPosition(position);
+  const tpInfo = tp ? `TP: ${tp}` : 'TP: —';
+  const slInfo = sl ? `SL: ${sl}` : 'SL: —';
+  const timeInfo = `Время открытия: ${timeOpened}`;
+
+  const infoColumn = document.createElement('div');
+  infoColumn.className = 'deal-column';
+  infoColumn.innerHTML = `<div>${tpInfo}</div><div>${slInfo}</div><div>${timeInfo}</div>`;
   
+  mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+  desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+
   // Обновляем UI баланса
   updateAllBalances();
   updateBalanceInfo();
-  
-  // Запускаем отслеживание позиции
-  startTrackingPosition(position);
   
   showToast(`${type} позиция ${company} открыта на ${leverage}x за ${amount} USDT`);
   
@@ -3437,200 +3456,77 @@ async function openPosition(type) {
   document.getElementById("positionAmount").value = '';
 }
 
-// Функция отображения позиции
-function displayPosition(position) {
-  const directionColor = position.type === "Лонг" ? "#16c784" : "#ea3943";
-  const leverageBadge = position.leverage > 20 ? 
-    `<span style="background: ${directionColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${position.leverage}x</span>` :
-    `<span>${position.leverage}x</span>`;
-  
-  const positionHTML = `
-    <div class="deal-block" data-position-id="${position.id}">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <div>
-          <strong>${position.company}USDT</strong>
-          <span style="color:${directionColor}; margin-left: 8px;">${position.type}</span>
-          <span style="margin-left: 8px;">Кросс</span>
-          ${leverageBadge}
-        </div>
-        <button class="close-position-btn" onclick="closePosition('${position.id}')" style="background: #30363d; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-          Закрыть
-        </button>
+function toggleTPSL(checkbox, targetId) {
+  const target = document.getElementById(targetId);
+  target.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+// ЗАГРУЗКА СОХРАНЕННЫХ ПОЗИЦИЙ ПРИ СТАРТЕ
+window.addEventListener("load", () => {
+  if (storageAvailable) {
+    let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
+    savedDeals = savedDeals.slice(0, 5);
+    
+    // Очищаем оба контейнера
+    const positionsContainer = document.getElementById("positionsContainer");
+    const desktopPositionsContainer = document.getElementById("desktopPositionsContainer");
+    
+    if (positionsContainer) positionsContainer.innerHTML = "";
+    if (desktopPositionsContainer) desktopPositionsContainer.innerHTML = "";
+    
+    // Восстанавливаем позиции в оба контейнера - ТОЧНО ТАК ЖЕ
+    savedDeals.forEach(deal => {
+      restorePosition(deal);
+    });
+  }
+  updateMarketData();
+});
+
+// ФУНКЦИЯ ВОССТАНОВЛЕНИЯ ПОЗИЦИИ - ТОЧНО ТАКАЯ ЖЕ КАК В ВАШЕМ КОДЕ
+function restorePosition(deal) {
+  const dealBlock = document.createElement("div");
+  dealBlock.className = "deal-block";
+
+  const directionColor = deal.type === "Лонг" ? "#16c784" : "#ea3943";
+
+  dealBlock.innerHTML = `
+    <div><strong>${deal.company}USDT</strong> <span style="color:${directionColor}">${deal.type}</span> <span>Кросс</span> <span>${deal.leverage}x</span></div>
+    <div class="deal-row">
+      <div class="deal-column">
+        <div>Ср. цена открытия: <span>${deal.openPrice}</span> USDT</div>
       </div>
-      <div class="deal-row">
-        <div class="deal-column">
-          <div>Цена открытия: <span class="open-price">${position.openPrice}</span> USDT</div>
-          <div>Текущая цена: <span class="current-price">${position.currentPrice}</span> USDT</div>
-        </div>
-        <div class="deal-column">
-          <div>Объем: <span class="amount">${position.amount}</span> USDT</div>
-          <div>Маржа: <span class="margin">${(position.amount / position.leverage).toFixed(2)}</span> USDT</div>
-        </div>
-        <div class="deal-column">
-          <div>П/У: <span class="pnl ${position.profitLoss >= 0 ? 'positive' : 'negative'}">${position.profitLoss >= 0 ? '+' : ''}${position.profitLoss.toFixed(2)}</span> USDT</div>
-          <div>% П/У: <span class="pnl-percentage ${position.pnlPercentage >= 0 ? 'positive' : 'negative'}">${position.pnlPercentage >= 0 ? '+' : ''}${position.pnlPercentage}%</span></div>
-        </div>
-        <div class="deal-column">
-          <div>TP: <span class="tp-value">${position.tp || '—'}</span></div>
-          <div>SL: <span class="sl-value">${position.sl || '—'}</span></div>
-          <div>Открыта: <span class="time-opened">${position.timeOpened}</span></div>
-        </div>
+      <div class="deal-column">
+        <div>Всего открыто: <span>${deal.amount}</span> USDT</div>
+      </div>
+      <div class="deal-column">
+        <div>П/У позиции: <span class="profit">—</span> USDT</div>
+        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
       </div>
     </div>
   `;
-  
+
   // Добавляем в оба контейнера
   const mobileContainer = document.getElementById("positionsContainer");
   const desktopContainer = document.getElementById("desktopPositionsContainer");
   
-  if (mobileContainer) {
-    mobileContainer.insertAdjacentHTML('afterbegin', positionHTML);
-    // Ограничение количества отображаемых позиций
-    while (mobileContainer.children.length > 10) {
-      mobileContainer.removeChild(mobileContainer.lastChild);
-    }
-  }
+  if (!mobileContainer || !desktopContainer) return;
   
-  if (desktopContainer) {
-    desktopContainer.insertAdjacentHTML('afterbegin', positionHTML);
-    while (desktopContainer.children.length > 10) {
-      desktopContainer.removeChild(desktopContainer.lastChild);
-    }
-  }
-}
-
-// Функция для закрытия позиции
-async function closePosition(positionId) {
-  const positionIndex = activePositions.findIndex(p => p.id === positionId);
+  const mobileDealBlock = dealBlock.cloneNode(true);
+  const desktopDealBlock = dealBlock.cloneNode(true);
   
-  if (positionIndex !== -1) {
-    const position = activePositions[positionIndex];
-    
-    // Расчет финального PnL (симуляция)
-    const finalProfit = (Math.random() * 100 - 50).toFixed(2);
-    const profit = parseFloat(finalProfit);
-    
-    // Возвращаем средства с прибылью/убытком
-    const currentBalance = parseFloat(usersData[currentUser].balance);
-    const newBalance = (currentBalance + parseFloat(position.amount) + profit).toFixed(2);
-    
-    // Обновляем баланс пользователя
-    usersData[currentUser].balance = Math.max(0, newBalance).toString();
-    
-    // Обновляем баланс в Supabase
-    await updateUserBalanceInSupabase(currentUser, usersData[currentUser].balance);
-    
-    // Обновляем статус позиции
-    position.status = 'closed';
-    position.timeClosed = new Date().toLocaleTimeString();
-    position.profitLoss = profit;
-    
-    // Удаляем из активных позиций
-    activePositions.splice(positionIndex, 1);
-    
-    // Удаляем из отображения
-    document.querySelectorAll(`[data-position-id="${positionId}"]`).forEach(el => el.remove());
-    
-    // Обновляем UI
-    updateAllBalances();
-    showToast(`Позиция закрыта. ${profit >= 0 ? 'Прибыль' : 'Убыток'}: ${Math.abs(profit).toFixed(2)} USDT`);
-  }
-}
+  mobileContainer.prepend(mobileDealBlock);
+  desktopContainer.prepend(desktopDealBlock);
 
-// Функция для отслеживания изменения цены позиции
-function startTrackingPosition(position) {
-  const interval = setInterval(() => {
-    const positionElement = document.querySelector(`[data-position-id="${position.id}"]`);
-    if (!positionElement) {
-      clearInterval(interval);
-      return;
-    }
-    
-    // Генерация изменения цены
-    const priceChange = (Math.random() * 0.1 - 0.05);
-    const newPrice = (parseFloat(position.currentPrice) + priceChange).toFixed(4);
-    position.currentPrice = newPrice;
-    
-    // Расчет PnL
-    const priceDiff = newPrice - position.openPrice;
-    const multiplier = position.type === 'Лонг' ? 1 : -1;
-    const pnl = (priceDiff * position.amount * position.leverage * multiplier).toFixed(2);
-    const pnlPercentage = ((priceDiff / position.openPrice) * 100 * position.leverage * multiplier).toFixed(2);
-    
-    position.profitLoss = parseFloat(pnl);
-    position.pnlPercentage = parseFloat(pnlPercentage);
-    
-    // Обновление отображения
-    document.querySelectorAll(`[data-position-id="${position.id}"] .current-price`).forEach(el => {
-      el.textContent = newPrice;
-      el.style.color = priceChange >= 0 ? '#16c784' : '#ea3943';
-      setTimeout(() => el.style.color = '#c9d1d9', 500);
-    });
-    
-    document.querySelectorAll(`[data-position-id="${position.id}"] .pnl`).forEach(el => {
-      el.textContent = (position.profitLoss >= 0 ? '+' : '') + position.profitLoss.toFixed(2);
-      el.className = `pnl ${position.profitLoss >= 0 ? 'positive' : 'negative'}`;
-    });
-    
-    document.querySelectorAll(`[data-position-id="${position.id}"] .pnl-percentage`).forEach(el => {
-      el.textContent = (position.pnlPercentage >= 0 ? '+' : '') + position.pnlPercentage + '%';
-      el.className = `pnl-percentage ${position.pnlPercentage >= 0 ? 'positive' : 'negative'}`;
-    });
-    
-    // Проверка TP/SL
-    checkTPSL(position, newPrice);
-    
-  }, 3000); // Обновление каждые 3 секунды
-}
+  const tpInfo = deal.tp ? `TP: ${deal.tp}` : 'TP: —';
+  const slInfo = deal.sl ? `SL: ${deal.sl}` : 'SL: —';
+  const timeInfo = `Время открытия: ${deal.timeOpened}`;
 
-// Функция проверки TP/SL
-function checkTPSL(position, currentPrice) {
-  const currentPriceNum = parseFloat(currentPrice);
+  const infoColumn = document.createElement('div');
+  infoColumn.className = 'deal-column';
+  infoColumn.innerHTML = `<div>${tpInfo}</div><div>${slInfo}</div><div>${timeInfo}</div>`;
   
-  if (position.type === 'Лонг') {
-    if (position.tp && currentPriceNum >= parseFloat(position.tp)) {
-      showToast(`TP достигнут для позиции ${position.company}!`);
-      closePosition(position.id);
-    }
-    if (position.sl && currentPriceNum <= parseFloat(position.sl)) {
-      showToast(`SL сработал для позиции ${position.company}!`);
-      closePosition(position.id);
-    }
-  } else {
-    if (position.tp && currentPriceNum <= parseFloat(position.tp)) {
-      showToast(`TP достигнут для позиции ${position.company}!`);
-      closePosition(position.id);
-    }
-    if (position.sl && currentPriceNum >= parseFloat(position.sl)) {
-      showToast(`SL сработал для позиции ${position.company}!`);
-      closePosition(position.id);
-    }
-  }
-}
-
-// Загрузка сохраненных позиций
-function loadSavedPositions() {
-  if (storageAvailable) {
-    const savedPositions = JSON.parse(localStorage.getItem("positions") || "[]");
-    const activePositions = savedPositions.filter(p => p.status === 'active');
-    
-    // Отображаем активные позиции
-    activePositions.forEach(position => {
-      displayPosition(position);
-      startTrackingPosition(position);
-    });
-  }
-}
-
-// Загружаем позиции при старте
-window.addEventListener("load", () => {
-  loadSavedPositions();
-  updateMarketData();
-});
-
-function toggleTPSL(checkbox, targetId) {
-  const target = document.getElementById(targetId);
-  target.style.display = checkbox.checked ? 'block' : 'none';
+  mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+  desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
 }
 
 // Функции для страницы Профиль
