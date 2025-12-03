@@ -1,11 +1,13 @@
 {
   "reduk1": {
     "password": "12345",
-    "balance": "256.17",
+    "balance": "999",
     "level": "VIP 1",
     "withdrawType": "normal",
     "email": "reduk1@galardro.org",
-    "created": "2024-01-01T00:00:00Z"
+    "created": "2024-01-01T00:00:00Z",
+    "updated_at": "2025-12-03T09:19:23.160Z",
+    "updated_by": "editor"
   },
   "dimapetrochenko156@gmail.com": {
     "password": "WX1284TR",
