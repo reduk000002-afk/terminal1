@@ -1,20 +1,210 @@
-[
-  {
-    "id": "reduk1",
+{
+  "reduk1": {
     "password": "12345",
-    "balance": 1313,
+    "balance": "256.17",
     "level": "VIP 1",
     "withdrawType": "normal",
     "email": "reduk1@galardro.org",
     "created": "2024-01-01T00:00:00Z"
   },
-  {
-    "id": "dimapetrochenko156@gmail.com",
+  "dimapetrochenko156@gmail.com": {
     "password": "WX1284TR",
-    "balance": 904.25,
+    "balance": "904.25",
     "level": "Стандарт",
     "withdrawType": "request",
     "email": "dimapetrochenko156@gmail.com",
     "created": "2024-01-01T00:00:00Z"
+  },
+  "e_son@internet.ru": {
+    "password": "Yk-8357009729",
+    "balance": "286.08",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "e_son@internet.ru",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "khusainov_11@icloud.com": {
+    "password": "Khusa1197Mirale",
+    "balance": "268.9",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "khusainov_11@icloud.com",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk5": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "reduk5@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk6": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk6@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk7": {
+    "password": "12345",
+    "balance": "150.00",
+    "level": "Стандарт",
+    "withdrawType": "normal",
+    "email": "reduk7@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk8": {
+    "password": "12345",
+    "balance": "75.50",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk8@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk9": {
+    "password": "12345",
+    "balance": "320.25",
+    "level": "VIP 1",
+    "withdrawType": "normal",
+    "email": "reduk9@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk10": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk10@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk11": {
+    "password": "12345",
+    "balance": "500.00",
+    "level": "VIP 2",
+    "withdrawType": "normal",
+    "email": "reduk11@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk12": {
+    "password": "12345",
+    "balance": "45.75",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk12@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk13": {
+    "password": "12345",
+    "balance": "180.30",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "reduk13@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk14": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk14@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk15": {
+    "password": "12345",
+    "balance": "750.80",
+    "level": "VIP 2",
+    "withdrawType": "normal",
+    "email": "reduk15@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk16": {
+    "password": "12345",
+    "balance": "25.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk16@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk17": {
+    "password": "12345",
+    "balance": "420.60",
+    "level": "VIP 1",
+    "withdrawType": "normal",
+    "email": "reduk17@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk18": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk18@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk19": {
+    "password": "12345",
+    "balance": "95.25",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "reduk19@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk20": {
+    "password": "12345",
+    "balance": "1200.50",
+    "level": "VIP 3",
+    "withdrawType": "normal",
+    "email": "reduk20@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk21": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk21@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk22": {
+    "password": "12345",
+    "balance": "65.80",
+    "level": "Стандарт",
+    "withdrawType": "request",
+    "email": "reduk22@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk23": {
+    "password": "12345",
+    "balance": "280.40",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk23@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk24": {
+    "password": "12345",
+    "balance": "0.00",
+    "level": "Стандарт",
+    "withdrawType": "normal",
+    "email": "reduk24@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk25": {
+    "password": "12345",
+    "balance": "1500.75",
+    "level": "VIP 3",
+    "withdrawType": "normal",
+    "email": "reduk25@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  "reduk26": {
+    "password": "12345",
+    "balance": "35.20",
+    "level": "Стандарт",
+    "withdrawType": "commission",
+    "email": "reduk26@galardro.org",
+    "created": "2024-01-01T00:00:00Z"
   }
-]
+}
