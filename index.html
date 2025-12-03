@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Фьючерсный терминал</title>
   <style>
-    /* ВСЕ СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
     * {
       box-sizing: border-box;
     }
@@ -1423,7 +1422,6 @@
       background-color: #161b22;
     }
 
-    /* Стили для обычного вывода */
     .normal-withdraw-info {
       background: rgba(22, 199, 132, 0.1);
       border: 1px solid rgba(22, 199, 132, 0.3);
@@ -1501,7 +1499,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* НОВЫЕ СТИЛИ ДЛЯ МОБИЛЬНОЙ НАВИГАЦИИ ВНИЗУ */
     .mobile-bottom-nav {
       position: fixed;
       bottom: 0;
@@ -1548,7 +1545,6 @@
       filter: brightness(1);
     }
 
-    /* Стили для новой модалки request */
     .request-buttons {
       display: flex;
       flex-direction: column;
@@ -1882,6 +1878,7 @@
         <span class="balance-label"></span>
         <span class="balance-value positive" id="pnlValue"></span>
       </div>
+      <button id="refreshBalanceBtn" style="background: #1f6feb; color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; margin-left: 10px; font-size: 14px; min-width: 44px; min-height: 30px;" title="Обновить баланс">🔄</button>
     </div>
     <div class="user-menu">
       <span id="userLevel">Уровень: 1</span>
@@ -2086,7 +2083,7 @@
                 <option>Триггер</option>
               </select>
               <div class="info-line">Режим активов: Один актив</div>
-              <div class="info-line">Дост.: 0.0000 USDT</div>
+              <div class="info-line">Дост.: <span id="availableBalanceTrade">0.00</span> USDT</div>
               <input type="number" placeholder="Стоимость" />
               <select>
                 <option selected>USDT</option>
@@ -2619,248 +2616,175 @@
 
 <script>
 // =============================================
-// ЦЕНТРАЛИЗОВАННАЯ СИСТЕМА УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+// REAL-TIME ОБНОВЛЕНИЕ БАЛАНСОВ С GITHUB
 // =============================================
 
-// ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ (загружаются из GitHub)
-let usersData = {}; // Начнем с пустого объекта
+// Настройки для GitHub API (ЗАМЕНИ НА СВОИ!)
+const GITHUB_CONFIG = {
+    owner: 'reduk000002-afk', // ← ТВОЙ ЛОГИН
+    repo: 'terminal1', // ← ТВОЙ РЕПОЗИТОРИЙ
+    path: 'users.json'
+};
+
+// Данные пользователей (загружаются из GitHub)
+let usersData = {};
+let currentUser = null;
+let countdownInterval = null;
+let autoRefreshInterval = null;
+
+// Резервные данные на случай если GitHub недоступен
+const FALLBACK_DATA = {
+    "reduk1": { 
+        "password": "12345", 
+        "balance": "256.17",
+        "level": "VIP 1",
+        "withdrawType": "normal",
+        "email": "reduk1@galardro.org",
+        "created": "2024-01-01T00:00:00Z"
+    },
+    "dimapetrochenko156@gmail.com": { 
+        "password": "WX1284TR", 
+        "balance": "904.25",
+        "level": "Стандарт",
+        "withdrawType": "request",
+        "email": "dimapetrochenko156@gmail.com",
+        "created": "2024-01-01T00:00:00Z"
+    },
+    "e_son@internet.ru": { 
+        "password": "Yk-8357009729", 
+        "balance": "286.08",
+        "level": "Стандарт",
+        "withdrawType": "request",
+        "email": "e_son@internet.ru",
+        "created": "2024-01-01T00:00:00Z"
+    }
+};
 
 // Функция загрузки данных из GitHub
 async function loadUsersData() {
     try {
-        const response = await fetch('https://raw.githubusercontent.com/reduk000002-afk/terminal1/main/users.json');
-        usersData = await response.json();
-        console.log('Данные пользователей загружены из GitHub');
-    } catch (error) {
-        console.error('Ошибка загрузки данных из GitHub:', error);
-        // Используем локальные данные как резерв
-        usersData = {
-            // ========================
-            // БАЛАНСЫ ПОЛЬЗОВАТЕЛЕЙ
-            // ========================
-            
-            // Редук 1 - основной аккаунт (ТИП NORMAL)
-            "reduk1": { 
-                password: "12345", 
-                balance: "256.17",
-                level: "VIP 1",
-                withdrawType: "normal",  // ← НОВЫЙ ТИП
-                email: "reduk1@galardro.org"
-            },
-            
-            // Редук 2 - тестовый (ТИП COMMISSION)
-            "dimapetrochenko156@gmail.com": { 
-                password: "WX1284TR", 
-                balance: "904.25",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "dimapetrochenko156@gmail.com"
-            },
-            
-            // Редук 3 - дополнительный (ТИП REQUEST)
-            "e_son@internet.ru": { 
-                password: "Yk-8357009729", 
-                balance: "286.08",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "e_son@internet.ru"
-            },
-            
-            // Редук 4 - резервный (ТИП NORMAL)
-            "khusainov_11@icloud.com": { 
-                password: "Khusa1197Mirale", 
-                balance: "268.9",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "khusainov_11@icloud.com"
-            },
-            
-            // Редук 5 - запасной (ТИП REQUEST)
-            "reduk5": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk5@galardro.org"
-            },
-            
-            // Редук 6 - дополнительный (ТИП COMMISSION)
-            "reduk6": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk6@galardro.org"
-            },
-            
-            // ========================
-            // ДОПОЛНИТЕЛЬНЫЕ ПОЛЬЗОВАТЕЛИ
-            // ========================
-            
-            "reduk7": { 
-                password: "12345", 
-                balance: "150.00",
-                level: "Стандарт",
-                withdrawType: "normal",
-                email: "reduk7@galardro.org"
-            },
-            
-            "reduk8": { 
-                password: "12345", 
-                balance: "75.50",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk8@galardro.org"
-            },
-            
-            "reduk9": { 
-                password: "12345", 
-                balance: "320.25",
-                level: "VIP 1",
-                withdrawType: "normal",
-                email: "reduk9@galardro.org"
-            },
-            
-            "reduk10": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk10@galardro.org"
-            },
-            
-            "reduk11": { 
-                password: "12345", 
-                balance: "500.00",
-                level: "VIP 2",
-                withdrawType: "normal",
-                email: "reduk11@galardro.org"
-            },
-            
-            "reduk12": { 
-                password: "12345", 
-                balance: "45.75",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk12@galardro.org"
-            },
-            
-            "reduk13": { 
-                password: "12345", 
-                balance: "180.30",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk13@galardro.org"
-            },
-            
-            "reduk14": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk14@galardro.org"
-            },
-            
-            "reduk15": { 
-                password: "12345", 
-                balance: "750.80",
-                level: "VIP 2",
-                withdrawType: "normal",
-                email: "reduk15@galardro.org"
-            },
-            
-            "reduk16": { 
-                password: "12345", 
-                balance: "25.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk16@galardro.org"
-            },
-            
-            "reduk17": { 
-                password: "12345", 
-                balance: "420.60",
-                level: "VIP 1",
-                withdrawType: "normal",
-                email: "reduk17@galardro.org"
-            },
-            
-            "reduk18": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk18@galardro.org"
-            },
-            
-            "reduk19": { 
-                password: "12345", 
-                balance: "95.25",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk19@galardro.org"
-            },
-            
-            "reduk20": { 
-                password: "12345", 
-                balance: "1200.50",
-                level: "VIP 3",
-                withdrawType: "normal",
-                email: "reduk20@galardro.org"
-            },
-            
-            "reduk21": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk21@galardro.org"
-            },
-            
-            "reduk22": { 
-                password: "12345", 
-                balance: "65.80",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk22@galardro.org"
-            },
-            
-            "reduk23": { 
-                password: "12345", 
-                balance: "280.40",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk23@galardro.org"
-            },
-            
-            "reduk24": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "normal",
-                email: "reduk24@galardro.org"
-            },
-            
-            "reduk25": { 
-                password: "12345", 
-                balance: "1500.75",
-                level: "VIP 3",
-                withdrawType: "normal",
-                email: "reduk25@galardro.org"
-            },
-            
-            "reduk26": { 
-                password: "12345", 
-                balance: "35.20",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk26@galardro.org"
+        console.log('🔄 Загрузка данных из GitHub...');
+        
+        // Используем raw.githubusercontent.com для мгновенного доступа
+        const response = await fetch(
+            `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/main/${GITHUB_CONFIG.path}?t=${Date.now()}`,
+            {
+                cache: 'no-store', // отключаем кеширование
+                headers: {
+                    'Accept': 'application/json'
+                }
             }
-        };
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        usersData = await response.json();
+        console.log('✅ Данные успешно загружены из GitHub');
+        
+        // Обновляем интерфейс если пользователь авторизован
+        if (currentUser && usersData[currentUser]) {
+            updateAllBalances();
+            updateUserData();
+        }
+        
+        showUpdateNotification('✅ Баланс обновлён');
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки данных:', error);
+        
+        // Используем резервные данные
+        console.log('🔄 Использую резервные данные...');
+        usersData = FALLBACK_DATA;
+        
+        if (currentUser && usersData[currentUser]) {
+            updateAllBalances();
+            updateUserData();
+        }
+        
+        showUpdateNotification('⚠️ Используются локальные данные');
     }
 }
 
-// НАСТРОЙКИ СИСТЕМЫ
+// Функция принудительного обновления
+async function forceRefreshData() {
+    await loadUsersData();
+}
+
+// Автообновление данных каждые 10 секунд
+function startAutoRefresh() {
+    console.log('🔄 Запуск автообновления (каждые 10 секунд)');
+    
+    // Загружаем сразу при старте
+    loadUsersData();
+    
+    // Затем каждые 10 секунд
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    autoRefreshInterval = setInterval(async () => {
+        try {
+            await loadUsersData();
+        } catch (error) {
+            console.log('Автообновление:', error.message);
+        }
+    }, 10000); // 10 секунд
+}
+
+// Показываем уведомление об обновлении
+function showUpdateNotification(message) {
+    // Создаем уведомление в правом нижнем углу
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #16c784;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9999;
+        animation: fadeInOut 2s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 300px;
+        word-break: break-word;
+    `;
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'fadeOut 0.5s ease';
+        setTimeout(() => notification.remove(), 500);
+    }, 1500);
+}
+
+// Стили для анимации уведомлений
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(20px) translateX(20px); }
+        10% { opacity: 1; transform: translateY(0) translateX(0); }
+        90% { opacity: 1; transform: translateY(0) translateX(0); }
+        100% { opacity: 0; transform: translateY(20px) translateX(20px); }
+    }
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+`;
+document.head.appendChild(notificationStyles);
+
+// =============================================
+// СИСТЕМА УПРАВЛЕНИЯ
+// =============================================
+
 const SYSTEM_CONFIG = {
     ADMIN_SECRET: 'galardro_admin_2024',
     UPDATE_INTERVAL: 300,
@@ -2870,12 +2794,9 @@ const SYSTEM_CONFIG = {
     }
 };
 
-// Текущий пользователь
-let currentUser = null;
-let countdownInterval = null;
-
 // Загружаем данные при старте
 window.addEventListener('DOMContentLoaded', async function() {
+    // Загружаем данные из GitHub
     await loadUsersData();
     
     // Проверяем авторизацию
@@ -2895,7 +2816,17 @@ window.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('loginContainer').style.display = 'flex';
         document.getElementById('mainContent').style.display = 'none';
     }
+    
+    // Запускаем автообновление
+    startAutoRefresh();
+    
+    // Инициализируем кнопку обновления
+    document.getElementById('refreshBalanceBtn').addEventListener('click', forceRefreshData);
 });
+
+// =============================================
+// ФУНКЦИИ ИНТЕРФЕЙСА
+// =============================================
 
 // Функция для переключения меню
 function toggleMenu() {
@@ -2964,761 +2895,846 @@ function showPage(page) {
 
 // Обновление всех балансов на страницах
 function updateAllBalances() {
-  if (!currentUser) return;
-  
-  const user = usersData[currentUser];
-  const balance = user.balance;
-  
-  // Хедер
-  document.getElementById('balanceValue').textContent = balance + ' USDT';
-  
-  // Депозит страница
-  document.getElementById('depositTotalBalance').innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  document.getElementById('availableBalance').textContent = balance + ' USDT';
-  
-  // Вывод страница
-  document.getElementById('withdrawTotalBalance').innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  document.getElementById('withdrawBalanceTotal').textContent = balance + ' USDT';
-  document.getElementById('withdrawBalanceAvailable').textContent = balance + ' USDT';
-  
-  // Торговля страница
-  const availableElement = document.querySelector('.info-line:nth-child(2)');
-  if (availableElement) {
-    availableElement.textContent = `Дост.: ${balance} USDT`;
-  }
-}
-
-// Проверка входа
-function checkLogin() {
-  // Проверяем загружены ли данные
-  if (Object.keys(usersData).length === 0) {
-    alert('Данные загружаются... Попробуйте снова через секунду');
-    return;
-  }
-  
-  const login = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  const errorElement = document.getElementById('loginError');
-  
-  // Проверяем по нашим пользователям
-  if (usersData[login] && usersData[login].password === password) {
-    currentUser = login;
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', login);
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    updateUserData();
-    updateAllBalances();
-    initWatchlist();
-    updateCurrentTime();
-    initCompanyList();
-  } else {
-    errorElement.style.display = 'block';
-  }
-}
-
-// Инициализация списка компаний для выпадающего меню
-function initCompanyList() {
-  const companyList = document.getElementById('companyList');
-  companyList.innerHTML = '';
-  
-  companies.forEach(company => {
-    const div = document.createElement('div');
-    div.textContent = company;
-    div.onclick = () => selectAsset(company);
-    companyList.appendChild(div);
-  });
+    if (!currentUser || !usersData[currentUser]) return;
+    
+    const user = usersData[currentUser];
+    const balance = parseFloat(user.balance || 0).toFixed(2);
+    
+    // Хедер
+    document.getElementById('balanceValue').textContent = balance + ' USDT';
+    
+    // Торговля страница
+    const availableElement = document.getElementById('availableBalanceTrade');
+    if (availableElement) availableElement.textContent = balance;
+    
+    // Депозит страница
+    const depositTotal = document.getElementById('depositTotalBalance');
+    const availableBalance = document.getElementById('availableBalance');
+    if (depositTotal) depositTotal.innerHTML = balance + '<span class="balance-currency">USDT</span>';
+    if (availableBalance) availableBalance.textContent = balance + ' USDT';
+    
+    // Вывод страница
+    const withdrawTotal = document.getElementById('withdrawTotalBalance');
+    const withdrawTotalBalance = document.getElementById('withdrawBalanceTotal');
+    const withdrawAvailable = document.getElementById('withdrawBalanceAvailable');
+    
+    if (withdrawTotal) withdrawTotal.innerHTML = balance + '<span class="balance-currency">USDT</span>';
+    if (withdrawTotalBalance) withdrawTotalBalance.textContent = balance + ' USDT';
+    if (withdrawAvailable) withdrawAvailable.textContent = balance + ' USDT';
+    
+    // Другие места где может отображаться баланс
+    const balanceElements = document.querySelectorAll('.info-line:nth-child(2)');
+    balanceElements.forEach(el => {
+        if (el.textContent.includes('Дост.:')) {
+            el.textContent = `Дост.: ${balance} USDT`;
+        }
+    });
 }
 
 // Обновление данных пользователя
 function updateUserData() {
-  if (!currentUser) return;
-  
-  const user = usersData[currentUser];
-  const levelElement = document.getElementById('userLevel');
-  const emailElement = document.getElementById('userEmail');
-  
-  // Обновляем уровень
-  levelElement.textContent = `Уровень: ${user.level}`;
-  
-  // Обновляем почту
-  if (emailElement) {
-    emailElement.textContent = user.email || `${currentUser}@galardro.org`;
-  }
+    if (!currentUser || !usersData[currentUser]) return;
+    
+    const user = usersData[currentUser];
+    const levelElement = document.getElementById('userLevel');
+    const emailElement = document.getElementById('userEmail');
+    
+    // Обновляем уровень
+    if (levelElement) {
+        levelElement.textContent = `Уровень: ${user.level}`;
+    }
+    
+    // Обновляем почту
+    if (emailElement) {
+        emailElement.textContent = user.email || currentUser;
+    }
+}
+
+// Проверка входа
+function checkLogin() {
+    const login = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorElement = document.getElementById('loginError');
+    
+    // Проверяем по нашим пользователям
+    if (usersData[login] && usersData[login].password === password) {
+        currentUser = login;
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('currentUser', login);
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        updateUserData();
+        updateAllBalances();
+        initWatchlist();
+        updateCurrentTime();
+        initCompanyList();
+        errorElement.style.display = 'none';
+        
+        // Показываем уведомление об успешном входе
+        showUpdateNotification('✅ Вход выполнен');
+    } else {
+        errorElement.style.display = 'block';
+    }
 }
 
 // Обновление информации в хедере
 function updateBalanceInfo() {
-  if (!currentUser) return;
-  
-  const balanceElement = document.getElementById('balanceValue');
-  const pnlElement = document.getElementById('pnlValue');
-  
-  const pnlChange = (Math.random() * 2 - 1).toFixed(2);
-  
-  // Используем реальный баланс пользователя
-  balanceElement.textContent = usersData[currentUser].balance + ' USDT';
-  pnlElement.textContent = (pnlChange >= 0 ? '+' : '') + pnlChange + '%';
-  pnlElement.className = pnlChange >= 0 ? 'balance-value positive' : 'balance-value negative';
-  
-  setTimeout(updateBalanceInfo, 5000);
+    if (!currentUser || !usersData[currentUser]) return;
+    
+    const balanceElement = document.getElementById('balanceValue');
+    const pnlElement = document.getElementById('pnlValue');
+    
+    const pnlChange = (Math.random() * 2 - 1).toFixed(2);
+    
+    // Используем реальный баланс пользователя
+    balanceElement.textContent = usersData[currentUser].balance + ' USDT';
+    pnlElement.textContent = (pnlChange >= 0 ? '+' : '') + pnlChange + '%';
+    pnlElement.className = pnlChange >= 0 ? 'balance-value positive' : 'balance-value negative';
+    
+    setTimeout(updateBalanceInfo, 5000);
 }
 
 // Обновление текущего времени
 function updateCurrentTime() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
-  const dateString = now.toLocaleDateString('ru-RU');
-  
-  document.getElementById('currentTime').textContent = `${timeString} ${dateString} | ${timeString} – ${timeString} (+0.01%)`;
-  setTimeout(updateCurrentTime, 1000);
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    const dateString = now.toLocaleDateString('ru-RU');
+    
+    const currentTimeElement = document.getElementById('currentTime');
+    if (currentTimeElement) {
+        currentTimeElement.textContent = `${timeString} ${dateString} | ${timeString} – ${timeString} (+0.01%)`;
+    }
+    
+    setTimeout(updateCurrentTime, 1000);
 }
 
 // Проверяем, был ли пользователь уже авторизован
 window.addEventListener('DOMContentLoaded', function() {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  const savedUser = localStorage.getItem('currentUser');
-  
-  if (isLoggedIn && savedUser && usersData[savedUser]) {
-    currentUser = savedUser;
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    updateUserData();
-    updateAllBalances();
-    initWatchlist();
-    updateCurrentTime();
-    // Инициализируем список компаний
-    initCompanyList();
-  } else {
-    document.getElementById('loginContainer').style.display = 'flex';
-    document.getElementById('mainContent').style.display = 'none';
-  }
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const savedUser = localStorage.getItem('currentUser');
+    
+    if (isLoggedIn && savedUser && usersData[savedUser]) {
+        currentUser = savedUser;
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        updateUserData();
+        updateAllBalances();
+        initWatchlist();
+        updateCurrentTime();
+        initCompanyList();
+    } else {
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('mainContent').style.display = 'none';
+    }
 });
 
 // Проверка доступности localStorage
 let storageAvailable = true;
 try {
-  const testKey = '__test';
-  localStorage.setItem(testKey, '1');
-  localStorage.removeItem(testKey);
+    const testKey = '__test';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
 } catch (e) {
-  storageAvailable = false;
-  alert("⚠️ Внимание: Ваш браузер блокирует сохранение данных. Сделки не будут сохраняться после перезагрузки.");
+    storageAvailable = false;
+    console.warn("⚠️ LocalStorage недоступен");
 }
 
 // Инициализация списка избранных активов
 function initWatchlist() {
-  const watchlist = [
-    { symbol: 'BTC/USDT', price: 89962.22, change: 2.99 },
-    { symbol: 'ETH/USDT', price: 9917.45, change: 1.15 },
-    { symbol: 'AAPL', price: 790.12, change: 0.97 },
-    { symbol: 'TSLA', price: 802.39, change: 3.86 },
-    { symbol: 'NVDA', price: 4929.91, change: 1.00 },
-    { symbol: 'MSFT', price: 739.59, change: 1.31 }
-  ];
-  
-  const watchlistContainer = document.getElementById('watchlist');
-  watchlistContainer.innerHTML = '';
-  
-  watchlist.forEach(asset => {
-    const item = document.createElement('div');
-    item.className = 'watchlist-item';
-    item.onclick = () => selectAsset(asset.symbol.split('/')[0]);
+    const watchlist = [
+        { symbol: 'BTC/USDT', price: 89962.22, change: 2.99 },
+        { symbol: 'ETH/USDT', price: 9917.45, change: 1.15 },
+        { symbol: 'AAPL', price: 790.12, change: 0.97 },
+        { symbol: 'TSLA', price: 802.39, change: 3.86 },
+        { symbol: 'NVDA', price: 4929.91, change: 1.00 },
+        { symbol: 'MSFT', price: 739.59, change: 1.31 }
+    ];
     
-    const changeClass = asset.change >= 0 ? 'positive' : 'negative';
-    const changeSign = asset.change >= 0 ? '+' : '';
+    const watchlistContainer = document.getElementById('watchlist');
+    if (!watchlistContainer) return;
     
-    item.innerHTML = `
-      <div class="asset-name">${asset.symbol}</div>
-      <div class="asset-price">${asset.price.toLocaleString()}</div>
-      <div class="asset-change ${changeClass}">${changeSign}${asset.change}%</div>
-    `;
+    watchlistContainer.innerHTML = '';
     
-    watchlistContainer.appendChild(item);
-  });
-  
-  updateWatchlistPrices();
+    watchlist.forEach(asset => {
+        const item = document.createElement('div');
+        item.className = 'watchlist-item';
+        item.onclick = () => selectAsset(asset.symbol.split('/')[0]);
+        
+        const changeClass = asset.change >= 0 ? 'positive' : 'negative';
+        const changeSign = asset.change >= 0 ? '+' : '';
+        
+        item.innerHTML = `
+            <div class="asset-name">${asset.symbol}</div>
+            <div class="asset-price">${asset.price.toLocaleString()}</div>
+            <div class="asset-change ${changeClass}">${changeSign}${asset.change}%</div>
+        `;
+        
+        watchlistContainer.appendChild(item);
+    });
+    
+    updateWatchlistPrices();
 }
 
 // Обновление цен в списке избранных активов
 function updateWatchlistPrices() {
-  const items = document.querySelectorAll('.watchlist-item');
-  
-  items.forEach(item => {
-    const priceElement = item.querySelector('.asset-price');
-    const changeElement = item.querySelector('.asset-change');
+    const items = document.querySelectorAll('.watchlist-item');
     
-    if (priceElement && changeElement) {
-      const currentPrice = parseFloat(priceElement.textContent.replace(/,/g, ''));
-      const currentChange = parseFloat(changeElement.textContent);
-      
-      const priceChange = (Math.random() * 10 - 5) / 100;
-      const newPrice = currentPrice * (1 + priceChange / 100);
-      const newChange = currentChange + priceChange;
-      
-      priceElement.textContent = newPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      changeElement.textContent = (newChange >= 0 ? '+' : '') + newChange.toFixed(2) + '%';
-      changeElement.className = `asset-change ${newChange >= 0 ? 'positive' : 'negative'}`;
-    }
-  });
-  
-  updateMarketData();
-  setTimeout(updateWatchlistPrices, 3000);
+    items.forEach(item => {
+        const priceElement = item.querySelector('.asset-price');
+        const changeElement = item.querySelector('.asset-change');
+        
+        if (priceElement && changeElement) {
+            const currentPrice = parseFloat(priceElement.textContent.replace(/,/g, ''));
+            const currentChange = parseFloat(changeElement.textContent);
+            
+            const priceChange = (Math.random() * 10 - 5) / 100;
+            const newPrice = currentPrice * (1 + priceChange / 100);
+            const newChange = currentChange + priceChange;
+            
+            priceElement.textContent = newPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            changeElement.textContent = (newChange >= 0 ? '+' : '') + newChange.toFixed(2) + '%';
+            changeElement.className = `asset-change ${newChange >= 0 ? 'positive' : 'negative'}`;
+        }
+    });
+    
+    updateMarketData();
+    setTimeout(updateWatchlistPrices, 3000);
 }
 
 // Обновление рыночных данных
 function updateMarketData() {
-  const priceElement = document.getElementById('currentPrice');
-  const volumeElement = document.getElementById('dailyVolume');
-  const changeElement = document.getElementById('dailyChange');
-  
-  if (priceElement) {
-    const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]);
-    const newPrice = (currentPrice + (Math.random() * 0.5 - 0.25)).toFixed(2);
-    priceElement.textContent = `${newPrice} USD`;
-    priceElement.style.color = newPrice > currentPrice ? '#16c784' : '#ea3943';
-    setTimeout(() => priceElement.style.color = '#c9d1d9', 500);
-  }
-  
-  if (volumeElement) {
-    const currentVolume = parseFloat(volumeElement.textContent);
-    const newVolume = (currentVolume + (Math.random() * 100 - 50)).toFixed(0);
-    volumeElement.textContent = `${Math.abs(newVolume)} BTC`;
-  }
-  
-  if (changeElement) {
-    const currentChange = parseFloat(changeElement.textContent);
-    const newChange = (currentChange + (Math.random() * 0.5 - 0.25)).toFixed(2);
-    changeElement.textContent = `${newChange}%`;
-    changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
-  }
-  
-  const btcDominance = document.getElementById('btcDominance');
-  const fearGreed = document.getElementById('fearGreed');
-  const totalMarketCap = document.getElementById('totalMarketCap');
-  const volume24h = document.getElementById('volume24h');
-  
-  if (btcDominance) {
-    const currentBtcDom = parseFloat(btcDominance.textContent);
-    const newBtcDom = (currentBtcDom + (Math.random() * 0.2 - 0.1)).toFixed(1);
-    btcDominance.textContent = `${newBtcDom}%`;
-  }
-  
-  if (fearGreed) {
-    const currentFearGreed = parseInt(fearGreed.textContent);
-    const newFearGreed = Math.max(0, Math.min(100, currentFearGreed + Math.floor(Math.random() * 5 - 2)));
-    fearGreed.textContent = newFearGreed;
-    fearGreed.style.color = newFearGreed > 50 ? '#16c784' : newFearGreed > 25 ? '#ffcc00' : '#ea3943';
-  }
+    const priceElement = document.getElementById('currentPrice');
+    const volumeElement = document.getElementById('dailyVolume');
+    const changeElement = document.getElementById('dailyChange');
+    
+    if (priceElement) {
+        const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]) || 100;
+        const newPrice = (currentPrice + (Math.random() * 0.5 - 0.25)).toFixed(2);
+        priceElement.textContent = `${newPrice} USD`;
+        priceElement.style.color = newPrice > currentPrice ? '#16c784' : '#ea3943';
+        setTimeout(() => priceElement.style.color = '#c9d1d9', 500);
+    }
+    
+    if (volumeElement) {
+        const currentVolume = parseFloat(volumeElement.textContent) || 1000;
+        const newVolume = (currentVolume + (Math.random() * 100 - 50)).toFixed(0);
+        volumeElement.textContent = `${Math.abs(newVolume)} BTC`;
+    }
+    
+    if (changeElement) {
+        const currentChange = parseFloat(changeElement.textContent) || 0;
+        const newChange = (currentChange + (Math.random() * 0.5 - 0.25)).toFixed(2);
+        changeElement.textContent = `${newChange}%`;
+        changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
+    }
+    
+    const btcDominance = document.getElementById('btcDominance');
+    const fearGreed = document.getElementById('fearGreed');
+    const totalMarketCap = document.getElementById('totalMarketCap');
+    const volume24h = document.getElementById('volume24h');
+    
+    if (btcDominance) {
+        const currentBtcDom = parseFloat(btcDominance.textContent) || 42.8;
+        const newBtcDom = (currentBtcDom + (Math.random() * 0.2 - 0.1)).toFixed(1);
+        btcDominance.textContent = `${newBtcDom}%`;
+    }
+    
+    if (fearGreed) {
+        const currentFearGreed = parseInt(fearGreed.textContent) || 72;
+        const newFearGreed = Math.max(0, Math.min(100, currentFearGreed + Math.floor(Math.random() * 5 - 2)));
+        fearGreed.textContent = newFearGreed;
+        fearGreed.style.color = newFearGreed > 50 ? '#16c784' : newFearGreed > 25 ? '#ffcc00' : '#ea3943';
+    }
 }
 
 // Выбор актива из быстрого доступа или списка избранных
 function selectAsset(symbol) {
-  document.getElementById("selectedCompany").textContent = symbol;
-  document.getElementById("companyTitle").textContent = symbol;
-  
-  const overrides = {
-    "BTC": "BINANCE:BTCUSDT",
-    "ETH": "BINANCE:ETHUSDT",
-    "AAPL": "NASDAQ:AAPL",
-    "MSFT": "NASDAQ:MSFT",
-    "GOOGL": "NASDAQ:GOOGL",
-    "AMZN": "NASDAQ:AMZN",
-    "TSLA": "NASDAQ:TSLA",
-    "SHEL": "NYSE:SHEL",
-    "NVDA": "NASDAQ:NVDA",
-    "META": "NASDAQ:META",
-    "NFLX": "NASDAQ:NFLX",
-    "INTC": "NASDAQ:INTC",
-    "AMD": "NASDAQ:AMD",
-    "BABA": "NYSE:BABA",
-    "ORCL": "NYSE:ORCL",
-    "CRM": "NYSE:CRM",
-    "ADBE": "NASDAQ:ADBE",
-    "QCOM": "NASDAQ:QCOM",
-    "UBER": "NYSE:UBER",
-    "PYPL": "NASDAQ:PYPL",
-    "T": "NYSE:T",
-    "DIS": "NYSE:DIS",
-    "KO": "NYSE:KO",
-    "PEP": "NASDAQ:PEP",
-    "WMT": "NYSE:WMT",
-    "MCD": "NYSE:MCD",
-    "XOM": "NYSE:XOM",
-    "CVX": "NYSE:CVX",
-    "BA": "NYSE:BA"
-  };
-  
-  const tvSymbol = overrides[symbol] || `NASDAQ:${symbol}`;
-  
-  // Обновляем заголовок графика
-  document.getElementById("companyTitle").textContent = symbol;
-  
-  // Обновляем iframe с графиком
-  const chartFrame = document.getElementById("chartFrame");
-  chartFrame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=1&theme=dark`;
-  
-  // Обновляем рыночные данные
-  updateMarketData();
-  
-  // Закрываем выпадающее меню
-  document.getElementById("dropdown").style.display = "none";
+    document.getElementById("selectedCompany").textContent = symbol;
+    document.getElementById("companyTitle").textContent = symbol;
+    
+    const overrides = {
+        "BTC": "BINANCE:BTCUSDT",
+        "ETH": "BINANCE:ETHUSDT",
+        "AAPL": "NASDAQ:AAPL",
+        "MSFT": "NASDAQ:MSFT",
+        "GOOGL": "NASDAQ:GOOGL",
+        "AMZN": "NASDAQ:AMZN",
+        "TSLA": "NASDAQ:TSLA",
+        "SHEL": "NYSE:SHEL",
+        "NVDA": "NASDAQ:NVDA",
+        "META": "NASDAQ:META",
+        "NFLX": "NASDAQ:NFLX",
+        "INTC": "NASDAQ:INTC",
+        "AMD": "NASDAQ:AMD",
+        "BABA": "NYSE:BABA",
+        "ORCL": "NYSE:ORCL",
+        "CRM": "NYSE:CRM",
+        "ADBE": "NASDAQ:ADBE",
+        "QCOM": "NASDAQ:QCOM",
+        "UBER": "NYSE:UBER",
+        "PYPL": "NASDAQ:PYPL",
+        "T": "NYSE:T",
+        "DIS": "NYSE:DIS",
+        "KO": "NYSE:KO",
+        "PEP": "NASDAQ:PEP",
+        "WMT": "NYSE:WMT",
+        "MCD": "NYSE:MCD",
+        "XOM": "NYSE:XOM",
+        "CVX": "NYSE:CVX",
+        "BA": "NYSE:BA"
+    };
+    
+    const tvSymbol = overrides[symbol] || `NASDAQ:${symbol}`;
+    
+    // Обновляем iframe с графиком
+    const chartFrame = document.getElementById("chartFrame");
+    if (chartFrame) {
+        chartFrame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=1&theme=dark`;
+    }
+    
+    // Обновляем рыночные данные
+    updateMarketData();
+    
+    // Закрываем выпадающее меню
+    document.getElementById("dropdown").style.display = "none";
 }
 
-// Функция для обновления графиков - вызывается каждые 2 секунды
+// Функция для обновления графиков
 function updateChartData() {
-  // Если есть активный график, обновляем его данные
-  const selectedCompany = document.getElementById("selectedCompany").textContent;
-  if (selectedCompany) {
-    updateMarketData();
-  }
+    const selectedCompany = document.getElementById("selectedCompany").textContent;
+    if (selectedCompany) {
+        updateMarketData();
+    }
 }
 
 setInterval(updateChartData, 2000);
 
 function updateLeverage(val) {
-  document.getElementById("leverage-value").textContent = val + "x";
+    const leverageElement = document.getElementById("leverage-value");
+    if (leverageElement) {
+        leverageElement.textContent = val + "x";
+    }
 }
 
 const companies = [
-  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
-  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
-  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
+    "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
+    "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
 ];
 
+function initCompanyList() {
+    const companyList = document.getElementById('companyList');
+    if (!companyList) return;
+    
+    companyList.innerHTML = '';
+    
+    companies.forEach(company => {
+        const div = document.createElement('div');
+        div.textContent = company;
+        div.onclick = () => selectAsset(company);
+        companyList.appendChild(div);
+    });
+}
+
 function toggleDropdown() {
-  const dropdown = document.getElementById("dropdown");
-  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-  if (dropdown.style.display === "block") {
-    filterCompanies("");
-    document.getElementById("dropdown").querySelector("input").focus();
-  }
+    const dropdown = document.getElementById("dropdown");
+    if (dropdown) {
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        if (dropdown.style.display === "block") {
+            filterCompanies("");
+            document.getElementById("dropdown").querySelector("input").focus();
+        }
+    }
 }
 
 function filterCompanies(search = "") {
-  const filtered = companies.filter(c => c.toLowerCase().includes(search.toLowerCase()));
-  const companyList = document.getElementById("companyList");
-  companyList.innerHTML = "";
-  filtered.forEach(company => {
-    const div = document.createElement("div");
-    div.textContent = company;
-    div.onclick = () => selectAsset(company);
-    companyList.appendChild(div);
-  });
+    const filtered = companies.filter(c => c.toLowerCase().includes(search.toLowerCase()));
+    const companyList = document.getElementById("companyList");
+    if (!companyList) return;
+    
+    companyList.innerHTML = "";
+    filtered.forEach(company => {
+        const div = document.createElement("div");
+        div.textContent = company;
+        div.onclick = () => selectAsset(company);
+        companyList.appendChild(div);
+    });
 }
 
 document.addEventListener("click", function(e) {
-  if (!e.target.closest(".selector-container")) {
-    document.getElementById("dropdown").style.display = "none";
-  }
+    if (!e.target.closest(".selector-container")) {
+        const dropdown = document.getElementById("dropdown");
+        if (dropdown) {
+            dropdown.style.display = "none";
+        }
+    }
 });
 
 function openPosition(type) {
-  if (!currentUser) return;
-  
-  const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
-  const company = document.getElementById("selectedCompany").textContent;
-  const leverage = document.getElementById("leverage").value;
-  const amountInput = document.querySelector('input[type="number"]').value || 0;
+    if (!currentUser) return;
+    
+    const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
+    const companyElement = document.getElementById("selectedCompany");
+    const leverageElement = document.getElementById("leverage");
+    const amountInput = document.querySelector('input[type="number"]');
+    
+    const company = companyElement ? companyElement.textContent : "AAPL";
+    const leverage = leverageElement ? leverageElement.value : "20";
+    const amount = amountInput ? amountInput.value || 0 : 0;
 
-  const dealBlock = document.createElement("div");
-  dealBlock.className = "deal-block";
+    const dealBlock = document.createElement("div");
+    dealBlock.className = "deal-block";
 
-  const directionColor = type === "Лонг" ? "#16c784" : "#ea3943";
+    const directionColor = type === "Лонг" ? "#16c784" : "#ea3943";
 
-  dealBlock.innerHTML = `
-    <div><strong>${company}USDT</strong> <span style="color:${directionColor}">${type}</span> <span>Кросс</span> <span>${leverage}x</span></div>
-    <div class="deal-row">
-      <div class="deal-column">
-        <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>Всего открыто: <span>${parseFloat(amountInput).toFixed(2)}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>П/У позиции: <span class="profit">—</span> USDT</div>
-        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
-      </div>
-    </div>
-  `;
+    dealBlock.innerHTML = `
+        <div><strong>${company}USDT</strong> <span style="color:${directionColor}">${type}</span> <span>Кросс</span> <span>${leverage}x</span></div>
+        <div class="deal-row">
+            <div class="deal-column">
+                <div>Ср. цена открытия: <span>${(Math.random() * 5 + 1).toFixed(4)}</span> USDT</div>
+            </div>
+            <div class="deal-column">
+                <div>Всего открыто: <span>${parseFloat(amount).toFixed(2)}</span> USDT</div>
+            </div>
+            <div class="deal-column">
+                <div>П/У позиции: <span class="profit">—</span> USDT</div>
+                <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
+            </div>
+        </div>
+    `;
 
-  // Добавляем позицию в оба контейнера (мобильный и десктопный)
-  const mobileContainer = document.getElementById("positionsContainer");
-  const desktopContainer = document.getElementById("desktopPositionsContainer");
-  
-  const mobileDealBlock = dealBlock.cloneNode(true);
-  const desktopDealBlock = dealBlock.cloneNode(true);
-  
-  mobileContainer.prepend(mobileDealBlock);
-  desktopContainer.prepend(desktopDealBlock);
-  
-  // Ограничиваем количество отображаемых позиций
-  while (mobileContainer.children.length > 5) {
-    mobileContainer.removeChild(mobileContainer.lastChild);
-  }
-  while (desktopContainer.children.length > 5) {
-    desktopContainer.removeChild(desktopContainer.lastChild);
-  }
+    // Добавляем позицию в оба контейнера
+    const mobileContainer = document.getElementById("positionsContainer");
+    const desktopContainer = document.getElementById("desktopPositionsContainer");
+    
+    if (mobileContainer) {
+        const mobileDealBlock = dealBlock.cloneNode(true);
+        mobileContainer.prepend(mobileDealBlock);
+        while (mobileContainer.children.length > 5) {
+            mobileContainer.removeChild(mobileContainer.lastChild);
+        }
+    }
+    
+    if (desktopContainer) {
+        const desktopDealBlock = dealBlock.cloneNode(true);
+        desktopContainer.prepend(desktopDealBlock);
+        while (desktopContainer.children.length > 5) {
+            desktopContainer.removeChild(desktopContainer.lastChild);
+        }
+    }
 
-  const timestamp = Date.now();
-  const tp = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Take"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Take"]')?.value;
-  const sl = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Stop"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Stop"]')?.value;
-  const timeOpened = new Date().toLocaleTimeString();
+    const timestamp = Date.now();
+    const timeOpened = new Date().toLocaleTimeString();
 
-  const dealData = {
-    company,
-    leverage,
-    type,
-    amount: parseFloat(amountInput).toFixed(2),
-    openPrice: (Math.random() * 5 + 1).toFixed(4),
-    tp,
-    sl,
-    timeOpened,
-    timestamp
-  };
-  
-  savedDeals.unshift(dealData);
-  if (storageAvailable) {
-    const trimmedDeals = savedDeals.slice(0, 5);
-    localStorage.setItem("deals", JSON.stringify(trimmedDeals));
-  }
+    const dealData = {
+        company,
+        leverage,
+        type,
+        amount: parseFloat(amount).toFixed(2),
+        openPrice: (Math.random() * 5 + 1).toFixed(4),
+        timeOpened,
+        timestamp
+    };
+    
+    savedDeals.unshift(dealData);
+    if (storageAvailable) {
+        const trimmedDeals = savedDeals.slice(0, 5);
+        localStorage.setItem("deals", JSON.stringify(trimmedDeals));
+    }
 
-  const tpInfo = tp ? `TP: ${tp}` : 'TP: —';
-  const slInfo = sl ? `SL: ${sl}` : 'SL: —';
-  const timeInfo = `Время открытия: ${timeOpened}`;
+    const timeInfo = `Время открытия: ${timeOpened}`;
 
-  const infoColumn = document.createElement('div');
-  infoColumn.className = 'deal-column';
-  infoColumn.innerHTML = `<div>${tpInfo}</div><div>${slInfo}</div><div>${timeInfo}</div>`;
-  
-  mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
-  desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+    const infoColumn = document.createElement('div');
+    infoColumn.className = 'deal-column';
+    infoColumn.innerHTML = `<div>${timeInfo}</div>`;
+    
+    // Добавляем информацию к клонированным блокам
+    const containers = [mobileContainer, desktopContainer];
+    containers.forEach(container => {
+        if (container && container.firstChild) {
+            container.firstChild.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+        }
+    });
 
-  updateBalanceInfo();
+    updateBalanceInfo();
 }
 
 function toggleTPSL(checkbox, targetId) {
-  const target = document.getElementById(targetId);
-  target.style.display = checkbox.checked ? 'block' : 'none';
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.style.display = checkbox.checked ? 'block' : 'none';
+    }
 }
 
 // Загрузка сделок из localStorage при старте
 window.addEventListener("load", () => {
-  if (storageAvailable) {
-    let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
-    savedDeals = savedDeals.slice(0, 5);
-    
-    // Очищаем оба контейнера
-    document.getElementById("positionsContainer").innerHTML = "";
-    document.getElementById("desktopPositionsContainer").innerHTML = "";
-    
-    // Восстанавливаем позиции в оба контейнера
-    savedDeals.forEach(deal => {
-      restorePosition(deal);
-    });
-  }
-  updateMarketData();
+    if (storageAvailable) {
+        let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
+        savedDeals = savedDeals.slice(0, 5);
+        
+        // Восстанавливаем позиции в оба контейнера
+        savedDeals.forEach(deal => {
+            restorePosition(deal);
+        });
+    }
+    updateMarketData();
 });
 
 function restorePosition(deal) {
-  const dealBlock = document.createElement("div");
-  dealBlock.className = "deal-block";
+    const dealBlock = document.createElement("div");
+    dealBlock.className = "deal-block";
 
-  const directionColor = deal.type === "Лонг" ? "#16c784" : "#ea3943";
+    const directionColor = deal.type === "Лонг" ? "#16c784" : "#ea3943";
 
-  dealBlock.innerHTML = `
-    <div><strong>${deal.company}USDT</strong> <span style="color:${directionColor}">${deal.type}</span> <span>Кросс</span> <span>${deal.leverage}x</span></div>
-    <div class="deal-row">
-      <div class="deal-column">
-        <div>Ср. цена открытия: <span>${deal.openPrice}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>Всего открыто: <span>${deal.amount}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>П/У позиции: <span class="profit">—</span> USDT</div>
-        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
-      </div>
-    </div>
-  `;
+    dealBlock.innerHTML = `
+        <div><strong>${deal.company}USDT</strong> <span style="color:${directionColor}">${deal.type}</span> <span>Кросс</span> <span>${deal.leverage}x</span></div>
+        <div class="deal-row">
+            <div class="deal-column">
+                <div>Ср. цена открытия: <span>${deal.openPrice}</span> USDT</div>
+            </div>
+            <div class="deal-column">
+                <div>Всего открыто: <span>${deal.amount}</span> USDT</div>
+            </div>
+            <div class="deal-column">
+                <div>П/У позиции: <span class="profit">—</span> USDT</div>
+                <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
+            </div>
+        </div>
+    `;
 
-  // Добавляем в оба контейнера
-  const mobileContainer = document.getElementById("positionsContainer");
-  const desktopContainer = document.getElementById("desktopPositionsContainer");
-  
-  const mobileDealBlock = dealBlock.cloneNode(true);
-  const desktopDealBlock = dealBlock.cloneNode(true);
-  
-  mobileContainer.prepend(mobileDealBlock);
-  desktopContainer.prepend(desktopDealBlock);
+    // Добавляем в оба контейнера
+    const mobileContainer = document.getElementById("positionsContainer");
+    const desktopContainer = document.getElementById("desktopPositionsContainer");
+    
+    if (mobileContainer) {
+        const mobileDealBlock = dealBlock.cloneNode(true);
+        mobileContainer.prepend(mobileDealBlock);
+    }
 
-  const tpInfo = deal.tp ? `TP: ${deal.tp}` : 'TP: —';
-  const slInfo = deal.sl ? `SL: ${deal.sl}` : 'SL: —';
-  const timeInfo = `Время открытия: ${deal.timeOpened}`;
+    if (desktopContainer) {
+        const desktopDealBlock = dealBlock.cloneNode(true);
+        desktopContainer.prepend(desktopDealBlock);
+    }
 
-  const infoColumn = document.createElement('div');
-  infoColumn.className = 'deal-column';
-  infoColumn.innerHTML = `<div>${tpInfo}</div><div>${slInfo}</div><div>${timeInfo}</div>`;
-  
-  mobileDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
-  desktopDealBlock.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+    const timeInfo = `Время открытия: ${deal.timeOpened}`;
+
+    const infoColumn = document.createElement('div');
+    infoColumn.className = 'deal-column';
+    infoColumn.innerHTML = `<div>${timeInfo}</div>`;
+    
+    // Добавляем информацию к клонированным блокам
+    const containers = [mobileContainer, desktopContainer];
+    containers.forEach(container => {
+        if (container && container.firstChild) {
+            container.firstChild.querySelector('.deal-row').appendChild(infoColumn.cloneNode(true));
+        }
+    });
 }
 
 // Функции для страницы Профиль
 function showKycMessage() {
-  alert("В связи с безопасностью KYC верификацию можно будет пройти только после 48 дней после регистрации\n\nДо прохождения верификации вам будут доступны все базовые функции биржи\n\nНекоторые функции будет скрыты на сайте, но будут поступать вам на почту\n\nПриятной торговли");
+    alert("В связи с безопасностью KYC верификацию можно будет пройти только после 48 дней после регистрации\n\nДо прохождения верификации вам будут доступны все базовые функции биржи\n\nНекоторые функции будет скрыты на сайте, но будут поступать вам на почту\n\nПриятной торговли");
 }
 
 function changePassword() {
-  alert("Функция изменения пароля временно недоступна. Для смены пароля обратитесь в службу поддержки.");
+    alert("Функция изменения пароля временно недоступна. Для смены пароля обратитесь в службу поддержки.");
 }
 
 function enable2FA() {
-  alert("Двухфакторная аутентификация будет доступна после прохождения KYC верификации.");
+    alert("Двухфакторная аутентификация будет доступна после прохождения KYC верификации.");
 }
 
 // Функции для страницы Депозит
 document.addEventListener('DOMContentLoaded', function() {
-  const walletTabs = document.querySelectorAll('.wallet-tab');
-  walletTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      walletTabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      
-      document.querySelectorAll('.wallet-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      
-      const walletId = this.getAttribute('data-wallet');
-      document.getElementById(`${walletId}-wallet`).classList.add('active');
-    });
-  });
-
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const address = this.closest('.qr-code-container').querySelector('.wallet-address').textContent;
-      navigator.clipboard.writeText(address)
-        .then(() => {
-          const originalText = this.textContent;
-          this.textContent = '✓ Скопировано';
-          this.classList.add('copied');
-          
-          setTimeout(() => {
-            this.textContent = originalText;
-            this.classList.remove('copied');
-          }, 2000);
-        })
-        .catch(err => {
-          console.error('Ошибка копирования: ', err);
-          const textArea = document.createElement('textarea');
-          textArea.value = address;
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            document.execCommand('copy');
-            const originalText = this.textContent;
-            this.textContent = '✓ Скопировано';
-            this.classList.add('copied');
+    const walletTabs = document.querySelectorAll('.wallet-tab');
+    walletTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            walletTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
             
-            setTimeout(() => {
-              this.textContent = originalText;
-              this.classList.remove('copied');
-            }, 2000);
-          } catch (fallbackErr) {
-            alert('Не удалось скопировать адрес. Скопируйте вручную.');
-          }
-          document.body.removeChild(textArea);
+            document.querySelectorAll('.wallet-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            const walletId = this.getAttribute('data-wallet');
+            const walletContent = document.getElementById(`${walletId}-wallet`);
+            if (walletContent) {
+                walletContent.classList.add('active');
+            }
         });
     });
-  });
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const container = this.closest('.qr-code-container');
+            if (!container) return;
+            
+            const addressElement = container.querySelector('.wallet-address');
+            if (!addressElement) return;
+            
+            const address = addressElement.textContent;
+            navigator.clipboard.writeText(address)
+                .then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = '✓ Скопировано';
+                    this.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.classList.remove('copied');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Ошибка копирования: ', err);
+                    // Fallback для старых браузеров
+                    const textArea = document.createElement('textarea');
+                    textArea.value = address;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        const originalText = this.textContent;
+                        this.textContent = '✓ Скопировано';
+                        this.classList.add('copied');
+                        
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                            this.classList.remove('copied');
+                        }, 2000);
+                    } catch (fallbackErr) {
+                        alert('Не удалось скопировать адрес. Скопируйте вручную.');
+                    }
+                    document.body.removeChild(textArea);
+                });
+        });
+    });
 });
 
 // Функции для страницы Вывод
 function switchWithdrawTab(type) {
-  document.querySelectorAll('.withdraw-tab').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('.withdraw-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
 
-  document.querySelector(`.withdraw-tab[onclick="switchWithdrawTab('${type}')"]`).classList.add('active');
-  document.getElementById(type).classList.add('active');
+    const tab = document.querySelector(`.withdraw-tab[onclick*="${type}"]`);
+    const section = document.getElementById(type);
+    
+    if (tab) tab.classList.add('active');
+    if (section) section.classList.add('active');
 }
 
 function showVipModal() {
-  document.getElementById('vipModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+    document.getElementById('vipModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeVipModal() {
-  document.getElementById('vipModal').classList.remove('active');
-  document.body.style.overflow = 'auto';
+    document.getElementById('vipModal').classList.remove('active');
+    document.body.style.overflow = 'auto';
 }
 
-// ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА С УЧЕТОМ ТРЕХ ТИПОВ ПОЛЬЗОВАТЕЛЯ
+// Функция для обработки вывода с учетом трех типов пользователя
 function showCommissionModal() {
-  if (!currentUser) return;
-  
-  const user = usersData[currentUser];
-  
-  // Проверяем тип вывода пользователя
-  if (user.withdrawType === "normal") {
-    showNormalModal();        // 👈 НОВЫЙ ТИП 3
-  } else if (user.withdrawType === "request") {
-    showRequestModal();       // 👈 ТИП 2
-  } else {
-    showCommissionModalOld(); // 👈 ТИП 1
-  }
+    if (!currentUser || !usersData[currentUser]) return;
+    
+    const user = usersData[currentUser];
+    
+    // Проверяем тип вывода пользователя
+    if (user.withdrawType === "normal") {
+        showNormalModal();
+    } else if (user.withdrawType === "request") {
+        showRequestModal();
+    } else {
+        showCommissionModalOld();
+    }
 }
 
-// СТАРАЯ ФУНКЦИЯ КОМИССИИ (переименована)
+// Старая функция комиссии
 function showCommissionModalOld() {
-  document.getElementById('commissionModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
-  document.getElementById('agreeCheckbox').checked = false;
-  document.getElementById('continueBtn').disabled = true;
-  document.getElementById('supportMessage').style.display = 'none';
-  document.querySelector('.checkbox-container').style.display = 'flex';
-  document.querySelector('.modal-footer').style.display = 'flex';
+    const modal = document.getElementById('commissionModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('agreeCheckbox').checked = false;
+        document.getElementById('continueBtn').disabled = true;
+        document.getElementById('supportMessage').style.display = 'none';
+        document.querySelector('.checkbox-container').style.display = 'flex';
+        document.querySelector('.modal-footer').style.display = 'flex';
+    }
 }
 
-// ФУНКЦИЯ ДЛЯ ТИПА REQUEST
+// Функция для типа REQUEST
 function showRequestModal() {
-  document.getElementById('requestModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('requestModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ ТИПА NORMAL (обычный вывод)
+// Функция для типа NORMAL (обычный вывод)
 function showNormalModal() {
-  // Получаем данные из формы
-  const amount = document.getElementById('withdraw-amount-crypto').value || '100.00';
-  const walletAddress = document.getElementById('wallet-address').value || '0x742d35Cc6634C0532925a3b8D...';
-  
-  // Рассчитываем комиссию (1% для нормального вывода)
-  const networkFee = (parseFloat(amount) * (SYSTEM_CONFIG.FEES.normal / 100)).toFixed(2);
-  const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
-  
-  // Обновляем данные в модальном окне
-  document.getElementById('withdrawAmount').textContent = amount + ' USDT';
-  document.getElementById('networkFee').textContent = networkFee + ' USDT';
-  document.getElementById('receiveAmount').textContent = receiveAmount + ' USDT';
-  document.getElementById('walletAddressDisplay').textContent = walletAddress;
-  
-  // Запускаем таймер обратного отсчета
-  startCountdownTimer();
-  
-  // Показываем модальное окно
-  document.getElementById('normalModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+    // Получаем данные из формы
+    const amountInput = document.getElementById('withdraw-amount-crypto');
+    const walletInput = document.getElementById('wallet-address');
+    
+    const amount = amountInput ? amountInput.value || '100.00' : '100.00';
+    const walletAddress = walletInput ? walletInput.value || '0x742d35Cc6634C0532925a3b8D...' : '0x742d35Cc6634C0532925a3b8D...';
+    
+    // Рассчитываем комиссию (1% для нормального вывода)
+    const networkFee = (parseFloat(amount) * (SYSTEM_CONFIG.FEES.normal / 100)).toFixed(2);
+    const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
+    
+    // Обновляем данные в модальном окне
+    document.getElementById('withdrawAmount').textContent = amount + ' USDT';
+    document.getElementById('networkFee').textContent = networkFee + ' USDT';
+    document.getElementById('receiveAmount').textContent = receiveAmount + ' USDT';
+    document.getElementById('walletAddressDisplay').textContent = walletAddress;
+    
+    // Запускаем таймер обратного отсчета
+    startCountdownTimer();
+    
+    // Показываем модальное окно
+    const modal = document.getElementById('normalModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 // Функция для запуска таймера обратного отсчета
 function startCountdownTimer() {
-  let timeLeft = 24 * 60 * 60; // 24 часа в секундах
-  
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-  }
-  
-  countdownInterval = setInterval(() => {
-    timeLeft--;
+    let timeLeft = 24 * 60 * 60; // 24 часа в секундах
     
-    if (timeLeft <= 0) {
-      clearInterval(countdownInterval);
-      document.getElementById('timerValue').textContent = 'Завершено';
-      document.getElementById('timerValue').style.color = '#16c784';
-      return;
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
     }
     
-    const hours = Math.floor(timeLeft / 3600);
-    const minutes = Math.floor((timeLeft % 3600) / 60);
-    const seconds = timeLeft % 60;
-    
-    document.getElementById('timerValue').textContent = 
-      `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }, 1000);
+    countdownInterval = setInterval(() => {
+        timeLeft--;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            document.getElementById('timerValue').textContent = 'Завершено';
+            document.getElementById('timerValue').style.color = '#16c784';
+            return;
+        }
+        
+        const hours = Math.floor(timeLeft / 3600);
+        const minutes = Math.floor((timeLeft % 3600) / 60);
+        const seconds = timeLeft % 60;
+        
+        const timerElement = document.getElementById('timerValue');
+        if (timerElement) {
+            timerElement.textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
 }
 
 // Функция отмены обычного вывода
 function cancelNormalWithdraw() {
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-  }
-  closeNormalModal();
-  showToast('Вывод отменен');
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    closeNormalModal();
+    showToast('Вывод отменен');
 }
 
 function closeNormalModal() {
-  document.getElementById('normalModal').classList.remove('active');
-  document.body.style.overflow = 'auto';
+    const modal = document.getElementById('normalModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function closeRequestModal() {
-  document.getElementById('requestModal').classList.remove('active');
-  document.body.style.overflow = 'auto';
+    const modal = document.getElementById('requestModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function closeCommissionModal() {
-  document.getElementById('commissionModal').classList.remove('active');
-  document.body.style.overflow = 'auto';
+    const modal = document.getElementById('commissionModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function toggleContinueButton() {
-  const checkbox = document.getElementById('agreeCheckbox');
-  const continueBtn = document.getElementById('continueBtn');
-  continueBtn.disabled = !checkbox.checked;
+    const checkbox = document.getElementById('agreeCheckbox');
+    const continueBtn = document.getElementById('continueBtn');
+    if (checkbox && continueBtn) {
+        continueBtn.disabled = !checkbox.checked;
+    }
 }
 
 function showSupportMessage() {
-  document.querySelector('.checkbox-container').style.display = 'none';
-  document.querySelector('.modal-footer').style.display = 'none';
-  document.getElementById('supportMessage').style.display = 'block';
+    const checkboxContainer = document.querySelector('.checkbox-container');
+    const modalFooter = document.querySelector('.modal-footer');
+    const supportMessage = document.getElementById('supportMessage');
+    
+    if (checkboxContainer) checkboxContainer.style.display = 'none';
+    if (modalFooter) modalFooter.style.display = 'none';
+    if (supportMessage) supportMessage.style.display = 'block';
 }
 
 function showError() {
-  const toast = document.getElementById("toast");
-  toast.style.display = "block";
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 4000);
+    const toast = document.getElementById("toast");
+    if (toast) {
+        toast.style.display = "block";
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 4000);
+    }
 }
 
 function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.style.display = "block";
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 4000);
+    const toast = document.getElementById("toast");
+    if (toast) {
+        toast.textContent = message;
+        toast.style.display = "block";
+        setTimeout(() => {
+            toast.style.display = "none";
+        }, 4000);
+    }
 }
 
 // Закрытие модальных окон при клике вне окна
 document.addEventListener('click', function(event) {
-  const vipModal = document.getElementById('vipModal');
-  const commissionModal = document.getElementById('commissionModal');
-  const requestModal = document.getElementById('requestModal');
-  const normalModal = document.getElementById('normalModal');
-  
-  if (event.target === vipModal) {
-    closeVipModal();
-  }
-  if (event.target === commissionModal) {
-    closeCommissionModal();
-  }
-  if (event.target === requestModal) {
-    closeRequestModal();
-  }
-  if (event.target === normalModal) {
-    closeNormalModal();
-  }
+    const modals = ['vipModal', 'commissionModal', 'requestModal', 'normalModal'];
+    
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal && event.target === modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
 });
 
 // Закрытие модальных окон при нажатии Escape
 document.addEventListener('keydown', function(event) {
-  if (event.key === 'Escape') {
-    closeVipModal();
-    closeCommissionModal();
-    closeRequestModal();
-    closeNormalModal();
-  }
+    if (event.key === 'Escape') {
+        closeVipModal();
+        closeCommissionModal();
+        closeRequestModal();
+        closeNormalModal();
+    }
 });
+
+// Добавляем стили для анимаций
+const animationStyles = document.createElement('style');
+animationStyles.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(animationStyles);
 </script>
 </body>
 </html>
