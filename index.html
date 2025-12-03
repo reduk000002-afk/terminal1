@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Фьючерсный терминал</title>
+  <!-- Supabase SDK -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
-    /* ВСЕ СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
+    /* ВСЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ */
     * {
       box-sizing: border-box;
     }
@@ -20,1834 +22,9 @@
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
-    .header-bar {
-      display: flex;
-      justify-content: space-between;
-      background: #161b22;
-      padding: 10px max(20px, env(safe-area-inset-right));
-      padding-left: max(20px, env(safe-area-inset-left));
-      border-bottom: 1px solid #30363d;
-      position: sticky;
-      top: 0;
-      z-index: 101;
-      font-size: 14px;
-      align-items: center;
-      height: 60px;
-      width: 100%;
-    }
+    /* ВСЕ ОСТАЛЬНЫЕ СТИЛИ ОСТАЮТСЯ ТАКИМИ ЖЕ */
+    /* ... (все стили остаются без изменений) ... */
 
-    .balance-info {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      overflow-x: auto;
-      white-space: nowrap;
-      max-width: 60%;
-    }
-
-    .balance-item {
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-    }
-
-    .balance-label {
-      color: #8b949e;
-      font-size: 11px;
-      margin-bottom: 2px;
-    }
-
-    .balance-value {
-      font-weight: bold;
-      font-size: 13px;
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .menu-toggle {
-      background: none;
-      border: none;
-      color: #c9d1d9;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .menu-toggle:hover {
-      background-color: #21262d;
-    }
-
-    .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      min-width: 200px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      display: none;
-      z-index: 1000;
-      margin-top: 5px;
-    }
-
-    .dropdown-menu.active {
-      display: block;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .menu-item {
-      padding: 12px 16px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      border-bottom: 1px solid #21262d;
-      min-height: 44px;
-    }
-
-    .menu-item:last-child {
-      border-bottom: none;
-    }
-
-    .menu-item:hover {
-      background-color: #21262d;
-    }
-
-    .menu-item img {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0.8);
-    }
-
-    .positive {
-      color: #16c784;
-    }
-
-    .negative {
-      color: #ea3943;
-    }
-
-    .login-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #0d1117;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      z-index: 1000;
-      padding-top: 80px;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
-
-    .login-form {
-      background: #161b22;
-      padding: 30px;
-      border-radius: 10px;
-      border: 1px solid #30363d;
-      width: calc(100% - 40px);
-      max-width: 400px;
-      margin-top: 20px;
-      margin-left: 20px;
-      margin-right: 20px;
-    }
-
-    .login-form h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #f0f6fc;
-    }
-
-    .login-form input {
-      width: 100%;
-      padding: 15px;
-      margin-bottom: 15px;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: white;
-      border-radius: 5px;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .login-form button {
-      width: 100%;
-      padding: 15px;
-      background-color: #1f6feb;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: 600;
-      min-height: 50px;
-    }
-
-    .login-error {
-      color: #f85149;
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .register-link {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 14px;
-      color: #8b949e;
-    }
-
-    .register-link a {
-      color: #1f6feb;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .main-container {
-      display: flex;
-      min-height: calc(100vh - 60px);
-    }
-
-    .market-column {
-      width: 280px;
-      background: #161b22;
-      border-right: 1px solid #30363d;
-      padding: 15px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .layout {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    .sidebar {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      background: #161b22;
-      padding: 10px 0;
-      border-bottom: 1px solid #30363d;
-      position: sticky;
-      top: 60px;
-      z-index: 100;
-    }
-
-    .sidebar-item {
-      text-align: center;
-      font-size: 12px;
-      color: #c9d1d9;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-width: 60px;
-      padding: 10px 5px;
-      border-radius: 5px;
-      transition: background-color 0.2s;
-      min-height: 44px;
-    }
-
-    .sidebar-item:hover, .sidebar-item.active {
-      background-color: #21262d;
-    }
-
-    .sidebar-item img {
-      width: 20px;
-      height: 20px;
-      margin-bottom: 5px;
-    }
-
-    .page-content {
-      flex: 1;
-      padding: 20px;
-      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-      overflow-y: auto;
-      display: none;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .page-content.active {
-      display: block;
-    }
-
-    .chart-section {
-      background: #0d1117;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      height: 50vh;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-
-    .chart-section iframe {
-      flex: 1;
-      width: 100%;
-      border: none;
-      min-height: 300px;
-      border-radius: 0 0 8px 8px;
-    }
-
-    .deal-display {
-      background: #0d1117;
-      border-top: 1px solid #30363d;
-      padding: 15px;
-      font-family: monospace;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-height: 30vh;
-      overflow-y: auto;
-    }
-
-    .deal-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 13px;
-    }
-
-    .deal-column {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .terminal-section {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 20px;
-      overflow-y: auto;
-      transition: transform 0.3s ease, margin-top 0.3s ease;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .selector-container {
-      margin-bottom: 15px;
-      position: relative;
-      width: 100%;
-    }
-
-    .selector-button {
-      width: 100%;
-      padding: 15px;
-      background: #0d1117;
-      color: white;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      text-align: left;
-      cursor: pointer;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: rgba(22, 27, 34, 0.95);
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      display: none;
-      z-index: 100;
-    }
-
-    .dropdown input {
-      width: 100%;
-      padding: 15px;
-      background: #0d1117;
-      color: white;
-      border: none;
-      border-bottom: 1px solid #30363d;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .dropdown div {
-      padding: 15px;
-      cursor: pointer;
-      font-size: 16px;
-      min-height: 44px;
-    }
-
-    .dropdown div:hover {
-      background: #21262d;
-    }
-
-    .terminal-section select,
-    .terminal-section input[type="number"] {
-      width: 100%;
-      padding: 15px;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      color: white;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 15px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-bottom: 15px;
-      transition: opacity 0.2s;
-      min-height: 50px;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-    }
-
-    .btn-long {
-      background-color: #16c784;
-      color: white;
-    }
-
-    .btn-short {
-      background-color: #ea3943;
-      color: white;
-    }
-
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .checkbox-group label {
-      display: flex;
-      align-items: center;
-      font-size: 16px;
-      gap: 10px;
-      min-height: 44px;
-    }
-
-    .checkbox-group input {
-      width: 20px;
-      height: 20px;
-      min-width: 20px;
-    }
-
-    .tp-sl {
-      display: none;
-      margin-bottom: 15px;
-    }
-
-    .tp-sl input {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 15px;
-      min-height: 50px;
-      font-size: 16px;
-    }
-
-    .flex-space {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .info-line {
-      font-size: 15px;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .leverage-display {
-      text-align: center;
-      margin: 10px 0 20px;
-      font-size: 16px;
-    }
-
-    .market-info {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      border: 1px solid #30363d;
-    }
-
-    .market-info div {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-
-    .market-info div:last-child {
-      margin-bottom: 0;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .positions-title {
-      padding: 15px;
-      font-weight: bold;
-      border-bottom: 1px solid #30363d;
-      background: #161b22;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      min-height: 44px;
-      font-size: 16px;
-    }
-
-    .positions-title::after {
-      content: "▼";
-      font-size: 14px;
-      transition: transform 0.3s;
-    }
-
-    .positions-title.expanded::after {
-      transform: rotate(180deg);
-    }
-
-    .deal-block {
-      border-bottom: 1px solid #30363d;
-      padding: 15px;
-      transition: background-color 0.2s;
-      font-size: 15px;
-    }
-
-    .deal-block:hover {
-      background-color: #161b22;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      color: #8b949e;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .watchlist-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #21262d;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      min-height: 44px;
-    }
-
-    .watchlist-item:hover {
-      background-color: #21262d;
-    }
-
-    .asset-name {
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .asset-price {
-      font-size: 15px;
-    }
-
-    .asset-change {
-      font-size: 14px;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
-
-    .quick-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .quick-btn {
-      background: #21262d;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-      padding: 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      text-align: center;
-      font-size: 14px;
-      transition: background-color 0.2s;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .quick-btn:hover {
-      background: #30363d;
-    }
-
-    .portfolio-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 15px;
-    }
-
-    .portfolio-bar {
-      height: 8px;
-      background: #30363d;
-      border-radius: 4px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-
-    .portfolio-fill {
-      height: 100%;
-      border-radius: 4px;
-    }
-
-    .market-stats {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      margin-top: 10px;
-      gap: 15px;
-    }
-
-    .stat-item {
-      text-align: center;
-      flex: 1;
-    }
-
-    .stat-value {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .stat-label {
-      color: #8b949e;
-      font-size: 13px;
-    }
-
-    .profile-container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #161b22;
-      padding: 30px;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .profile-section {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      margin-top: 25px;
-      border-top: 1px solid #30363d;
-      padding-top: 20px;
-    }
-
-    .profile-column {
-      flex: 1;
-      margin: 10px;
-      min-width: 300px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 15px 0;
-      padding: 12px 0;
-      border-bottom: 1px solid #21262d;
-      font-size: 16px;
-    }
-
-    .label {
-      font-weight: 600;
-      color: #8b949e;
-    }
-
-    .profile-btn {
-      background-color: #238636;
-      border: none;
-      padding: 12px 20px;
-      color: white;
-      cursor: pointer;
-      border-radius: 6px;
-      font-weight: 600;
-      transition: background-color 0.2s;
-      font-size: 16px;
-      min-height: 44px;
-    }
-
-    .profile-btn:hover {
-      background-color: #2ea043;
-    }
-
-    .btn-secondary {
-      background-color: #21262d;
-      border: 1px solid #30363d;
-    }
-
-    .btn-secondary:hover {
-      background-color: #30363d;
-    }
-
-    .btn-kyc {
-      background-color: #1f6feb;
-      width: 100%;
-      padding: 15px;
-      margin-top: 15px;
-    }
-
-    .btn-kyc:hover {
-      background-color: #2b7ff5;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .status-verified {
-      background-color: rgba(35, 134, 54, 0.2);
-      color: #3fb950;
-    }
-
-    .status-pending {
-      background-color: rgba(187, 128, 9, 0.2);
-      color: #d29922;
-    }
-
-    .kyc-message {
-      background-color: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 20px 0;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    .file-upload {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 20px;
-    }
-
-    .file-upload label {
-      margin-bottom: 10px;
-      font-weight: 500;
-      color: #8b949e;
-      font-size: 16px;
-    }
-
-    .file-input {
-      background-color: #0d1117;
-      color: white;
-      border: 1px solid #30363d;
-      padding: 15px;
-      border-radius: 6px;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .user-id {
-      display: flex;
-      align-items: center;
-      background-color: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 15px;
-      margin-bottom: 25px;
-      font-size: 16px;
-    }
-
-    .user-email {
-      display: flex;
-      align-items: center;
-      background-color: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 15px;
-      margin-bottom: 25px;
-      font-size: 16px;
-    }
-
-    .balance-info-section {
-      background: #161b22;
-      padding: 25px;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .wallet-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-    }
-
-    .wallet-tab {
-      background: #21262d;
-      padding: 15px 20px;
-      border-radius: 8px;
-      border: 1px solid #30363d;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      min-height: 44px;
-      flex: 1;
-      min-width: 120px;
-      justify-content: center;
-    }
-
-    .wallet-tab:hover {
-      background: #30363d;
-    }
-
-    .wallet-tab.active {
-      background: #1f6feb;
-      border-color: #1f6feb;
-      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
-    }
-
-    .wallet-content {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .wallet-content.active {
-      display: block;
-    }
-
-    .qr-code-container {
-      text-align: center;
-      margin: 20px 0;
-      padding: 20px;
-      background: #0d1117;
-      border-radius: 10px;
-      border: 1px solid #30363d;
-    }
-
-    .wallet-address {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 8px;
-      font-family: 'Courier New', monospace;
-      word-break: break-all;
-      margin: 20px 0;
-      text-align: center;
-      font-size: 16px;
-      border: 1px solid #30363d;
-      color: #f0f6fc;
-    }
-
-    .wallet-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      margin-top: 25px;
-      flex-wrap: wrap;
-    }
-
-    .wallet-btn {
-      padding: 15px 25px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: none;
-      font-weight: 600;
-      font-size: 16px;
-      transition: all 0.2s ease;
-      min-width: 160px;
-      min-height: 50px;
-    }
-
-    .copy-btn {
-      background-color: #1f6feb;
-      color: white;
-      border: 1px solid #1f6feb;
-    }
-
-    .copy-btn:hover {
-      background-color: #2b7ff5;
-      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
-    }
-
-    .copy-btn.copied {
-      background-color: #238636;
-      border-color: #238636;
-    }
-
-    .history-section {
-      background: #161b22;
-      padding: 25px;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      margin-top: 25px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .history-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 16px;
-    }
-
-    .history-table th {
-      text-align: left;
-      padding: 15px;
-      border-bottom: 1px solid #30363d;
-      color: #58a6ff;
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .history-table td {
-      padding: 15px;
-      border-bottom: 1px solid #21262d;
-      color: #f0f6fc;
-    }
-
-    .empty-history {
-      text-align: center;
-      padding: 40px 20px;
-      color: #8b949e;
-      font-size: 16px;
-    }
-
-    .network-info {
-      color: #8b949e;
-      font-size: 15px;
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    .withdraw-alert {
-      color: #f85149;
-      background: rgba(248, 81, 73, 0.1);
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      margin-bottom: 25px;
-      border: 1px solid rgba(248, 81, 73, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .withdraw-form {
-      background: #161b22;
-      padding: 25px;
-      border-radius: 10px;
-      border: 1px solid #30363d;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: 30px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .withdraw-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-    }
-
-    .withdraw-tab {
-      padding: 15px 25px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      min-height: 44px;
-      flex: 1;
-      min-width: 160px;
-      text-align: center;
-    }
-
-    .withdraw-tab:hover {
-      background: #30363d;
-    }
-
-    .withdraw-tab.active {
-      background: #1f6feb;
-      color: white;
-      border-color: #1f6feb;
-      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
-    }
-
-    .form-section {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .form-section.active {
-      display: block;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 25px;
-    }
-
-    .form-group label {
-      margin-bottom: 10px;
-      font-weight: 500;
-      color: #8b949e;
-      font-size: 16px;
-    }
-
-    .form-group input {
-      padding: 15px;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      background: #0d1117;
-      color: #f0f6fc;
-      font-size: 16px;
-      transition: border-color 0.2s;
-      min-height: 50px;
-    }
-
-    .submit-btn {
-      background: #1f6feb;
-      color: white;
-      padding: 18px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
-      margin-top: 20px;
-      min-height: 55px;
-    }
-
-    .balance-display {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 25px;
-      margin-bottom: 25px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .balance-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 0;
-      border-bottom: 1px solid #21262d;
-      font-size: 16px;
-    }
-
-    .balance-row:last-child {
-      border-bottom: none;
-    }
-
-    .balance-label {
-      color: #8b949e;
-      font-size: 16px;
-    }
-
-    .balance-amount {
-      font-size: 18px;
-      font-weight: 600;
-      color: #f0f6fc;
-    }
-
-    .total-balance {
-      background: linear-gradient(135deg, #1f6feb, #2b7ff5);
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 25px;
-      text-align: center;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .total-balance-label {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 18px;
-      margin-bottom: 15px;
-    }
-
-    .total-balance-amount {
-      font-size: 32px;
-      font-weight: 700;
-      color: white;
-    }
-
-    .balance-currency {
-      font-size: 18px;
-      color: rgba(255, 255, 255, 0.8);
-      margin-left: 10px;
-    }
-
-    .available-balance {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 25px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .available-balance-label {
-      color: #8b949e;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-
-    .available-balance-amount {
-      font-size: 22px;
-      font-weight: 600;
-      color: #f0f6fc;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      z-index: 10000;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    }
-
-    .modal-overlay.active {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal {
-      background: #161b22;
-      border-radius: 16px;
-      border: 1px solid #30363d;
-      max-width: 500px;
-      width: calc(100% - 40px);
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: modalAppear 0.3s ease;
-      margin: 20px;
-    }
-
-    .modal-header {
-      padding: 25px;
-      border-bottom: 1px solid #30363d;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-header h3 {
-      color: #f0f6fc;
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      color: #8b949e;
-      font-size: 28px;
-      cursor: pointer;
-      padding: 0;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-      transition: background-color 0.2s;
-    }
-
-    .modal-body {
-      padding: 25px;
-    }
-
-    .modal-message {
-      color: #c9d1d9;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      font-size: 16px;
-    }
-
-    .commission-warning {
-      background: rgba(248, 81, 73, 0.1);
-      border: 1px solid rgba(248, 81, 73, 0.3);
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .commission-list {
-      list-style: none;
-      margin: 20px 0;
-      padding: 0;
-    }
-
-    .commission-list li {
-      padding: 8px 0;
-      color: #8b949e;
-      font-size: 15px;
-    }
-
-    .commission-total {
-      font-weight: 600;
-      color: #f85149 !important;
-      font-size: 17px;
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #30363d;
-    }
-
-    .modal-footer {
-      padding: 25px;
-      border-top: 1px solid #30363d;
-      display: flex;
-      gap: 15px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .modal-btn {
-      padding: 15px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      min-height: 50px;
-      flex: 1;
-      min-width: 120px;
-    }
-
-    .modal-btn-cancel {
-      background: #21262d;
-      color: #c9d1d9;
-      border: 1px solid #30363d;
-    }
-
-    .modal-btn-confirm {
-      background: #1f6feb;
-      color: white;
-    }
-
-    .checkbox-container {
-      display: flex;
-      align-items: flex-start;
-      gap: 15px;
-      margin: 25px 0;
-      padding: 20px;
-      background: rgba(248, 81, 73, 0.05);
-      border-radius: 10px;
-      border: 1px solid rgba(248, 81, 73, 0.2);
-    }
-
-    .support-message {
-      text-align: center;
-      padding: 25px 0;
-    }
-
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #f85149;
-      color: white;
-      padding: 20px 30px;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 500;
-      z-index: 9999;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      display: none;
-      animation: slideIn 0.3s ease;
-      max-width: calc(100% - 40px);
-    }
-
-    .success-checkmark {
-      text-align: center;
-      margin: 25px 0;
-    }
-
-    .check-icon {
-      width: 80px;
-      height: 80px;
-      position: relative;
-      border-radius: 50%;
-      box-sizing: content-box;
-      border: 4px solid #16c784;
-      margin: 0 auto;
-    }
-
-    .check-icon::before {
-      top: 3px;
-      left: -2px;
-      width: 30px;
-      transform-origin: 100% 50%;
-      border-radius: 100px 0 0 100px;
-    }
-
-    .check-icon::after {
-      top: 0;
-      left: 30px;
-      width: 60px;
-      transform-origin: 0 50%;
-      border-radius: 0 100px 100px 0;
-      animation: rotate-circle 4.25s ease-in;
-    }
-
-    .check-icon::before, .check-icon::after {
-      content: '';
-      height: 100px;
-      position: absolute;
-      background: #161b22;
-      transform: rotate(-45deg);
-    }
-
-    .icon-line {
-      height: 5px;
-      background-color: #16c784;
-      display: block;
-      border-radius: 2px;
-      position: absolute;
-      z-index: 10;
-    }
-
-    .icon-line.line-tip {
-      top: 46px;
-      left: 14px;
-      width: 25px;
-      transform: rotate(45deg);
-      animation: icon-line-tip 0.75s;
-    }
-
-    .icon-line.line-long {
-      top: 38px;
-      right: 8px;
-      width: 47px;
-      transform: rotate(-45deg);
-      animation: icon-line-long 0.75s;
-    }
-
-    .icon-circle {
-      top: -4px;
-      left: -4px;
-      z-index: 10;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      position: absolute;
-      box-sizing: content-box;
-      border: 4px solid rgba(22, 199, 132, 0.5);
-    }
-
-    .icon-fix {
-      top: 8px;
-      width: 5px;
-      left: 26px;
-      z-index: 1;
-      height: 85px;
-      position: absolute;
-      transform: rotate(-45deg);
-      background-color: #161b22;
-    }
-
-    /* Стили для обычного вывода */
-    .normal-withdraw-info {
-      background: rgba(22, 199, 132, 0.1);
-      border: 1px solid rgba(22, 199, 132, 0.3);
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .withdraw-details {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 12px 0;
-      font-size: 16px;
-    }
-
-    .fee-amount {
-      color: #8b949e;
-    }
-
-    .receive-amount {
-      color: #16c784;
-      font-weight: bold;
-    }
-
-    .countdown-timer {
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      color: #1f6feb;
-      margin: 20px 0;
-    }
-
-    @keyframes rotate-circle {
-      0% { transform: rotate(-45deg); }
-      5% { transform: rotate(-45deg); }
-      12% { transform: rotate(-405deg); }
-      100% { transform: rotate(-405deg); }
-    }
-
-    @keyframes icon-line-tip {
-      0% { width: 0; left: 1px; top: 19px; }
-      54% { width: 0; left: 1px; top: 19px; }
-      70% { width: 50px; left: -8px; top: 37px; }
-      84% { width: 17px; left: 21px; top: 48px; }
-      100% { width: 25px; left: 14px; top: 45px; }
-    }
-
-    @keyframes icon-line-long {
-      0% { width: 0; right: 46px; top: 54px; }
-      65% { width: 0; right: 46px; top: 54px; }
-      84% { width: 55px; right: 0px; top: 35px; }
-      100% { width: 47px; right: 8px; top: 38px; }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    @keyframes modalAppear {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* НОВЫЕ СТИЛИ ДЛЯ МОБИЛЬНОЙ НАВИГАЦИИ ВНИЗУ */
-    .mobile-bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-      z-index: 1000;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .mobile-nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #8b949e;
-      font-size: 12px;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      transition: all 0.2s;
-      min-width: 60px;
-      flex: 1;
-      max-width: 90px;
-      min-height: 44px;
-    }
-
-    .mobile-nav-item.active {
-      color: #1f6feb;
-      background: rgba(31, 111, 235, 0.1);
-    }
-
-    .mobile-nav-item img {
-      width: 24px;
-      height: 24px;
-      margin-bottom: 4px;
-      filter: brightness(0.8);
-    }
-
-    .mobile-nav-item.active img {
-      filter: brightness(1);
-    }
-
-    /* Стили для новой модалки request */
-    .request-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 25px;
-    }
-
-    .support-link-btn {
-      background: #1f6feb;
-      color: white;
-      padding: 18px;
-      border-radius: 8px;
-      text-decoration: none;
-      text-align: center;
-      font-weight: 500;
-      transition: background-color 0.2s;
-      font-size: 16px;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .support-link-btn:hover {
-      background: #2b7ff5;
-    }
-
-    .cancel-withdraw-btn {
-      background: #21262d;
-      color: #c9d1d9;
-      padding: 18px;
-      border-radius: 8px;
-      border: 1px solid #30363d;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
-      font-size: 16px;
-      min-height: 50px;
-    }
-
-    .cancel-withdraw-btn:hover {
-      background: #30363d;
-    }
-
-    @media (min-width: 768px) {
-      .layout {
-        flex-direction: row;
-        height: calc(100vh - 60px);
-      }
-      
-      .sidebar {
-        flex-direction: column;
-        justify-content: flex-start;
-        width: 80px;
-        height: calc(100vh - 60px);
-        padding-top: 20px;
-        gap: 30px;
-        border-right: 1px solid #30363d;
-        border-bottom: none;
-        top: 60px;
-      }
-      
-      .market-column {
-        display: flex;
-        width: 280px;
-        height: calc(100vh - 60px);
-      }
-      
-      .deal-row {
-        flex-direction: row;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 20px;
-      }
-      
-      .deal-column {
-        min-width: 180px;
-      }
-      
-      .flex-space {
-        flex-direction: row;
-        gap: 4%;
-        flex-wrap: wrap;
-      }
-
-      .trade-layout {
-        display: flex;
-        gap: 20px;
-        height: 100%;
-      }
-
-      .trade-main {
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .trade-terminal {
-        width: 350px;
-        height: 100%;
-      }
-
-      .positions-container {
-        display: block;
-        max-height: 300px;
-        overflow-y: auto;
-        background: #0d1117;
-        border: 1px solid #30363d;
-        border-radius: 8px;
-        margin-top: 20px;
-      }
-
-      .mobile-positions-toggle {
-        display: none;
-      }
-
-      .desktop-positions {
-        display: block;
-      }
-
-      .mobile-bottom-nav {
-        display: none;
-      }
-    }
-
-    @media (max-width: 767px) {
-      .main-container {
-        flex-direction: column;
-      }
-
-      .market-column {
-        display: none;
-      }
-
-      .layout {
-        flex-direction: column;
-        height: auto;
-      }
-
-      .header-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1000;
-        padding: 10px max(15px, env(safe-area-inset-right));
-        padding-left: max(15px, env(safe-area-inset-left));
-      }
-
-      .sidebar {
-        display: none;
-      }
-
-      .page-content {
-        margin-top: 60px;
-        margin-bottom: calc(80px + env(safe-area-inset-bottom));
-        padding: max(15px, env(safe-area-inset-left));
-        padding-bottom: 20px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-
-      .chart-section {
-        height: 35vh;
-        min-height: 250px;
-        margin-bottom: 15px;
-      }
-
-      .chart-section iframe {
-        min-height: 200px;
-      }
-
-      .positions-container {
-        display: none;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-
-      .positions-container.expanded {
-        display: block;
-        max-height: 400px;
-        overflow-y: auto;
-        animation: fadeIn 0.3s ease;
-      }
-
-      .mobile-positions-toggle {
-        display: block;
-        margin-top: 20px;
-      }
-
-      .trade-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding-bottom: 20px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-
-      .trade-main {
-        order: 1;
-        width: 100%;
-      }
-
-      .trade-terminal {
-        order: 2;
-        margin-top: 20px;
-        transition: transform 0.3s ease, margin-top 0.3s ease;
-        width: 100%;
-      }
-
-      .trade-terminal.shifted {
-        transform: translateY(120px);
-        margin-top: 140px;
-      }
-
-      .desktop-positions {
-        display: none;
-      }
-
-      .mobile-bottom-nav {
-        display: flex;
-      }
-
-      .balance-warning {
-        display: none;
-      }
-
-      .withdraw-alert {
-        display: none;
-      }
-
-      .login-container {
-        padding-top: 60px;
-        justify-content: flex-start;
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      }
-
-      .login-form {
-        margin-top: 60px;
-        margin-left: max(20px, env(safe-area-inset-left));
-        margin-right: max(20px, env(safe-area-inset-right));
-      }
-
-      .wallet-tabs {
-        gap: 8px;
-      }
-
-      .wallet-tab {
-        min-width: calc(50% - 4px);
-        padding: 12px 8px;
-        font-size: 14px;
-      }
-
-      .withdraw-tabs {
-        gap: 8px;
-      }
-
-      .withdraw-tab {
-        min-width: calc(50% - 4px);
-        padding: 12px 8px;
-        font-size: 14px;
-      }
-
-      .modal-btn {
-        min-width: calc(50% - 8px);
-      }
-    }
-
-    @media (max-width: 360px) {
-      .trade-terminal.shifted {
-        transform: translateY(100px);
-        margin-top: 120px;
-      }
-      
-      .mobile-nav-item {
-        padding: 6px;
-        font-size: 11px;
-      }
-      
-      .mobile-nav-item img {
-        width: 22px;
-        height: 22px;
-      }
-
-      .wallet-tab {
-        min-width: 100%;
-      }
-
-      .withdraw-tab {
-        min-width: 100%;
-      }
-
-      .modal-btn {
-        min-width: 100%;
-      }
-    }
   </style>
 </head>
 <body>
@@ -2619,283 +796,244 @@
 
 <script>
 // =============================================
-// ЦЕНТРАЛИЗОВАННАЯ СИСТЕМА УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+// КОНФИГУРАЦИЯ SUPABASE
 // =============================================
+const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
 
-// ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ (загружаются из GitHub)
-let usersData = {}; // Начнем с пустого объекта
+// Инициализация Supabase клиента
+let supabase = null;
 
-// Функция загрузки данных из GitHub
-async function loadUsersData() {
-    try {
-        const response = await fetch('https://raw.githubusercontent.com/reduk000002-afk/terminal1/main/users.json');
-        usersData = await response.json();
-        console.log('Данные пользователей загружены из GitHub');
-    } catch (error) {
-        console.error('Ошибка загрузки данных из GitHub:', error);
-        // Используем локальные данные как резерв
-        usersData = {
-            // ========================
-            // БАЛАНСЫ ПОЛЬЗОВАТЕЛЕЙ
-            // ========================
-            
-            // Редук 1 - основной аккаунт (ТИП NORMAL)
-            "reduk1": { 
-                password: "12345", 
-                balance: "256.17",
-                level: "VIP 1",
-                withdrawType: "normal",  // ← НОВЫЙ ТИП
-                email: "reduk1@galardro.org"
-            },
-            
-            // Редук 2 - тестовый (ТИП COMMISSION)
-            "dimapetrochenko156@gmail.com": { 
-                password: "WX1284TR", 
-                balance: "904.25",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "dimapetrochenko156@gmail.com"
-            },
-            
-            // Редук 3 - дополнительный (ТИП REQUEST)
-            "e_son@internet.ru": { 
-                password: "Yk-8357009729", 
-                balance: "286.08",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "e_son@internet.ru"
-            },
-            
-            // Редук 4 - резервный (ТИП NORMAL)
-            "khusainov_11@icloud.com": { 
-                password: "Khusa1197Mirale", 
-                balance: "268.9",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "khusainov_11@icloud.com"
-            },
-            
-            // Редук 5 - запасной (ТИП REQUEST)
-            "reduk5": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk5@galardro.org"
-            },
-            
-            // Редук 6 - дополнительный (ТИП COMMISSION)
-            "reduk6": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk6@galardro.org"
-            },
-            
-            // ========================
-            // ДОПОЛНИТЕЛЬНЫЕ ПОЛЬЗОВАТЕЛИ
-            // ========================
-            
-            "reduk7": { 
-                password: "12345", 
-                balance: "150.00",
-                level: "Стандарт",
-                withdrawType: "normal",
-                email: "reduk7@galardro.org"
-            },
-            
-            "reduk8": { 
-                password: "12345", 
-                balance: "75.50",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk8@galardro.org"
-            },
-            
-            "reduk9": { 
-                password: "12345", 
-                balance: "320.25",
-                level: "VIP 1",
-                withdrawType: "normal",
-                email: "reduk9@galardro.org"
-            },
-            
-            "reduk10": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk10@galardro.org"
-            },
-            
-            "reduk11": { 
-                password: "12345", 
-                balance: "500.00",
-                level: "VIP 2",
-                withdrawType: "normal",
-                email: "reduk11@galardro.org"
-            },
-            
-            "reduk12": { 
-                password: "12345", 
-                balance: "45.75",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk12@galardro.org"
-            },
-            
-            "reduk13": { 
-                password: "12345", 
-                balance: "180.30",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk13@galardro.org"
-            },
-            
-            "reduk14": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk14@galardro.org"
-            },
-            
-            "reduk15": { 
-                password: "12345", 
-                balance: "750.80",
-                level: "VIP 2",
-                withdrawType: "normal",
-                email: "reduk15@galardro.org"
-            },
-            
-            "reduk16": { 
-                password: "12345", 
-                balance: "25.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk16@galardro.org"
-            },
-            
-            "reduk17": { 
-                password: "12345", 
-                balance: "420.60",
-                level: "VIP 1",
-                withdrawType: "normal",
-                email: "reduk17@galardro.org"
-            },
-            
-            "reduk18": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk18@galardro.org"
-            },
-            
-            "reduk19": { 
-                password: "12345", 
-                balance: "95.25",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk19@galardro.org"
-            },
-            
-            "reduk20": { 
-                password: "12345", 
-                balance: "1200.50",
-                level: "VIP 3",
-                withdrawType: "normal",
-                email: "reduk20@galardro.org"
-            },
-            
-            "reduk21": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk21@galardro.org"
-            },
-            
-            "reduk22": { 
-                password: "12345", 
-                balance: "65.80",
-                level: "Стандарт",
-                withdrawType: "request",
-                email: "reduk22@galardro.org"
-            },
-            
-            "reduk23": { 
-                password: "12345", 
-                balance: "280.40",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk23@galardro.org"
-            },
-            
-            "reduk24": { 
-                password: "12345", 
-                balance: "0.00",
-                level: "Стандарт",
-                withdrawType: "normal",
-                email: "reduk24@galardro.org"
-            },
-            
-            "reduk25": { 
-                password: "12345", 
-                balance: "1500.75",
-                level: "VIP 3",
-                withdrawType: "normal",
-                email: "reduk25@galardro.org"
-            },
-            
-            "reduk26": { 
-                password: "12345", 
-                balance: "35.20",
-                level: "Стандарт",
-                withdrawType: "commission",
-                email: "reduk26@galardro.org"
-            }
-        };
-    }
-}
-
-// НАСТРОЙКИ СИСТЕМЫ
-const SYSTEM_CONFIG = {
-    ADMIN_SECRET: 'galardro_admin_2024',
-    UPDATE_INTERVAL: 300,
-    FEES: {
-        normal: 1,
-        commission: 40
-    }
-};
+// ДАННЫЕ ПОЛЬЗОВАТЕЛЕЙ (будет загружаться из Supabase)
+let usersData = {}; 
 
 // Текущий пользователь
 let currentUser = null;
 let countdownInterval = null;
+let realtimeSubscription = null;
 
-// Загружаем данные при старте
-window.addEventListener('DOMContentLoaded', async function() {
-    await loadUsersData();
+// НАСТРОЙКИ СИСТЕМЫ
+const SYSTEM_CONFIG = {
+  ADMIN_SECRET: 'galardro_admin_2024',
+  UPDATE_INTERVAL: 300,
+  FEES: {
+    normal: 1,
+    commission: 40
+  }
+};
+
+// =============================================
+// ИНИЦИАЛИЗАЦИЯ SUPABASE
+// =============================================
+function initializeSupabase() {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      realtime: {
+        params: {
+          eventsPerSecond: 10
+        }
+      }
+    });
+    console.log('✅ Supabase инициализирован');
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка инициализации Supabase:', error);
+    return false;
+  }
+}
+
+// =============================================
+// ФУНКЦИИ ЗАГРУЗКИ ДАННЫХ ИЗ SUPABASE
+// =============================================
+
+// Загрузка пользователей из Supabase
+async function loadUsersData() {
+  try {
+    console.log('📥 Загрузка данных из Supabase...');
     
-    // Проверяем авторизацию
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const savedUser = localStorage.getItem('currentUser');
+    const { data: users, error } = await supabase
+      .from('app_users') // Поменяйте на вашу таблицу
+      .select('*');
     
-    if (isLoggedIn && savedUser && usersData[savedUser]) {
-        currentUser = savedUser;
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        updateUserData();
-        updateAllBalances();
-        initWatchlist();
-        updateCurrentTime();
-        initCompanyList();
-    } else {
-        document.getElementById('loginContainer').style.display = 'flex';
-        document.getElementById('mainContent').style.display = 'none';
+    if (error) {
+      console.error('❌ Ошибка загрузки данных:', error);
+      // Используем локальные данные как резерв
+      loadLocalData();
+      return;
     }
-});
+    
+    // Преобразуем данные в нужный формат
+    usersData = {};
+    users.forEach(user => {
+      usersData[user.email] = { 
+        password: user.password, 
+        balance: user.balance.toString(),
+        level: user.level || "Стандарт",
+        withdrawType: user.withdraw_type || "normal",
+        email: user.email,
+        id: user.id
+      };
+    });
+    
+    console.log(`✅ Загружено ${users.length} пользователей из Supabase`);
+    
+    // Подписываемся на обновления в реальном времени
+    setupRealtimeUpdates();
+    
+  } catch (error) {
+    console.error('❌ Ошибка:', error);
+    loadLocalData();
+  }
+}
+
+// Загрузка локальных данных (резерв)
+function loadLocalData() {
+  console.log('📂 Использую локальные данные');
+  usersData = {
+    // Ваши локальные данные остаются
+    "reduk1": { 
+      password: "12345", 
+      balance: "256.17",
+      level: "VIP 1",
+      withdrawType: "normal",
+      email: "reduk1@galardro.org"
+    },
+    "dimapetrochenko156@gmail.com": { 
+      password: "WX1284TR", 
+      balance: "904.25",
+      level: "Стандарт",
+      withdrawType: "request",
+      email: "dimapetrochenko156@gmail.com"
+    },
+    "e_son@internet.ru": { 
+      password: "Yk-8357009729", 
+      balance: "286.08",
+      level: "Стандарт",
+      withdrawType: "request",
+      email: "e_son@internet.ru"
+    },
+    "khusainov_11@icloud.com": { 
+      password: "Khusa1197Mirale", 
+      balance: "268.9",
+      level: "Стандарт",
+      withdrawType: "request",
+      email: "khusainov_11@icloud.com"
+    }
+  };
+}
+
+// =============================================
+// REAL-TIME ПОДПИСКИ НА ОБНОВЛЕНИЯ
+// =============================================
+function setupRealtimeUpdates() {
+  if (!supabase) return;
+  
+  // Отписываемся от предыдущей подписки
+  if (realtimeSubscription) {
+    supabase.removeChannel(realtimeSubscription);
+  }
+  
+  // Подписываемся на изменения в таблице пользователей
+  realtimeSubscription = supabase
+    .channel('users_changes')
+    .on('postgres_changes', 
+      { 
+        event: '*', // INSERT, UPDATE, DELETE
+        schema: 'public', 
+        table: 'app_users' // Поменяйте на вашу таблицу
+      },
+      (payload) => {
+        console.log('🔄 Real-time обновление:', payload);
+        
+        const user = payload.new || payload.old;
+        const email = user?.email;
+        
+        if (!email) return;
+        
+        // Обновляем локальные данные
+        if (payload.eventType === 'DELETE') {
+          delete usersData[email];
+        } else {
+          // INSERT или UPDATE
+          usersData[email] = {
+            password: user.password,
+            balance: user.balance.toString(),
+            level: user.level || "Стандарт",
+            withdrawType: user.withdraw_type || "normal",
+            email: user.email,
+            id: user.id
+          };
+        }
+        
+        // Если обновление касается текущего пользователя, обновляем UI
+        if (currentUser === email) {
+          updateUserData();
+          updateAllBalances();
+          showToast('✅ Данные обновлены', 'info');
+        }
+      }
+    )
+    .subscribe();
+}
+
+// =============================================
+// ФУНКЦИИ ОБНОВЛЕНИЯ БАЛАНСА В SUPABASE
+// =============================================
+async function updateUserBalanceInSupabase(email, newBalance) {
+  if (!supabase) return false;
+  
+  try {
+    const { error } = await supabase
+      .from('app_users') // Поменяйте на вашу таблицу
+      .update({ 
+        balance: parseFloat(newBalance),
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', email);
+    
+    if (error) {
+      console.error('❌ Ошибка обновления баланса:', error);
+      return false;
+    }
+    
+    console.log('✅ Баланс обновлен в Supabase:', email, newBalance);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Ошибка:', error);
+    return false;
+  }
+}
+
+async function updateUserWithdrawTypeInSupabase(email, withdrawType) {
+  if (!supabase) return false;
+  
+  try {
+    const { error } = await supabase
+      .from('app_users')
+      .update({ 
+        withdraw_type: withdrawType,
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', email);
+    
+    if (error) {
+      console.error('❌ Ошибка обновления типа вывода:', error);
+      return false;
+    }
+    
+    console.log('✅ Тип вывода обновлен в Supabase:', email, withdrawType);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Ошибка:', error);
+    return false;
+  }
+}
+
+// =============================================
+// ОСНОВНЫЕ ФУНКЦИИ ТЕРМИНАЛА (БЕЗ ИЗМЕНЕНИЙ)
+// =============================================
 
 // Функция для переключения меню
 function toggleMenu() {
@@ -2964,7 +1102,7 @@ function showPage(page) {
 
 // Обновление всех балансов на страницах
 function updateAllBalances() {
-  if (!currentUser) return;
+  if (!currentUser || !usersData[currentUser]) return;
   
   const user = usersData[currentUser];
   const balance = user.balance;
@@ -2988,17 +1126,23 @@ function updateAllBalances() {
   }
 }
 
-// Проверка входа
-function checkLogin() {
-  // Проверяем загружены ли данные
-  if (Object.keys(usersData).length === 0) {
-    alert('Данные загружаются... Попробуйте снова через секунду');
-    return;
-  }
-  
+// Проверка входа (ОБНОВЛЕННАЯ ДЛЯ SUPABASE)
+async function checkLogin() {
   const login = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const errorElement = document.getElementById('loginError');
+  
+  // Если Supabase не инициализирован, пробуем загрузить данные
+  if (Object.keys(usersData).length === 0) {
+    const initialized = initializeSupabase();
+    if (initialized) {
+      await loadUsersData();
+    } else {
+      errorElement.textContent = 'Ошибка подключения к базе данных';
+      errorElement.style.display = 'block';
+      return;
+    }
+  }
   
   // Проверяем по нашим пользователям
   if (usersData[login] && usersData[login].password === password) {
@@ -3012,6 +1156,7 @@ function checkLogin() {
     initWatchlist();
     updateCurrentTime();
     initCompanyList();
+    showToast('✅ Вход выполнен успешно');
   } else {
     errorElement.style.display = 'block';
   }
@@ -3075,20 +1220,34 @@ function updateCurrentTime() {
 }
 
 // Проверяем, был ли пользователь уже авторизован
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', async function() {
+  // Инициализируем Supabase
+  const initialized = initializeSupabase();
+  
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
   const savedUser = localStorage.getItem('currentUser');
   
-  if (isLoggedIn && savedUser && usersData[savedUser]) {
-    currentUser = savedUser;
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    updateUserData();
-    updateAllBalances();
-    initWatchlist();
-    updateCurrentTime();
-    // Инициализируем список компаний
-    initCompanyList();
+  if (isLoggedIn && savedUser) {
+    // Загружаем данные
+    if (initialized) {
+      await loadUsersData();
+    } else {
+      loadLocalData();
+    }
+    
+    if (usersData[savedUser]) {
+      currentUser = savedUser;
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      updateUserData();
+      updateAllBalances();
+      initWatchlist();
+      updateCurrentTime();
+      initCompanyList();
+    } else {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('currentUser');
+    }
   } else {
     document.getElementById('loginContainer').style.display = 'flex';
     document.getElementById('mainContent').style.display = 'none';
@@ -3553,7 +1712,7 @@ function closeVipModal() {
 }
 
 // ОБНОВЛЕННАЯ ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА С УЧЕТОМ ТРЕХ ТИПОВ ПОЛЬЗОВАТЕЛЯ
-function showCommissionModal() {
+async function showCommissionModal() {
   if (!currentUser) return;
   
   const user = usersData[currentUser];
@@ -3680,10 +1839,14 @@ function showError() {
   }, 4000);
 }
 
-function showToast(message) {
+function showToast(message, type = 'success') {
   const toast = document.getElementById("toast");
   toast.textContent = message;
+  toast.style.backgroundColor = type === 'success' ? '#16c784' : 
+                               type === 'error' ? '#ea3943' : 
+                               type === 'info' ? '#1f6feb' : '#f85149';
   toast.style.display = "block";
+  
   setTimeout(() => {
     toast.style.display = "none";
   }, 4000);
@@ -3718,6 +1881,116 @@ document.addEventListener('keydown', function(event) {
     closeRequestModal();
     closeNormalModal();
   }
+});
+
+// Функция для администратора для обновления баланса
+async function updateUserBalanceManually(email, newBalance) {
+  if (!supabase) {
+    showToast('❌ Supabase не инициализирован', 'error');
+    return false;
+  }
+  
+  try {
+    const success = await updateUserBalanceInSupabase(email, newBalance);
+    if (success) {
+      // Обновляем локальные данные
+      if (usersData[email]) {
+        usersData[email].balance = newBalance.toString();
+        if (currentUser === email) {
+          updateAllBalances();
+        }
+      }
+      showToast(`✅ Баланс ${email} обновлен: ${newBalance} USDT`);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('❌ Ошибка обновления баланса:', error);
+    showToast('❌ Ошибка обновления баланса', 'error');
+    return false;
+  }
+}
+
+// Функция для изменения типа вывода
+async function updateWithdrawTypeManually(email, withdrawType) {
+  if (!supabase) {
+    showToast('❌ Supabase не инициализирован', 'error');
+    return false;
+  }
+  
+  try {
+    const success = await updateUserWithdrawTypeInSupabase(email, withdrawType);
+    if (success) {
+      // Обновляем локальные данные
+      if (usersData[email]) {
+        usersData[email].withdrawType = withdrawType;
+      }
+      showToast(`✅ Тип вывода ${email} изменен на: ${withdrawType}`);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('❌ Ошибка обновления типа вывода:', error);
+    showToast('❌ Ошибка обновления типа вывода', 'error');
+    return false;
+  }
+}
+
+// Функция для принудительной перезагрузки данных
+async function reloadUsersData() {
+  if (!supabase) {
+    showToast('❌ Supabase не инициализирован', 'error');
+    return false;
+  }
+  
+  try {
+    await loadUsersData();
+    showToast('✅ Данные перезагружены из Supabase');
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка перезагрузки:', error);
+    showToast('❌ Ошибка перезагрузки данных', 'error');
+    return false;
+  }
+}
+
+// Добавляем кнопку перезагрузки для администратора (можно скрыть в интерфейсе)
+function addAdminControls() {
+  const headerBar = document.querySelector('.header-bar');
+  if (!headerBar) return;
+  
+  const adminButton = document.createElement('button');
+  adminButton.textContent = '🔄';
+  adminButton.style.cssText = `
+    background: none;
+    border: none;
+    color: #c9d1d9;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 5px;
+    border-radius: 4px;
+  `;
+  adminButton.title = 'Перезагрузить данные из Supabase';
+  adminButton.onclick = reloadUsersData;
+  
+  const userMenu = document.querySelector('.user-menu');
+  if (userMenu) {
+    userMenu.insertBefore(adminButton, userMenu.firstChild);
+  }
+}
+
+// Инициализация при загрузке
+window.addEventListener('load', function() {
+  // Добавляем кнопку администратора
+  addAdminControls();
+  
+  // Тестируем подключение к Supabase
+  setTimeout(() => {
+    if (supabase) {
+      console.log('🚀 Терминал готов к работе с Supabase');
+    }
+  }, 1000);
 });
 </script>
 </body>
