@@ -552,18 +552,12 @@
             });
         }
 
-        // Конфигурация Supabase
-        const SUPABASE_CONFIG = {
-            url: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
-            anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i',
-            tableName: 'app_users'
-        };
-
+        // Конфигурация Supabase (ТАК ЖЕ как в админке)
+        const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        
         // Инициализация Supabase
-        const supabase = window.supabase.createClient(
-            SUPABASE_CONFIG.url,
-            SUPABASE_CONFIG.anonKey
-        );
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Обработка формы регистрации
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
@@ -601,9 +595,9 @@
             loadingSpinner.style.display = 'inline';
             
             try {
-                // Сохраняем пользователя в Supabase
+                // Добавляем пользователя ТОЧНО так же как в админке
                 const { data, error } = await supabase
-                    .from(SUPABASE_CONFIG.tableName)
+                    .from('app_users')
                     .insert([
                         {
                             user_key: username,           // Логин (из email)
@@ -611,20 +605,20 @@
                             email: email,                 // Email
                             phone: countryCode + ' ' + phone, // Телефон
                             country: country,             // Страна
-                            balance: '1000.00',           // Стартовый баланс
+                            balance: 1000.00,           // Стартовый баланс (число, не строка)
                             level: 'Стандарт',            // Уровень
                             withdraw_type: 'normal',      // Тип вывода
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
                             updated_by: 'registration_form'
+                            // НЕ добавляем created_at - база сама сделает
                         }
                     ]);
                 
                 if (error) {
+                    console.error('Ошибка Supabase:', error);
                     throw error;
                 }
                 
-                // Показываем уведомление об успехе
+                // Успех
                 document.getElementById('registrationForm').style.display = 'none';
                 document.getElementById('registeredEmail').textContent = email;
                 document.getElementById('successNotification').classList.add('success');
@@ -636,7 +630,7 @@
                     phone: countryCode + phone 
                 });
                 
-                // Сохраняем данные для авто-входа (опционально)
+                // Сохраняем данные для авто-входа
                 localStorage.setItem('temp_registration_data', JSON.stringify({
                     email: email,
                     password: password
@@ -645,14 +639,18 @@
             } catch (error) {
                 console.error('Ошибка регистрации:', error);
                 
-                // Показываем ошибку пользователю
+                // Показываем детальную ошибку
+                let errorMessage = 'Ошибка регистрации. Пожалуйста, попробуйте позже.';
+                
                 if (error.message.includes('duplicate key')) {
-                    alert('Пользователь с таким email уже зарегистрирован!');
+                    errorMessage = 'Пользователь с таким email уже зарегистрирован!';
+                } else if (error.message.includes('null value')) {
+                    errorMessage = 'Пожалуйста, заполните все обязательные поля.';
                 } else if (error.message.includes('auth')) {
-                    alert('Ошибка авторизации. Проверьте данные.');
-                } else {
-                    alert('Ошибка регистрации. Пожалуйста, попробуйте позже.');
+                    errorMessage = 'Ошибка авторизации. Проверьте данные.';
                 }
+                
+                alert(errorMessage);
                 
                 // Скрываем индикатор загрузки
                 submitBtn.disabled = false;
@@ -675,6 +673,24 @@
                 case 'UK': countryCodeSelect.value = '+44'; break;
                 case 'DE': countryCodeSelect.value = '+49'; break;
                 default: countryCodeSelect.value = '+7';
+            }
+        });
+        
+        // Проверка подключения к Supabase
+        window.addEventListener('load', async function() {
+            try {
+                const { data, error } = await supabase
+                    .from('app_users')
+                    .select('count')
+                    .limit(1);
+                    
+                if (error) {
+                    console.warn('Supabase подключен, но есть ошибка:', error);
+                } else {
+                    console.log('Supabase успешно подключен!');
+                }
+            } catch (error) {
+                console.error('Ошибка подключения к Supabase:', error);
             }
         });
     </script>
