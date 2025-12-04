@@ -1,1 +1,1298 @@
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поддержка | GL Биржа</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a0e17;
+            --secondary: #1a2332;
+            --accent: #2563eb;
+            --accent-hover: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --card-bg: #151f2e;
+            --border-color: #2d3748;
+            --profit: #10b981;
+            --loss: #ef4444;
+            --admin-msg: rgba(37, 99, 235, 0.15);
+            --user-msg: rgba(30, 41, 59, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Minimal Header */
+        .minimal-header {
+            background-color: var(--primary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #3b82f6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .logo p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .chat-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Support Hero */
+        .support-hero {
+            text-align: center;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .support-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .support-hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Support Info Section */
+        .support-info {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .support-header {
+            margin-bottom: 2rem;
+        }
+
+        .support-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--accent);
+            font-size: 2rem;
+        }
+
+        .support-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .support-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0;
+        }
+
+        .support-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .support-feature {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .support-feature i {
+            width: 40px;
+            height: 40px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .feature-text h3 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .feature-text p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Help Categories */
+        .help-categories {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--accent);
+            font-size: 1.8rem;
+        }
+
+        .category-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Chat Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .chat-modal {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            max-height: 800px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 20px 24px;
+            background: var(--secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--profit);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--profit);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .close-chat:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Chat Body */
+        .chat-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Messages Area */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--primary);
+        }
+
+        .message {
+            max-width: 75%;
+            animation: messageAppear 0.3s ease;
+        }
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.admin {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 14px 18px;
+            border-radius: 18px;
+            position: relative;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: var(--admin-msg);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.admin .message-content {
+            background: var(--user-msg);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        .message.admin .message-time {
+            text-align: left;
+        }
+
+        /* Chat Input */
+        .chat-input-area {
+            padding: 20px 24px;
+            background: var(--secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: none;
+            min-height: 60px;
+            max-height: 120px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .send-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            height: 60px;
+        }
+
+        .send-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* User Email Form */
+        .email-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .email-form h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .email-form p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .email-input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .start-chat-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .start-chat-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Welcome Message */
+        .welcome-message {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .welcome-message h4 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-bottom: 3rem;
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .faq-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .faq-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+        }
+
+        .faq-question i {
+            color: var(--accent);
+            margin-top: 0.2rem;
+        }
+
+        .faq-answer {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 12px 16px;
+            margin: 10px 24px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--profit);
+            color: var(--profit);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--loss);
+            color: var(--loss);
+        }
+
+        /* Scrollbar Styling */
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .minimal-header {
+                padding: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .support-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .chat-modal {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+            
+            .messages-container {
+                padding: 16px;
+            }
+            
+            .chat-input-area {
+                padding: 16px;
+            }
+            
+            .input-wrapper {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .send-btn {
+                width: 100%;
+                height: 50px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .support-hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .support-info {
+                padding: 1.5rem;
+            }
+            
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="minimal-header">
+        <div class="logo">
+            <div class="logo-icon">GL</div>
+            <div class="logo-text">
+                <h1><span>Galardro</span> Support</h1>
+                <p>Центр поддержки</p>
+            </div>
+        </div>
+        <button class="chat-btn" id="openChatBtn">
+            <i class="fas fa-headset"></i> Открыть чат поддержки
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Support Hero -->
+        <section class="support-hero">
+            <h1>Техническая поддержка GL Биржи</h1>
+            <p>Получите профессиональную помощь от нашей команды поддержки 24/7</p>
+        </section>
+
+        <!-- Support Info Section -->
+        <section class="support-info">
+            <div class="support-header">
+                <div class="support-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h2>Служба поддержки Galardro</h2>
+                <p class="support-subtitle">Профессиональная помощь для ваших торговых операций</p>
+            </div>
+            <div class="support-details">
+                <div class="support-feature">
+                    <i class="fas fa-clock"></i>
+                    <div class="feature-text">
+                        <h3>Среднее время ответа</h3>
+                        <p>15-30 минут в рабочее время</p>
+                    </div>
+                </div>
+                <div class="support-feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <div class="feature-text">
+                        <h3>Конфиденциальность</h3>
+                        <p>Все данные защищены шифрованием</p>
+                    </div>
+                </div>
+                <div class="support-feature">
+                    <i class="fas fa-certificate"></i>
+                    <div class="feature-text">
+                        <h3>Экспертная поддержка</h3>
+                        <p>Трейдеры и финансовые эксперты</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Welcome Message -->
+        <div class="welcome-message">
+            <h4><i class="fas fa-info-circle"></i> Важная информация</h4>
+            <p>При обращении в поддержку используйте email, указанный при регистрации на бирже. Это ускорит обработку вашего запроса и позволит связать чат с вашим аккаунтом.</p>
+        </div>
+
+        <!-- Help Categories -->
+        <section class="help-categories">
+            <h2 class="section-title">Популярные категории запросов</h2>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3>Верификация аккаунта</h3>
+                    <p>KYC процедура и подтверждение личности</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3>Торговые операции</h3>
+                    <p>Ордера, исполнение сделок, лимиты</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h3>Финансовые операции</h3>
+                    <p>Депозиты, выводы, комиссии</p>
+                </div>
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Безопасность аккаунта</h3>
+                    <p>2FA, восстановление доступа, защита</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <h2 class="section-title">Часто задаваемые вопросы</h2>
+            <div class="faq-grid">
+                <div class="faq-card">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Какой email использовать для чата?</span>
+                    </div>
+                    <div class="faq-answer">
+                        Используйте email, который вы указали при регистрации на бирже. Это позволит связать ваш чат с аккаунтом и ускорит решение вопросов.
+                    </div>
+                </div>
+                <div class="faq-card">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Сколько хранится история чата?</span>
+                    </div>
+                    <div class="faq-answer">
+                        История всех чатов сохраняется в течение 6 месяцев. Вы можете вернуться к обсуждению в любое время, даже после закрытия окна чата.
+                    </div>
+                </div>
+                <div class="faq-card">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Можно ли прикрепить файлы в чате?</span>
+                    </div>
+                    <div class="faq-answer">
+                        В данный момент функция прикрепления файлов находится в разработке. Для передачи документов используйте email службы поддержки.
+                    </div>
+                </div>
+                <div class="faq-card">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        <span>В какое время работает поддержка?</span>
+                    </div>
+                    <div class="faq-answer">
+                        Техническая поддержка работает 24/7. В ночное время ответ может занять до 2 часов.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="copyright">
+            <p>&copy; 2023 GL Биржа (Galardro). Все права защищены.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">GL Биржа является зарегистрированным брокером-дилером. Инвестиции сопряжены с рисками.</p>
+        </div>
+    </footer>
+
+    <!-- Chat Modal -->
+    <div class="modal-overlay" id="chatModal">
+        <div class="chat-modal">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <h3>Чат поддержки</h3>
+                    <div class="chat-status" id="chatStatus">
+                        <div class="status-indicator"></div>
+                        <span>Онлайн</span>
+                    </div>
+                </div>
+                <button class="close-chat" id="closeChatBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Chat Body -->
+            <div class="chat-body">
+                <!-- Email Form (initial state) -->
+                <div id="emailForm" class="email-form">
+                    <div class="support-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Введите ваш email</h3>
+                    <p>Для начала общения с поддержкой введите email, привязанный к вашему аккаунту на бирже</p>
+                    <input type="email" id="userEmail" class="email-input" placeholder="ваш.email@example.com">
+                    <button class="start-chat-btn" id="startChatBtn">
+                        <i class="fas fa-comments"></i> Начать чат
+                    </button>
+                </div>
+
+                <!-- Messages Area (hidden initially) -->
+                <div id="messagesContainer" class="messages-container" style="display: none;">
+                    <!-- Messages will be loaded here -->
+                </div>
+
+                <!-- Chat Input (hidden initially) -->
+                <div id="chatInputArea" class="chat-input-area" style="display: none;">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            class="chat-input" 
+                            placeholder="Введите ваше сообщение..." 
+                            rows="3"
+                            onkeydown="handleMessageKeydown(event)"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i> Отправить
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Message -->
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // State variables
+        let currentUserEmail = '';
+        let currentUserId = '';
+        let chatSubscription = null;
+        let isSendingMessage = false; // Флаг для предотвращения дублирования
+        
+        // DOM Elements
+        const chatModal = document.getElementById('chatModal');
+        const openChatBtn = document.getElementById('openChatBtn');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const emailForm = document.getElementById('emailForm');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const chatInputArea = document.getElementById('chatInputArea');
+        const userEmailInput = document.getElementById('userEmail');
+        const startChatBtn = document.getElementById('startChatBtn');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Open chat modal
+        openChatBtn.addEventListener('click', openChatModal);
+        
+        // Close chat modal
+        closeChatBtn.addEventListener('click', closeChatModal);
+        
+        // Start chat with email
+        startChatBtn.addEventListener('click', startChat);
+        
+        // Close modal when clicking outside
+        chatModal.addEventListener('click', function(event) {
+            if (event.target === chatModal) {
+                closeChatModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeChatModal();
+            }
+        });
+        
+        // Open chat modal function
+        function openChatModal() {
+            chatModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Check if user already has email in localStorage
+            const savedEmail = localStorage.getItem('support_email');
+            if (savedEmail) {
+                userEmailInput.value = savedEmail;
+            }
+            
+            userEmailInput.focus();
+        }
+        
+        // Close chat modal function
+        function closeChatModal() {
+            chatModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Unsubscribe from real-time updates
+            if (chatSubscription) {
+                supabase.removeChannel(chatSubscription);
+                chatSubscription = null;
+            }
+            
+            // Reset state
+            currentUserId = '';
+            currentUserEmail = '';
+            isSendingMessage = false;
+        }
+        
+        // Start chat function
+        function startChat() {
+            const email = userEmailInput.value.trim();
+            
+            if (!email || !validateEmail(email)) {
+                showStatus('Введите корректный email адрес', 'error');
+                userEmailInput.focus();
+                return;
+            }
+            
+            // Save email to localStorage
+            localStorage.setItem('support_email', email);
+            
+            currentUserEmail = email;
+            currentUserId = `user_${email.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 45)}`;
+            
+            // Hide email form, show chat
+            emailForm.style.display = 'none';
+            messagesContainer.style.display = 'flex';
+            chatInputArea.style.display = 'block';
+            
+            // Load messages
+            loadMessages();
+            
+            // Setup real-time updates
+            setupRealtimeUpdates();
+            
+            showStatus('Чат успешно открыт. Ожидайте ответа оператора.', 'success');
+            messageInput.focus();
+        }
+        
+        // Validate email function
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'success') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, type === 'error' ? 5000 : 3000);
+        }
+        
+        // Load messages function
+        async function loadMessages() {
+            try {
+                const { data: messages, error } = await supabase
+                    .from('support_chat')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .order('created_at', { ascending: true });
+                
+                if (error) throw error;
+                
+                displayMessages(messages);
+                
+                // Mark admin messages as read
+                await markMessagesAsRead();
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                showStatus('Ошибка загрузки сообщений', 'error');
+            }
+        }
+        
+        // Display messages function
+        function displayMessages(messages) {
+            messagesContainer.innerHTML = '';
+            
+            if (messages.length === 0) {
+                // Show welcome message
+                const welcomeMsg = createMessageElement({
+                    id: 'welcome',
+                    message: 'Добро пожаловать в чат поддержки GL Биржи! Оператор свяжется с вами в ближайшее время. Пожалуйста, опишите ваш вопрос подробно.',
+                    is_admin: true,
+                    created_at: new Date().toISOString()
+                });
+                messagesContainer.appendChild(welcomeMsg);
+                return;
+            }
+            
+            messages.forEach(message => {
+                const messageElement = createMessageElement(message);
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+        
+        // Create message element
+        function createMessageElement(message) {
+            const messageDiv = document.createElement('div');
+            const time = new Date(message.created_at).toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.className = `message ${message.is_admin ? 'admin' : 'user'}`;
+            messageDiv.setAttribute('data-message-id', message.id || Date.now());
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(message.message)}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            return messageDiv;
+        }
+        
+        // Send message function - ИСПРАВЛЕНА: не добавляем сообщение вручную
+        async function sendMessage() {
+            if (isSendingMessage) return; // Предотвращаем двойную отправку
+            
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                showStatus('Введите сообщение', 'error');
+                messageInput.focus();
+                return;
+            }
+            
+            if (!currentUserId) {
+                showStatus('Сначала начните чат с email', 'error');
+                return;
+            }
+            
+            isSendingMessage = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+            
+            try {
+                const messageData = {
+                    user_id: currentUserId,
+                    message: message,
+                    is_admin: false,
+                    read: false,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabase
+                    .from('support_chat')
+                    .insert([messageData]);
+                
+                if (error) throw error;
+                
+                // Только очищаем поле, НЕ добавляем сообщение вручную
+                // Real-time подписка сама добавит его
+                messageInput.value = '';
+                
+                // Фокус остаётся в поле ввода
+                messageInput.focus();
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showStatus('Ошибка отправки сообщения', 'error');
+            } finally {
+                isSendingMessage = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить';
+            }
+        }
+        
+        // Handle Enter key for sending
+        function handleMessageKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // Mark messages as read
+        async function markMessagesAsRead() {
+            try {
+                const { error } = await supabase
+                    .from('support_chat')
+                    .update({ read: true })
+                    .eq('user_id', currentUserId)
+                    .eq('is_admin', true)
+                    .eq('read', false);
+                
+                if (error) throw error;
+                
+            } catch (error) {
+                console.error('Error marking messages as read:', error);
+            }
+        }
+        
+        // Setup real-time updates
+        function setupRealtimeUpdates() {
+            // Unsubscribe from previous subscription
+            if (chatSubscription) {
+                supabase.removeChannel(chatSubscription);
+            }
+            
+            // Subscribe to new messages
+            chatSubscription = supabase
+                .channel(`support_chat_${currentUserId}`)
+                .on('postgres_changes', 
+                    { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'support_chat',
+                        filter: `user_id=eq.${currentUserId}`
+                    },
+                    (payload) => {
+                        // Добавляем сообщение только если его ещё нет в чате
+                        const existingMessage = document.querySelector(`[data-message-id="${payload.new.id}"]`);
+                        if (!existingMessage) {
+                            const messageElement = createMessageElement(payload.new);
+                            messagesContainer.appendChild(messageElement);
+                            
+                            // Scroll to bottom
+                            scrollToBottom();
+                            
+                            // Play notification sound for admin messages
+                            if (payload.new.is_admin) {
+                                playNotificationSound();
+                                markMessagesAsRead();
+                            }
+                        }
+                    }
+                )
+                .on('postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'support_chat',
+                        filter: `user_id=eq.${currentUserId}`
+                    },
+                    (payload) => {
+                        // Обновляем статус прочтения если нужно
+                        console.log('Message updated:', payload.new);
+                    }
+                )
+                .subscribe();
+        }
+        
+        // Play notification sound (optional)
+        function playNotificationSound() {
+            // Простой звук уведомления
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            } catch (e) {
+                console.log('Notification sound error:', e);
+            }
+        }
+        
+        // Scroll to bottom of messages
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Load saved email on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedEmail = localStorage.getItem('support_email');
+            if (savedEmail) {
+                userEmailInput.value = savedEmail;
+            }
+            
+            // Test Supabase connection
+            testSupabaseConnection();
+        });
+        
+        // Test Supabase connection
+        async function testSupabaseConnection() {
+            try {
+                const { data, error } = await supabase
+                    .from('support_chat')
+                    .select('count', { count: 'exact', head: true })
+                    .limit(1);
+                
+                if (error) throw error;
+                console.log('Supabase connection OK');
+            } catch (error) {
+                console.error('Supabase connection error:', error.message);
+            }
+        }
+    </script>
+</body>
+</html>
