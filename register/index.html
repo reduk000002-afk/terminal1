@@ -372,6 +372,7 @@
         .welcome-section {
             max-width: 800px;
             margin: 0 auto;
+            width: 100%;
         }
 
         .welcome-section h2 {
@@ -387,20 +388,25 @@
             font-size: 1.1rem;
             margin-bottom: 2rem;
             max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
+        /* Mobile Auth Buttons - Правильное расположение */
         .mobile-auth-buttons {
             display: none;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             gap: 1rem;
             width: 100%;
-            max-width: 300px;
-            margin-top: 2rem;
+            max-width: 400px;
+            margin: 2rem auto 0;
         }
 
         .mobile-auth-buttons .btn {
-            width: 100%;
-            padding: 1rem;
+            flex: 1;
+            min-width: 140px;
+            padding: 0.9rem 1.2rem;
             font-size: 1rem;
         }
 
@@ -524,10 +530,21 @@
         @media (max-width: 768px) {
             header {
                 padding: 1rem;
+                position: relative;
             }
             
             nav ul {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--card-bg);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+                border-top: 1px solid var(--border-color);
+                z-index: 99;
             }
             
             .mobile-menu {
@@ -547,16 +564,38 @@
                 font-size: 2rem;
             }
 
-            .welcome-section .btn-primary {
-                display: none;
+            .welcome-section p {
+                font-size: 1rem;
+                padding: 0 1rem;
             }
 
+            /* Исправлено: показываем кнопки Войти и Регистрация на мобильных */
             .mobile-auth-buttons {
                 display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
             .features {
                 grid-template-columns: 1fr;
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mobile-auth-buttons {
+                flex-direction: column;
+                gap: 0.8rem;
+                width: 100%;
+            }
+            
+            .mobile-auth-buttons .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .welcome-section h2 {
+                font-size: 1.8rem;
             }
         }
 
@@ -599,7 +638,6 @@
         <div class="welcome-section">
             <h2>Инвестируйте в будущее с GL Биржей</h2>
             <p>Передовая фондовая платформа для торговли акциями, ETF и облигациями. Начните инвестировать сегодня с минимальным депозитом.</p>
-            <!-- Убрана кнопка "Начать инвестировать" -->
             
             <!-- Кнопки авторизации для мобильных устройств -->
             <div class="mobile-auth-buttons">
