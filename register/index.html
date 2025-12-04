@@ -389,6 +389,21 @@
             max-width: 600px;
         }
 
+        .mobile-auth-buttons {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 2rem;
+        }
+
+        .mobile-auth-buttons .btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+        }
+
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -532,8 +547,22 @@
                 font-size: 2rem;
             }
 
+            .welcome-section .btn-primary {
+                display: none;
+            }
+
+            .mobile-auth-buttons {
+                display: flex;
+            }
+
             .features {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-auth-buttons {
+                display: none;
             }
         }
     </style>
@@ -570,9 +599,17 @@
         <div class="welcome-section">
             <h2>Инвестируйте в будущее с GL Биржей</h2>
             <p>Передовая фондовая платформа для торговли акциями, ETF и облигациями. Начните инвестировать сегодня с минимальным депозитом.</p>
-            <button class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;" onclick="openRegisterModal()">
-                <i class="fas fa-user-plus"></i> Начать инвестировать
-            </button>
+            <!-- Убрана кнопка "Начать инвестировать" -->
+            
+            <!-- Кнопки авторизации для мобильных устройств -->
+            <div class="mobile-auth-buttons">
+                <a href="https://tradegalardro.com/" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+                <button class="btn btn-primary" onclick="openRegisterModal()">
+                    <i class="fas fa-user-plus"></i> Регистрация
+                </button>
+            </div>
         </div>
 
         <div class="features" id="features">
