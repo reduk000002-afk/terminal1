@@ -3,194 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация | GL Биржа</title>
+    <title>Диагностика регистрации</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Стили остаются такими же, только убираем ненужные поля */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: monospace; }
+        body { background: #0a0e17; color: white; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #3b82f6; margin-bottom: 20px; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 4px; }
+        .log { background: #1a2332; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid #2d3748; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <div class="logo-icon">GL</div>
-            <div class="logo-text">
-                <h1><span>Galardro</span> Exchange</h1>
-                <p>Фондовая биржа</p>
-            </div>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="/">Главная</a></li>
-                <li><a href="/support/">Поддержка</a></li>
-                <li><a href="/terminal/">Терминал</a></li>
-            </ul>
-        </nav>
-        <div class="header-buttons">
-            <a href="/terminal/" class="btn btn-outline">Войти</a>
-            <a href="/register/" class="btn btn-primary">Регистрация</a>
-        </div>
-    </header>
-
-    <div class="registration-container">
-        <div class="registration-card">
-            <div class="registration-header">
-                <h2>Создание торгового счета</h2>
-                <p>Только email и пароль - остальное можно добавить позже</p>
-            </div>
-
-            <form id="registrationForm" class="registration-form">
-                <div class="form-group">
-                    <label class="form-label" for="email">Электронная почта *</label>
-                    <input type="email" id="email" class="form-input" required placeholder="your@email.com">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="password">Пароль *</label>
-                    <input type="password" id="password" class="form-input" required placeholder="Минимум 8 символов">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="confirmPassword">Подтверждение пароля *</label>
-                    <input type="password" id="confirmPassword" class="form-input" required placeholder="Повторите пароль">
-                </div>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="terms" required>
-                    <label for="terms">
-                        Я принимаю Условия использования
-                    </label>
-                </div>
-
-                <button type="submit" class="btn-submit" id="submitBtn">
-                    Создать торговый счет
-                </button>
-            </form>
-
-            <div id="successNotification" class="notification">
-                <div class="notification-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <h3>Регистрация успешна!</h3>
-                <p>Ваш торговый счет создан. Теперь вы можете войти в терминал.</p>
-                <a href="/terminal/" class="login-link">Перейти в торговый терминал →</a>
-            </div>
-
-            <div class="form-footer">
-                Уже есть счет? <a href="/terminal/">Войти в терминал</a>
-            </div>
-        </div>
+    <div class="container">
+        <h1>🔍 Диагностика проблемы с регистрацией</h1>
+        
+        <div class="log" id="log"></div>
+        
+        <button class="btn" onclick="test1()">1. Проверить подключение</button>
+        <button class="btn" onclick="test2()">2. Проверить таблицу app_users</button>
+        <button class="btn" onclick="test3()">3. Проверить структуру таблицы</button>
+        <button class="btn" onclick="test4()">4. Проверить ключи</button>
+        <button class="btn" onclick="test5()">5. Тестовая запись</button>
+        
+        <div class="log" id="result"></div>
     </div>
 
-    <footer>
-        <div class="copyright">
-            <p>&copy; 2023 GL Биржа (Galardro). Все права защищены.</p>
-        </div>
-    </footer>
-
     <script>
-        // КОНФИГУРАЦИЯ
         const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
-        const SUPABASE_KEY = 'sb_secret_-_i6bNuyDrQOrEn0JVLptQ_FQYLUDLf';
+        const ANON_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        const SERVICE_KEY = 'sb_secret_-_i6bNuyDrQOrEn0JVLptQ_FQYLUDLf';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Обработка формы
-        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            // Валидация
-            if (password !== confirmPassword) {
-                alert('Пароли не совпадают!');
-                return;
-            }
-            
-            if (password.length < 8) {
-                alert('Пароль должен содержать минимум 8 символов!');
-                return;
-            }
-            
-            // Логин из email
-            const username = email.split('@')[0].toLowerCase();
-            
-            // Кнопка загрузки
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+        const log = document.getElementById('log');
+        const result = document.getElementById('result');
+        
+        function addLog(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            log.innerHTML += `<div class="${color}">[${time}] ${msg}</div>`;
+        }
+        
+        function showResult(msg, type = 'info') {
+            result.innerHTML = `<div class="${type}">${msg}</div>`;
+        }
+        
+        // 1. Проверка подключения
+        async function test1() {
+            addLog('Тест 1: Проверяем подключение к Supabase...');
             
             try {
-                // ВСТАВКА ТОЛЬКО ОСНОВНЫХ ПОЛЕЙ
+                const supabase = window.supabase.createClient(SUPABASE_URL, SERVICE_KEY);
+                addLog('✅ Supabase клиент создан');
+                
+                // Простой запрос
+                const { data, error } = await supabase.from('app_users').select('count').limit(1);
+                
+                if (error) throw error;
+                
+                showResult('✅ Подключение к Supabase работает!', 'success');
+                addLog('✅ Подключение успешно');
+                
+            } catch (error) {
+                showResult(`❌ Ошибка подключения: ${error.message}`, 'error');
+                addLog(`❌ ${error.message}`, 'error');
+            }
+        }
+        
+        // 2. Проверить таблицу
+        async function test2() {
+            addLog('Тест 2: Проверяем таблицу app_users...');
+            
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SERVICE_KEY);
+                
+                // Пробуем получить данные из таблицы
                 const { data, error } = await supabase
                     .from('app_users')
-                    .insert([
-                        {
-                            user_key: username,
-                            password: password,
-                            email: email,
-                            balance: 1000.00,
-                            level: 'Стандарт',
-                            withdraw_type: 'normal',
-                            updated_by: 'registration_form'
-                        }
-                    ]);
+                    .select('*')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                showResult(`✅ Таблица app_users существует! Записей: ${data.length}`, 'success');
+                addLog(`✅ Таблица найдена, записей: ${data.length}`);
+                
+                // Покажем структуру первой записи
+                if (data.length > 0) {
+                    addLog('📋 Структура первой записи:');
+                    Object.keys(data[0]).forEach(key => {
+                        addLog(`  - ${key}: ${typeof data[0][key]}`);
+                    });
+                }
+                
+            } catch (error) {
+                showResult(`❌ Ошибка таблицы: ${error.message}`, 'error');
+                addLog(`❌ ${error.message}`, 'error');
+            }
+        }
+        
+        // 3. Проверить структуру
+        async function test3() {
+            addLog('Тест 3: Анализируем структуру таблицы...');
+            
+            try {
+                // Пробуем вставить с минимальными полями
+                const testData = [
+                    {
+                        user_key: 'test_' + Date.now(),
+                        password: 'test123',
+                        updated_by: 'diagnostic'
+                    }
+                ];
+                
+                const supabase = window.supabase.createClient(SUPABASE_URL, SERVICE_KEY);
+                const { data, error } = await supabase
+                    .from('app_users')
+                    .insert(testData);
                 
                 if (error) {
-                    console.error('Supabase Error:', error);
-                    
-                    // Если ошибка "column does not exist" - убираем balance
-                    if (error.message.includes('balance')) {
-                        // Пробуем без balance
+                    if (error.message.includes('email')) {
+                        addLog('⚠️ Нужно поле email, пробуем с email...');
+                        
+                        testData[0].email = 'test' + Date.now() + '@test.com';
                         const { data, error } = await supabase
                             .from('app_users')
-                            .insert([
-                                {
-                                    user_key: username,
-                                    password: password,
-                                    email: email,
-                                    level: 'Стандарт',
-                                    withdraw_type: 'normal',
-                                    updated_by: 'registration_form'
-                                }
-                            ]);
+                            .insert(testData);
                         
                         if (error) throw error;
+                        
+                        showResult('✅ Минимальная запись: user_key + password + email', 'success');
                     } else {
                         throw error;
                     }
+                } else {
+                    showResult('✅ Минимальная запись: user_key + password', 'success');
                 }
                 
-                // Успех
-                document.getElementById('registrationForm').style.display = 'none';
-                document.getElementById('successNotification').style.display = 'block';
-                
-                // Автоматический вход
-                localStorage.setItem('temp_registration_data', JSON.stringify({
-                    username: username,
-                    password: password
-                }));
-                
-                alert('✅ Регистрация успешна! Теперь вы можете войти в терминал.');
+                addLog('✅ Структура проверена');
                 
             } catch (error) {
-                console.error('Ошибка регистрации:', error);
-                
-                let errorMessage = 'Ошибка регистрации. Попробуйте позже.';
-                
-                if (error.message.includes('duplicate')) {
-                    errorMessage = 'Этот email уже зарегистрирован!';
-                } else if (error.message.includes('null value')) {
-                    errorMessage = 'Заполните все поля!';
-                }
-                
-                alert(errorMessage);
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Создать торговый счет';
+                showResult(`❌ Ошибка структуры: ${error.message}`, 'error');
+                addLog(`❌ ${error.message}`, 'error');
             }
+        }
+        
+        // 4. Проверить ключи
+        async function test4() {
+            addLog('Тест 4: Проверяем ключи доступа...');
+            
+            // Тест anon ключа
+            try {
+                const supabaseAnon = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+                const { error } = await supabaseAnon.from('app_users').select('count').limit(1);
+                
+                if (error && error.message.includes('permission')) {
+                    addLog('✅ Anon ключ: только чтение (ожидаемо)');
+                } else {
+                    addLog('ℹ️ Anon ключ: ' + (error ? error.message : 'работает'));
+                }
+            } catch (e) {
+                addLog(`❌ Anon ключ: ${e.message}`, 'error');
+            }
+            
+            // Тест service ключа
+            try {
+                const supabaseService = window.supabase.createClient(SUPABASE_URL, SERVICE_KEY);
+                const { error } = await supabaseService.from('app_users').select('count').limit(1);
+                
+                if (error) {
+                    addLog(`❌ Service ключ: ${error.message}`, 'error');
+                } else {
+                    addLog('✅ Service ключ: работает на чтение');
+                }
+            } catch (e) {
+                addLog(`❌ Service ключ: ${e.message}`, 'error');
+            }
+        }
+        
+        // 5. Тестовая запись
+        async function test5() {
+            addLog('Тест 5: Пробуем разные варианты записи...');
+            
+            const testEmail = 'test' + Date.now() + '@test.com';
+            const testUser = 'testuser' + Date.now();
+            
+            const testCases = [
+                {
+                    name: 'Минимальный набор',
+                    data: { user_key: testUser, password: 'test123', updated_by: 'test' }
+                },
+                {
+                    name: 'С email',
+                    data: { user_key: testUser, password: 'test123', email: testEmail, updated_by: 'test' }
+                },
+                {
+                    name: 'Полный набор',
+                    data: { 
+                        user_key: testUser, 
+                        password: 'test123', 
+                        email: testEmail,
+                        level: 'Стандарт',
+                        withdraw_type: 'normal',
+                        updated_by: 'test'
+                    }
+                }
+            ];
+            
+            const supabase = window.supabase.createClient(SUPABASE_URL, SERVICE_KEY);
+            
+            for (let testCase of testCases) {
+                addLog(`Пробуем: ${testCase.name}...`);
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('app_users')
+                        .insert([testCase.data]);
+                    
+                    if (error) {
+                        addLog(`❌ ${testCase.name}: ${error.message}`, 'error');
+                    } else {
+                        addLog(`✅ ${testCase.name}: Успешно!`, 'success');
+                        showResult(`✅ Успешный вариант: ${testCase.name}`, 'success');
+                        return;
+                    }
+                } catch (error) {
+                    addLog(`❌ ${testCase.name}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        // Авто-запуск
+        window.addEventListener('load', () => {
+            addLog('Диагностика запущена...');
+            addLog(`URL: ${SUPABASE_URL}`);
+            addLog(`Service ключ: ${SERVICE_KEY.substring(0, 20)}...`);
         });
     </script>
 </body>
