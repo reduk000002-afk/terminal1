@@ -552,9 +552,9 @@
             });
         }
 
-        // Конфигурация Supabase (ТАК ЖЕ как в админке)
+        // КОНФИГУРАЦИЯ SUPABASE С СЕКРЕТНЫМ КЛЮЧОМ
         const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        const SUPABASE_KEY = 'sb_secret_-_i6bNuyDrQOrEn0JVLptQ_FQYLUDLf';
         
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -595,26 +595,25 @@
             loadingSpinner.style.display = 'inline';
             
             try {
-                // Добавляем пользователя ТОЧНО так же как в админке
+                // Сохраняем пользователя в Supabase (используем те же поля что в админке)
                 const { data, error } = await supabase
                     .from('app_users')
                     .insert([
                         {
-                            user_key: username,           // Логин (из email)
-                            password: password,           // Пароль
-                            email: email,                 // Email
-                            phone: countryCode + ' ' + phone, // Телефон
-                            country: country,             // Страна
-                            balance: 1000.00,           // Стартовый баланс (число, не строка)
-                            level: 'Стандарт',            // Уровень
-                            withdraw_type: 'normal',      // Тип вывода
+                            user_key: username,
+                            password: password,
+                            email: email,
+                            phone: countryCode + ' ' + phone,
+                            country: country,
+                            balance: 1000.00,
+                            level: 'Стандарт',
+                            withdraw_type: 'normal',
                             updated_by: 'registration_form'
-                            // НЕ добавляем created_at - база сама сделает
                         }
                     ]);
                 
                 if (error) {
-                    console.error('Ошибка Supabase:', error);
+                    console.error('Supabase Error:', error);
                     throw error;
                 }
                 
@@ -623,21 +622,19 @@
                 document.getElementById('registeredEmail').textContent = email;
                 document.getElementById('successNotification').classList.add('success');
                 
-                console.log('Пользователь зарегистрирован:', { 
+                console.log('✅ Пользователь зарегистрирован:', { 
                     username, 
-                    email, 
-                    country,
-                    phone: countryCode + phone 
+                    email 
                 });
                 
                 // Сохраняем данные для авто-входа
                 localStorage.setItem('temp_registration_data', JSON.stringify({
-                    email: email,
+                    username: username,
                     password: password
                 }));
                 
             } catch (error) {
-                console.error('Ошибка регистрации:', error);
+                console.error('❌ Ошибка регистрации:', error);
                 
                 // Показываем детальную ошибку
                 let errorMessage = 'Ошибка регистрации. Пожалуйста, попробуйте позже.';
@@ -646,8 +643,8 @@
                     errorMessage = 'Пользователь с таким email уже зарегистрирован!';
                 } else if (error.message.includes('null value')) {
                     errorMessage = 'Пожалуйста, заполните все обязательные поля.';
-                } else if (error.message.includes('auth')) {
-                    errorMessage = 'Ошибка авторизации. Проверьте данные.';
+                } else if (error.message.includes('invalid input syntax')) {
+                    errorMessage = 'Неверный формат данных. Проверьте правильность ввода.';
                 }
                 
                 alert(errorMessage);
@@ -664,7 +661,6 @@
             const country = this.value;
             const countryCodeSelect = document.getElementById('countryCode');
             
-            // Устанавливаем соответствующий код страны
             switch(country) {
                 case 'RU': countryCodeSelect.value = '+7'; break;
                 case 'UA': countryCodeSelect.value = '+380'; break;
@@ -687,10 +683,10 @@
                 if (error) {
                     console.warn('Supabase подключен, но есть ошибка:', error);
                 } else {
-                    console.log('Supabase успешно подключен!');
+                    console.log('✅ Supabase успешно подключен!');
                 }
             } catch (error) {
-                console.error('Ошибка подключения к Supabase:', error);
+                console.error('❌ Ошибка подключения к Supabase:', error);
             }
         });
     </script>
