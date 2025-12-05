@@ -1,8 +1,1105 @@
-const userData = {
-    user_key: userKey,
-    password: password,
-    email: email,
-    created: new Date().toISOString(),
-    balance: '0.00',     // строка, а не число
-    level: 'Стандарт'    // значение по умолчанию
-};
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GL Биржа | Galardro - Фондовая платформа</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a0e17;
+            --secondary: #1a2332;
+            --accent: #2563eb;
+            --accent-hover: #3b82f6;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --card-bg: #151f2e;
+            --border-color: #2d3748;
+            --profit: #10b981;
+            --loss: #ef4444;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #3b82f6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .logo p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            font-size: 1rem;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--text-primary);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .mobile-menu {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Registration Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .form-control.error {
+            border-color: var(--error);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            padding: 0.9rem;
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: var(--success);
+            font-size: 2rem;
+        }
+
+        .success-message h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message p {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Status Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 0.8rem;
+            z-index: 1001;
+            animation: toastSlide 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes toastSlide {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--error);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .welcome-section {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent), #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-section p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Mobile Auth Buttons */
+        .mobile-auth-buttons {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto 0;
+        }
+
+        .mobile-auth-buttons .btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 0.9rem 1.2rem;
+            font-size: 1rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(37, 99, 235, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--secondary);
+            padding: 3rem 2rem 2rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .footer-column a:hover {
+            color: var(--text-primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-link {
+            width: 36px;
+            height: 36px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+                position: relative;
+            }
+            
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--card-bg);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+                border-top: 1px solid var(--border-color);
+                z-index: 99;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+            
+            .header-buttons {
+                display: none;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .welcome-section h2 {
+                font-size: 2rem;
+            }
+
+            .welcome-section p {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+
+            .mobile-auth-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mobile-auth-buttons {
+                flex-direction: column;
+                gap: 0.8rem;
+                width: 100%;
+            }
+            
+            .mobile-auth-buttons .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .welcome-section h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-auth-buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">GL</div>
+            <div class="logo-text">
+                <h1><span>Galardro</span> Exchange</h1>
+                <p>Фондовая биржа</p>
+            </div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Главная</a></li>
+                <li><a href="#features">Преимущества</a></li>
+                <li><a href="#about">О платформе</a></li>
+                <li><a href="https://tradegalardro.com/sapport1/" target="_blank">Поддержка</a></li>
+            </ul>
+        </nav>
+        <div class="header-buttons">
+            <a href="https://tradegalardro.com/" target="_blank" class="btn btn-outline">Войти</a>
+            <button class="btn btn-primary" onclick="openRegisterModal()">Регистрация</button>
+        </div>
+        <div class="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="welcome-section">
+            <h2>Инвестируйте в будущее с GL Биржей</h2>
+            <p>Передовая фондовая платформа для торговли акциями, ETF и облигациями. Начните инвестировать сегодня с минимальным депозитом.</p>
+            
+            <!-- Кнопки авторизации для мобильных устройств -->
+            <div class="mobile-auth-buttons">
+                <a href="https://tradegalardro.com/" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+                <button class="btn btn-primary" onclick="openRegisterModal()">
+                    <i class="fas fa-user-plus"></i> Регистрация
+                </button>
+            </div>
+        </div>
+
+        <div class="features" id="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Аналитика в реальном времени</h3>
+                <p>Доступ к профессиональным графикам и аналитическим инструментам для принятия взвешенных решений.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Безопасность и надежность</h3>
+                <p>Ваши средства и данные защищены многоуровневой системой безопасности и шифрования.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Мобильная торговля</h3>
+                <p>Торгуйте с любого устройства через наше мобильное приложение или веб-платформу.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3>Круглосуточная поддержка</h3>
+                <p>Наша команда поддержки всегда готова помочь вам с любыми вопросами 24/7.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="support">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>GL Биржа</h3>
+                <ul>
+                    <li><a href="#about">О нас</a></li>
+                    <li><a href="#features">Преимущества</a></li>
+                    <li><a href="#news">Новости</a></li>
+                    <li><a href="#partners">Партнеры</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Торговля</h3>
+                <ul>
+                    <li><a href="https://tradegalardro.com/" target="_blank">Акции</a></li>
+                    <li><a href="https://tradegalardro.com/" target="_blank">ETF</a></li>
+                    <li><a href="https://tradegalardro.com/" target="_blank">Облигации</a></li>
+                    <li><a href="https://tradegalardro.com/" target="_blank">Фьючерсы</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Поддержка</h3>
+                <ul>
+                    <li><a href="https://tradegalardro.com/sapport1/" target="_blank">Центр помощи</a></li>
+                    <li><a href="https://tradegalardro.com/sapport1/" target="_blank">Связаться с нами</a></li>
+                    <li><a href="https://tradegalardro.com/sapport1/" target="_blank">Частые вопросы</a></li>
+                    <li><a href="https://tradegalardro.com/sapport1/" target="_blank">Сообщество</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Социальные сети</h3>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 GL Биржа (Galardro). Все права защищены.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">GL Биржа является зарегистрированным брокер-дилером. Инвестиции сопряжены с рисками.</p>
+        </div>
+    </footer>
+
+    <!-- Registration Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+                <button class="close-modal" onclick="closeRegisterModal()">&times;</button>
+            </div>
+            
+            <div id="registrationForm">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Электронная почта</label>
+                    <input type="email" id="email" class="form-control" placeholder="example@mail.com" required>
+                    <div class="error-message" id="emailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Пароль</label>
+                    <input type="password" id="password" class="form-control" placeholder="Не менее 6 символов" required>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword"><i class="fas fa-lock"></i> Подтверждение пароля</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Повторите пароль" required>
+                    <div class="error-message" id="confirmPasswordError"></div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="registerUser()" id="registerBtn">
+                        <i class="fas fa-user-plus"></i> Зарегистрироваться
+                    </button>
+                    <button class="btn btn-outline" onclick="closeRegisterModal()">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                </div>
+            </div>
+            
+            <div id="successMessage" class="success-message">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3>Регистрация успешна!</h3>
+                <p id="successText">Письмо с подтверждением отправлено на ваш email.</p>
+                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Нажмите кнопку "Закончить регистрацию" в письме для входа в личный кабинет.
+                </p>
+                <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="closeRegisterModal()">
+                    <i class="fas fa-check"></i> Понятно
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="toast-message" id="toastMessage"></div>
+    </div>
+
+    <script>
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        
+        // Инициализация Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Инициализация EmailJS
+        (function() {
+            emailjs.init("f7oQF7vPq4Cq-EDDh");
+            console.log("✅ EmailJS инициализирован");
+        })();
+        
+        // Элементы DOM
+        const registerModal = document.getElementById('registerModal');
+        const registrationForm = document.getElementById('registrationForm');
+        const successMessage = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Открытие модального окна
+        function openRegisterModal() {
+            registerModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            resetForm();
+        }
+        
+        // Закрытие модального окна
+        function closeRegisterModal() {
+            registerModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Сброс формы
+        function resetForm() {
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('confirmPassword').value = '';
+            hideAllErrors();
+            registrationForm.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        // Скрытие ошибок
+        function hideAllErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+            });
+            document.querySelectorAll('.form-control').forEach(el => {
+                el.classList.remove('error');
+            });
+        }
+        
+        // Показ ошибки
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorElement = document.getElementById(inputId + 'Error');
+            input.classList.add('error');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+        
+        // Валидация формы
+        function validateForm() {
+            hideAllErrors();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            let isValid = true;
+            
+            if (!email) {
+                showError('email', 'Введите email');
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('email', 'Введите корректный email');
+                isValid = false;
+            }
+            
+            if (!password) {
+                showError('password', 'Введите пароль');
+                isValid = false;
+            } else if (password.length < 6) {
+                showError('password', 'Пароль должен быть не менее 6 символов');
+                isValid = false;
+            }
+            
+            if (!confirmPassword) {
+                showError('confirmPassword', 'Подтвердите пароль');
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                showError('confirmPassword', 'Пароли не совпадают');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Генерация логина
+        function generateLoginFromEmail(email) {
+            return email.toLowerCase().trim();
+        }
+        
+        // Показ уведомления
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Регистрация пользователя - ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
+        async function registerUser() {
+            if (!validateForm()) {
+                showToast('Пожалуйста, исправьте ошибки в форме', 'error');
+                return;
+            }
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const userKey = generateLoginFromEmail(email);
+            
+            const registerBtn = document.getElementById('registerBtn');
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+            registerBtn.disabled = true;
+            
+            try {
+                console.log('🔄 Начинаем регистрацию для:', email);
+                
+                // 1. Проверка пользователя
+                console.log('🔄 Проверяем существующего пользователя...');
+                const { data: existingUsers, error: checkError } = await supabase
+                    .from('app_users')
+                    .select('*')
+                    .eq('email', email);
+                
+                if (checkError) {
+                    console.error('❌ Ошибка проверки:', checkError);
+                    throw checkError;
+                }
+                
+                if (existingUsers && existingUsers.length > 0) {
+                    showToast('Пользователь с таким email уже существует', 'error');
+                    registerBtn.innerHTML = originalText;
+                    registerBtn.disabled = false;
+                    return;
+                }
+                
+                console.log('✅ Пользователь не найден, продолжаем...');
+                
+                // 2. УПРОЩЕННЫЕ данные для Supabase (только основные поля)
+                const userData = {
+                    user_key: userKey,
+                    password: password,
+                    email: email,
+                    created: new Date().toISOString(),
+                    balance: '0.00',
+                    level: 'Стандарт'
+                };
+                
+                console.log('🔄 Отправляем в Supabase:', userData);
+                
+                // 3. Сохраняем в БД
+                const { data: newUser, error: insertError } = await supabase
+                    .from('app_users')
+                    .insert([userData])
+                    .select();
+                
+                if (insertError) {
+                    console.error('❌ Ошибка Supabase при сохранении:');
+                    console.error('Код:', insertError.code);
+                    console.error('Сообщение:', insertError.message);
+                    console.error('Детали:', insertError.details);
+                    console.error('Hint:', insertError.hint);
+                    throw insertError;
+                }
+                
+                console.log('✅ Данные сохранены в Supabase:', newUser);
+                
+                // 4. Отправляем письмо через EmailJS
+                let emailSent = false;
+                try {
+                    console.log('🔄 Отправляем письмо через EmailJS...');
+                    
+                    const emailParams = {
+                        to_email: email,
+                        login_url: 'https://tradegalardro.com/',
+                        email: email
+                    };
+                    
+                    console.log('📧 Параметры письма:', emailParams);
+                    
+                    const emailResult = await emailjs.send(
+                        'service_9eygn9l',      // Service ID
+                        'template_vjlrrud',     // Template ID (НОВЫЙ!)
+                        emailParams
+                    );
+                    
+                    console.log('✅ Письмо отправлено успешно:', emailResult);
+                    emailSent = true;
+                    
+                    // Обновляем статус в БД
+                    await supabase
+                        .from('app_users')
+                        .update({ 
+                            email_sent: true,
+                            email_sent_at: new Date().toISOString()
+                        })
+                        .eq('email', email);
+                    
+                } catch (emailErr) {
+                    console.error('❌ Ошибка отправки письма:');
+                    console.error('Статус:', emailErr.status);
+                    console.error('Текст:', emailErr.text);
+                    console.error('Сообщение:', emailErr.message);
+                    emailSent = false;
+                }
+                
+                // 5. Показываем результат пользователю
+                registrationForm.style.display = 'none';
+                successMessage.style.display = 'block';
+                
+                if (emailSent) {
+                    successText.innerHTML = `✅ Регистрация успешна!<br>Письмо с подтверждением отправлено на <strong>${email}</strong><br><br>Нажмите кнопку "Закончить регистрацию" в письме для входа в личный кабинет.`;
+                    showToast('Письмо отправлено! Проверьте вашу почту');
+                } else {
+                    successText.innerHTML = `✅ Регистрация завершена!<br>Ваши данные для входа:<br>Логин: <strong>${email}</strong><br>Пароль: указанный при регистрации<br><br>Перейдите на <a href="https://tradegalardro.com/" target="_blank" style="color: #2563eb;">tradegalardro.com</a> для входа.`;
+                    showToast('Регистрация завершена! Данные сохранены.');
+                }
+                
+            } catch (error) {
+                console.error('❌ ФИНАЛЬНАЯ ОШИБКА РЕГИСТРАЦИИ:', error);
+                
+                let errorMessage = 'Ошибка при регистрации';
+                let detailedError = '';
+                
+                // Определяем тип ошибки
+                if (error.code === '23505') {
+                    errorMessage = 'Пользователь с таким email уже существует';
+                } else if (error.code === '42501') {
+                    errorMessage = 'Ошибка доступа к базе данных';
+                } else if (error.code === '22P02') {
+                    errorMessage = 'Некорректный формат данных';
+                } else if (error.message && error.message.includes('JWT')) {
+                    errorMessage = 'Ошибка авторизации';
+                } else if (error.message && error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Проблема с интернет-соединением';
+                }
+                
+                // Добавляем детали ошибки
+                if (error.details) detailedError = error.details;
+                else if (error.message) detailedError = error.message;
+                
+                // Формируем финальное сообщение
+                const finalMessage = detailedError 
+                    ? `${errorMessage}: ${detailedError.substring(0, 100)}${detailedError.length > 100 ? '...' : ''}`
+                    : errorMessage;
+                
+                showToast(finalMessage, 'error');
+                
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
+            }
+        }
+        
+        // Mobile menu
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const nav = document.querySelector('nav ul');
+        
+        mobileMenu.addEventListener('click', () => {
+            if (nav.style.display === 'flex') {
+                nav.style.display = 'none';
+            } else {
+                nav.style.display = 'flex';
+                nav.style.flexDirection = 'column';
+                nav.style.position = 'absolute';
+                nav.style.top = '100%';
+                nav.style.left = '0';
+                nav.style.right = '0';
+                nav.style.backgroundColor = 'var(--card-bg)';
+                nav.style.padding = '1rem';
+                nav.style.gap = '1rem';
+                nav.style.borderTop = '1px solid var(--border-color)';
+            }
+        });
+        
+        // Закрытие модальных окон
+        document.addEventListener('click', function(event) {
+            if (event.target === registerModal) {
+                closeRegisterModal();
+            }
+        });
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeRegisterModal();
+            }
+        });
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 GL Биржа загружена и готова к работе');
+            console.log('📧 EmailJS настроен с Template ID: template_vjlrrud');
+            console.log('🗄️ Supabase подключен к URL:', SUPABASE_URL);
+        });
+    </script>
+</body>
+</html>
