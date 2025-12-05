@@ -891,9 +891,10 @@
             return isValid;
         }
         
-        // Генерация логина из email
+        // Генерация логина из email - ТЕПЕРЬ ВОЗВРАЩАЕТ ПОЛНЫЙ EMAIL
         function generateLoginFromEmail(email) {
-            return email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Возвращаем полный email в нижнем регистре
+            return email.toLowerCase().trim();
         }
         
         // Показ уведомления
@@ -918,7 +919,7 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             
-            // Генерируем логин из email
+            // Генерируем логин из email - теперь это будет полный email
             const userKey = generateLoginFromEmail(email);
             
             // Блокируем кнопку
@@ -944,10 +945,11 @@
                 }
                 
                 // 2. Добавляем пользователя в базу данных
+                // Теперь user_key будет содержать полный email
                 const { error: insertError } = await supabase
                     .from('app_users')
                     .insert([{
-                        user_key: userKey,
+                        user_key: userKey, // Теперь это полный email
                         password: password,
                         email: email,
                         balance: 0.00,
