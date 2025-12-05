@@ -799,14 +799,12 @@
         
         // Инициализация EmailJS с твоими ключами
         (function() {
-            emailjs.init({
-                publicKey: "f7oQF7vPq4Cq-EDDh",
-                blockHeadless: true,
-                limitRate: {
-                    id: 'app',
-                    throttle: 10000 // 10 секунд между письмами
-                }
-            });
+            try {
+                emailjs.init("f7oQF7vPq4Cq-EDDh");
+                console.log("EmailJS инициализирован успешно");
+            } catch (error) {
+                console.error("Ошибка инициализации EmailJS:", error);
+            }
         })();
         
         // Элементы DOM
@@ -920,7 +918,7 @@
             }, 5000);
         }
         
-        // Регистрация пользователя
+        // Регистрация пользователя - УПРОЩЕННАЯ ВЕРСИЯ
         async function registerUser() {
             // Валидация формы
             if (!validateForm()) {
@@ -937,7 +935,7 @@
             // Блокируем кнопку
             const registerBtn = document.getElementById('registerBtn');
             const originalText = registerBtn.innerHTML;
-            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка письма...';
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
             registerBtn.disabled = true;
             
             try {
@@ -947,7 +945,10 @@
                     .select('*')
                     .or(`email.eq.${email},user_key.eq.${userKey}`);
                 
-                if (checkError) throw checkError;
+                if (checkError) {
+                    console.error('Ошибка проверки пользователя:', checkError);
+                    throw checkError;
+                }
                 
                 if (existingUsers && existingUsers.length > 0) {
                     showToast('Пользователь с таким email уже существует', 'error');
@@ -956,21 +957,32 @@
                     return;
                 }
                 
-                // 2. Отправляем приветственное письмо через EmailJS
-                const emailParams = {
-                    to_email: email,
-                    login_url: 'https://tradegalardro.com/',
-                    email: email
-                };
-                
-                // Отправляем письмо
-                const emailResult = await emailjs.send(
-                    'service_9eygn9l', // Service ID
-                    'template_voi8fd8', // Template ID
-                    emailParams
-                );
-                
-                console.log('Email отправлен успешно:', emailResult);
+                // 2. Пытаемся отправить письмо через EmailJS
+                let emailSent = false;
+                try {
+                    const emailParams = {
+                        to_email: email,
+                        login_url: 'https://tradegalardro.com/',
+                        email: email
+                    };
+                    
+                    console.log('Пытаемся отправить письмо через EmailJS...');
+                    
+                    // Отправляем письмо
+                    const emailResult = await emailjs.send(
+                        'service_9eygn9l', // Service ID
+                        'template_voi8fd8', // Template ID
+                        emailParams
+                    );
+                    
+                    console.log('Email отправлен успешно:', emailResult);
+                    emailSent = true;
+                    
+                } catch (emailError) {
+                    console.warn('Не удалось отправить письмо через EmailJS:', emailError);
+                    console.warn('Продолжаем регистрацию без отправки письма...');
+                    emailSent = false;
+                }
                 
                 // 3. Сохраняем пользователя в БД
                 const { error: insertError } = await supabase
@@ -985,59 +997,42 @@
                         created: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         updated_by: 'registration_form',
-                        email_sent: true,
-                        email_sent_at: new Date().toISOString()
+                        email_sent: emailSent,
+                        email_sent_at: emailSent ? new Date().toISOString() : null
                     }]);
                 
-                if (insertError) throw insertError;
+                if (insertError) {
+                    console.error('Ошибка сохранения в БД:', insertError);
+                    throw insertError;
+                }
                 
                 // 4. Показываем сообщение об успехе
                 registrationForm.style.display = 'none';
                 successMessage.style.display = 'block';
                 
-                // Обновляем текст успешного сообщения
-                successText.innerHTML = `Письмо с подтверждением отправлено на <strong>${email}</strong>`;
-                
-                showToast('Письмо с инструкциями отправлено на вашу почту');
+                if (emailSent) {
+                    // Обновляем текст успешного сообщения
+                    successText.innerHTML = `Письмо с подтверждением отправлено на <strong>${email}</strong>`;
+                    showToast('Письмо с инструкциями отправлено на вашу почту');
+                } else {
+                    successText.innerHTML = `Регистрация успешна!<br>Данные сохранены, но письмо не отправлено.<br>Ваш логин: <strong>${email}</strong>`;
+                    showToast('Регистрация завершена, но письмо не отправлено', 'error');
+                }
                 
             } catch (error) {
                 console.error('Ошибка регистрации:', error);
                 
                 let errorMessage = 'Ошибка при регистрации. Попробуйте позже.';
                 
-                if (error.status === 0 || error.message?.includes('Network')) {
+                if (error.message?.includes('Failed to fetch')) {
                     errorMessage = 'Проблема с интернет-соединением';
-                } else if (error.message?.includes('emailjs')) {
-                    errorMessage = 'Ошибка отправки письма';
+                } else if (error.message?.includes('duplicate')) {
+                    errorMessage = 'Пользователь с таким email уже существует';
                 }
                 
                 showToast(errorMessage, 'error');
                 registerBtn.innerHTML = originalText;
                 registerBtn.disabled = false;
-                
-                // Пробуем сохранить без отправки письма (на случай проблем с EmailJS)
-                try {
-                    const { error: insertError } = await supabase
-                        .from('app_users')
-                        .insert([{
-                            user_key: userKey,
-                            password: password,
-                            email: email,
-                            balance: 0.00,
-                            level: 'Стандарт',
-                            withdraw_type: 'normal',
-                            created: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
-                            updated_by: 'registration_form',
-                            email_sent: false
-                        }]);
-                    
-                    if (!insertError) {
-                        showToast('Данные сохранены, но письмо не отправлено', 'error');
-                    }
-                } catch (dbError) {
-                    console.error('Ошибка сохранения в БД:', dbError);
-                }
             }
         }
         
@@ -1079,7 +1074,16 @@
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
             console.log('GL Биржа загружена. Ожидание регистраций...');
-            console.log('EmailJS инициализирован с ключом: f7oQF7vPq4Cq-EDDh');
+            console.log('EmailJS Public Key: f7oQF7vPq4Cq-EDDh');
+            console.log('Service ID: service_9eygn9l');
+            console.log('Template ID: template_voi8fd8');
+            
+            // Проверяем подключение к EmailJS
+            if (typeof emailjs !== 'undefined') {
+                console.log('EmailJS подключен');
+            } else {
+                console.error('EmailJS не подключен!');
+            }
         });
     </script>
 </body>
