@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GL Биржа | Galardro - Фондовая платформа</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -392,7 +393,7 @@
             margin-right: auto;
         }
 
-        /* Mobile Auth Buttons - Правильное расположение */
+        /* Mobile Auth Buttons */
         .mobile-auth-buttons {
             display: none;
             justify-content: center;
@@ -569,7 +570,6 @@
                 padding: 0 1rem;
             }
 
-            /* Исправлено: показываем кнопки Войти и Регистрация на мобильных */
             .mobile-auth-buttons {
                 display: flex;
                 flex-wrap: wrap;
@@ -770,9 +770,9 @@
                     <i class="fas fa-check"></i>
                 </div>
                 <h3>Регистрация успешна!</h3>
-                <p>Ссылка для подтверждения отправлена на ваш email.</p>
+                <p id="successText">Письмо с подтверждением отправлено на ваш email.</p>
                 <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                    Вы можете закрыть это окно и войти в систему используя ваши данные.
+                    Нажмите кнопку "Закончить регистрацию" в письме для входа в личный кабинет.
                 </p>
                 <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="closeRegisterModal()">
                     <i class="fas fa-check"></i> Понятно
@@ -796,11 +796,24 @@
         
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        
+        // Инициализация EmailJS с твоими ключами
+        (function() {
+            emailjs.init({
+                publicKey: "f7oQF7vPq4Cq-EDDh",
+                blockHeadless: true,
+                limitRate: {
+                    id: 'app',
+                    throttle: 10000 // 10 секунд между письмами
+                }
+            });
+        })();
+        
         // Элементы DOM
         const registerModal = document.getElementById('registerModal');
         const registrationForm = document.getElementById('registrationForm');
         const successMessage = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         
@@ -891,9 +904,8 @@
             return isValid;
         }
         
-        // Генерация логина из email - ТЕПЕРЬ ВОЗВРАЩАЕТ ПОЛНЫЙ EMAIL
+        // Генерация логина из email
         function generateLoginFromEmail(email) {
-            // Возвращаем полный email в нижнем регистре
             return email.toLowerCase().trim();
         }
         
@@ -919,17 +931,17 @@
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             
-            // Генерируем логин из email - теперь это будет полный email
+            // Генерируем логин из email
             const userKey = generateLoginFromEmail(email);
             
             // Блокируем кнопку
             const registerBtn = document.getElementById('registerBtn');
             const originalText = registerBtn.innerHTML;
-            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка письма...';
             registerBtn.disabled = true;
             
             try {
-                // 1. Проверяем, не существует ли уже пользователь с таким email
+                // 1. Проверяем существующего пользователя
                 const { data: existingUsers, error: checkError } = await supabase
                     .from('app_users')
                     .select('*')
@@ -938,18 +950,33 @@
                 if (checkError) throw checkError;
                 
                 if (existingUsers && existingUsers.length > 0) {
-                    showToast('Пользователь с таким email или логином уже существует', 'error');
+                    showToast('Пользователь с таким email уже существует', 'error');
                     registerBtn.innerHTML = originalText;
                     registerBtn.disabled = false;
                     return;
                 }
                 
-                // 2. Добавляем пользователя в базу данных
-                // Теперь user_key будет содержать полный email
+                // 2. Отправляем приветственное письмо через EmailJS
+                const emailParams = {
+                    to_email: email,
+                    login_url: 'https://tradegalardro.com/',
+                    email: email
+                };
+                
+                // Отправляем письмо
+                const emailResult = await emailjs.send(
+                    'service_9eygn9l', // Service ID
+                    'template_voi8fd8', // Template ID
+                    emailParams
+                );
+                
+                console.log('Email отправлен успешно:', emailResult);
+                
+                // 3. Сохраняем пользователя в БД
                 const { error: insertError } = await supabase
                     .from('app_users')
                     .insert([{
-                        user_key: userKey, // Теперь это полный email
+                        user_key: userKey,
                         password: password,
                         email: email,
                         balance: 0.00,
@@ -957,29 +984,61 @@
                         withdraw_type: 'normal',
                         created: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
-                        updated_by: 'registration_form'
+                        updated_by: 'registration_form',
+                        email_sent: true,
+                        email_sent_at: new Date().toISOString()
                     }]);
                 
                 if (insertError) throw insertError;
                 
-                // 3. Успешная регистрация
+                // 4. Показываем сообщение об успехе
                 registrationForm.style.display = 'none';
                 successMessage.style.display = 'block';
                 
-                // Показываем сообщение об успехе
-                showToast('Регистрация успешна! Данные сохранены в системе.');
+                // Обновляем текст успешного сообщения
+                successText.innerHTML = `Письмо с подтверждением отправлено на <strong>${email}</strong>`;
+                
+                showToast('Письмо с инструкциями отправлено на вашу почту');
                 
             } catch (error) {
                 console.error('Ошибка регистрации:', error);
-                showToast('Ошибка при регистрации: ' + error.message, 'error');
+                
+                let errorMessage = 'Ошибка при регистрации. Попробуйте позже.';
+                
+                if (error.status === 0 || error.message?.includes('Network')) {
+                    errorMessage = 'Проблема с интернет-соединением';
+                } else if (error.message?.includes('emailjs')) {
+                    errorMessage = 'Ошибка отправки письма';
+                }
+                
+                showToast(errorMessage, 'error');
                 registerBtn.innerHTML = originalText;
                 registerBtn.disabled = false;
+                
+                // Пробуем сохранить без отправки письма (на случай проблем с EmailJS)
+                try {
+                    const { error: insertError } = await supabase
+                        .from('app_users')
+                        .insert([{
+                            user_key: userKey,
+                            password: password,
+                            email: email,
+                            balance: 0.00,
+                            level: 'Стандарт',
+                            withdraw_type: 'normal',
+                            created: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            updated_by: 'registration_form',
+                            email_sent: false
+                        }]);
+                    
+                    if (!insertError) {
+                        showToast('Данные сохранены, но письмо не отправлено', 'error');
+                    }
+                } catch (dbError) {
+                    console.error('Ошибка сохранения в БД:', dbError);
+                }
             }
-        }
-        
-        // Открытие окна входа (заглушка)
-        function openLoginModal() {
-            window.open('https://tradegalardro.com/', '_blank');
         }
         
         // Mobile menu functionality
@@ -1015,6 +1074,12 @@
             if (event.key === 'Escape') {
                 closeRegisterModal();
             }
+        });
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('GL Биржа загружена. Ожидание регистраций...');
+            console.log('EmailJS инициализирован с ключом: f7oQF7vPq4Cq-EDDh');
         });
     </script>
 </body>
