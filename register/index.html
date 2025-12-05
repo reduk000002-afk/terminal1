@@ -797,14 +797,10 @@
         // Инициализация Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // Инициализация EmailJS с твоими ключами
+        // Инициализация EmailJS
         (function() {
-            try {
-                emailjs.init("f7oQF7vPq4Cq-EDDh");
-                console.log("EmailJS инициализирован успешно");
-            } catch (error) {
-                console.error("Ошибка инициализации EmailJS:", error);
-            }
+            emailjs.init("f7oQF7vPq4Cq-EDDh");
+            console.log("✅ EmailJS инициализирован");
         })();
         
         // Элементы DOM
@@ -815,7 +811,7 @@
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         
-        // Открытие модального окна регистрации
+        // Открытие модального окна
         function openRegisterModal() {
             registerModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -833,16 +829,12 @@
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
             document.getElementById('confirmPassword').value = '';
-            
-            // Скрываем ошибки
             hideAllErrors();
-            
-            // Показываем форму, скрываем сообщение об успехе
             registrationForm.style.display = 'block';
             successMessage.style.display = 'none';
         }
         
-        // Скрытие всех сообщений об ошибках
+        // Скрытие ошибок
         function hideAllErrors() {
             document.querySelectorAll('.error-message').forEach(el => {
                 el.classList.remove('show');
@@ -856,7 +848,6 @@
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + 'Error');
-            
             input.classList.add('error');
             errorElement.textContent = message;
             errorElement.classList.add('show');
@@ -872,7 +863,6 @@
             
             let isValid = true;
             
-            // Валидация email
             if (!email) {
                 showError('email', 'Введите email');
                 isValid = false;
@@ -881,7 +871,6 @@
                 isValid = false;
             }
             
-            // Валидация пароля
             if (!password) {
                 showError('password', 'Введите пароль');
                 isValid = false;
@@ -890,7 +879,6 @@
                 isValid = false;
             }
             
-            // Валидация подтверждения пароля
             if (!confirmPassword) {
                 showError('confirmPassword', 'Подтвердите пароль');
                 isValid = false;
@@ -902,7 +890,7 @@
             return isValid;
         }
         
-        // Генерация логина из email
+        // Генерация логина
         function generateLoginFromEmail(email) {
             return email.toLowerCase().trim();
         }
@@ -912,15 +900,13 @@
             toastMessage.textContent = message;
             toast.className = `toast ${type}`;
             toast.style.display = 'flex';
-            
             setTimeout(() => {
                 toast.style.display = 'none';
             }, 5000);
         }
         
-        // Регистрация пользователя - УПРОЩЕННАЯ ВЕРСИЯ
+        // Регистрация пользователя - РАБОЧАЯ ВЕРСИЯ
         async function registerUser() {
-            // Валидация формы
             if (!validateForm()) {
                 showToast('Пожалуйста, исправьте ошибки в форме', 'error');
                 return;
@@ -928,27 +914,21 @@
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            
-            // Генерируем логин из email
             const userKey = generateLoginFromEmail(email);
             
-            // Блокируем кнопку
             const registerBtn = document.getElementById('registerBtn');
             const originalText = registerBtn.innerHTML;
             registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
             registerBtn.disabled = true;
             
             try {
-                // 1. Проверяем существующего пользователя
+                // 1. Проверка существующего пользователя
                 const { data: existingUsers, error: checkError } = await supabase
                     .from('app_users')
                     .select('*')
                     .or(`email.eq.${email},user_key.eq.${userKey}`);
                 
-                if (checkError) {
-                    console.error('Ошибка проверки пользователя:', checkError);
-                    throw checkError;
-                }
+                if (checkError) throw checkError;
                 
                 if (existingUsers && existingUsers.length > 0) {
                     showToast('Пользователь с таким email уже существует', 'error');
@@ -957,34 +937,35 @@
                     return;
                 }
                 
-                // 2. Пытаемся отправить письмо через EmailJS
+                // 2. Отправка письма через EmailJS
                 let emailSent = false;
+                let emailError = null;
+                
                 try {
+                    console.log('🔄 Отправка письма через EmailJS...');
+                    
                     const emailParams = {
                         to_email: email,
                         login_url: 'https://tradegalardro.com/',
                         email: email
                     };
                     
-                    console.log('Пытаемся отправить письмо через EmailJS...');
-                    
-                    // Отправляем письмо
                     const emailResult = await emailjs.send(
-                        'service_9eygn9l', // Service ID
-                        'template_vjlrrud', // Template ID
+                        'service_9eygn9l',    // Service ID
+                        'template_vjlrrud',   // Template ID (НОВЫЙ!)
                         emailParams
                     );
                     
-                    console.log('Email отправлен успешно:', emailResult);
+                    console.log('✅ Письмо отправлено успешно:', emailResult);
                     emailSent = true;
                     
-                } catch (emailError) {
-                    console.warn('Не удалось отправить письмо через EmailJS:', emailError);
-                    console.warn('Продолжаем регистрацию без отправки письма...');
+                } catch (emailErr) {
+                    console.error('❌ Ошибка отправки письма:', emailErr);
+                    emailError = emailErr;
                     emailSent = false;
                 }
                 
-                // 3. Сохраняем пользователя в БД
+                // 3. Сохранение в БД
                 const { error: insertError } = await supabase
                     .from('app_users')
                     .insert([{
@@ -1001,33 +982,28 @@
                         email_sent_at: emailSent ? new Date().toISOString() : null
                     }]);
                 
-                if (insertError) {
-                    console.error('Ошибка сохранения в БД:', insertError);
-                    throw insertError;
-                }
+                if (insertError) throw insertError;
                 
-                // 4. Показываем сообщение об успехе
+                // 4. Показ результата
                 registrationForm.style.display = 'none';
                 successMessage.style.display = 'block';
                 
                 if (emailSent) {
-                    // Обновляем текст успешного сообщения
-                    successText.innerHTML = `Письмо с подтверждением отправлено на <strong>${email}</strong>`;
-                    showToast('Письмо с инструкциями отправлено на вашу почту');
+                    successText.innerHTML = `Письмо отправлено на <strong>${email}</strong><br>Нажмите "Закончить регистрацию" в письме`;
+                    showToast('✅ Регистрация успешна! Проверьте почту');
                 } else {
-                    successText.innerHTML = `Регистрация успешна!<br>Данные сохранены, но письмо не отправлено.<br>Ваш логин: <strong>${email}</strong>`;
-                    showToast('Регистрация завершена, но письмо не отправлено', 'error');
+                    successText.innerHTML = `Регистрация завершена!<br>Ваш логин: <strong>${email}</strong><br>Пароль: указанный при регистрации`;
+                    showToast('⚠️ Регистрация завершена, но письмо не отправлено', 'error');
                 }
                 
             } catch (error) {
-                console.error('Ошибка регистрации:', error);
+                console.error('❌ Ошибка регистрации:', error);
                 
-                let errorMessage = 'Ошибка при регистрации. Попробуйте позже.';
-                
+                let errorMessage = 'Ошибка при регистрации';
                 if (error.message?.includes('Failed to fetch')) {
                     errorMessage = 'Проблема с интернет-соединением';
                 } else if (error.message?.includes('duplicate')) {
-                    errorMessage = 'Пользователь с таким email уже существует';
+                    errorMessage = 'Пользователь уже существует';
                 }
                 
                 showToast(errorMessage, 'error');
@@ -1036,7 +1012,7 @@
             }
         }
         
-        // Mobile menu functionality
+        // Mobile menu
         const mobileMenu = document.querySelector('.mobile-menu');
         const nav = document.querySelector('nav ul');
         
@@ -1057,33 +1033,23 @@
             }
         });
         
-        // Закрытие модальных окон при клике вне их
+        // Закрытие модальных окон
         document.addEventListener('click', function(event) {
             if (event.target === registerModal) {
                 closeRegisterModal();
             }
         });
         
-        // Закрытие модальных окон при нажатии Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeRegisterModal();
             }
         });
         
-        // Инициализация при загрузке
+        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('GL Биржа загружена. Ожидание регистраций...');
-            console.log('EmailJS Public Key: f7oQF7vPq4Cq-EDDh');
-            console.log('Service ID: service_9eygn9l');
-            console.log('Template ID: template_vjlrrud');
-            
-            // Проверяем подключение к EmailJS
-            if (typeof emailjs !== 'undefined') {
-                console.log('EmailJS подключен');
-            } else {
-                console.error('EmailJS не подключен!');
-            }
+            console.log('🚀 GL Биржа загружена');
+            console.log('📧 EmailJS настроен с Template ID: template_vjlrrud');
         });
     </script>
 </body>
