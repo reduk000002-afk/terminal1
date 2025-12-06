@@ -2572,7 +2572,7 @@
               <label for="withdraw-amount-crypto">Сумма в USDT</label>
               <input type="text" id="withdraw-amount-crypto" placeholder="0.00" />
             </div>
-            <button class="submit-btn" onclick="showCommissionModal()">Отправить криптовалюту</button>
+            <button class="submit-btn" onclick="submitWithdrawRequest()">Отправить криптовалюту</button>
           </div>
         </div>
 
@@ -2706,7 +2706,7 @@
       </div>
 
       <div class="request-buttons">
-        <a href="https://www.galardro.org/sapport" target="_blank" class="support-link-btn">
+        <a href="https://tradegalardro.com/sapport1/" target="_blank" class="support-link-btn">
           Перейти в поддержку
         </a>
         <button class="cancel-withdraw-btn" onclick="closeRequestModal()">
@@ -2781,13 +2781,14 @@
 
 <script>
 // =============================================
-// КОНФИГУРАЦИЯ SUPABASE (ТАБЛИЦА ДЛЯ СДЕЛОК)
+// КОНФИГУРАЦИЯ SUPABASE (ТАБЛИЦА ДЛЯ СДЕЛОК И ВЫВОДОВ)
 // =============================================
 const SUPABASE_CONFIG = {
   url: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
   anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i',
   usersTable: 'app_users',
-  tradesTable: 'trades'
+  tradesTable: 'trades',
+  withdrawTable: 'withdraw_requests'  // НОВАЯ ТАБЛИЦА ДЛЯ ВЫВОДОВ
 };
 
 // =============================================
@@ -2811,6 +2812,148 @@ try {
 } catch (error) {
   console.error('Ошибка инициализации Supabase:', error);
   alert('Ошибка подключения к базе данных. Проверьте конфигурацию Supabase.');
+}
+
+// =============================================
+// НОВАЯ ФУНКЦИЯ: СОХРАНЕНИЕ ЗАЯВКИ НА ВЫВОД В SUPABASE
+// =============================================
+async function createWithdrawRequest() {
+  if (!currentUser || !supabase) {
+    showToast('❌ Сначала войдите в систему');
+    return false;
+  }
+  
+  try {
+    // Получаем данные из формы
+    const walletAddress = document.getElementById('wallet-address').value.trim();
+    const amountInput = document.getElementById('withdraw-amount-crypto').value.trim();
+    
+    // Проверяем обязательные поля
+    if (!walletAddress) {
+      showToast('❌ Введите адрес кошелька');
+      return false;
+    }
+    
+    if (!amountInput) {
+      showToast('❌ Введите сумму вывода');
+      return false;
+    }
+    
+    const amount = parseFloat(amountInput);
+    if (isNaN(amount) || amount <= 0) {
+      showToast('❌ Введите корректную сумму вывода');
+      return false;
+    }
+    
+    // Проверяем баланс пользователя
+    const user = usersData[currentUser];
+    if (!user) {
+      showToast('❌ Пользователь не найден');
+      return false;
+    }
+    
+    const userBalance = parseFloat(user.balance || 0);
+    if (userBalance < amount) {
+      showToast('❌ Недостаточно средств на балансе');
+      return false;
+    }
+    
+    // Получаем email пользователя
+    const userEmail = user.email || `${currentUser}@galardro.org`;
+    
+    // Подготавливаем данные для вставки
+    const withdrawData = {
+      user_email: userEmail,
+      amount: amount,
+      wallet_address: walletAddress,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('Создание заявки на вывод:', JSON.stringify(withdrawData, null, 2));
+    
+    // Вставляем запись в таблицу withdraw_requests
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.withdrawTable)
+      .insert([withdrawData])
+      .select();
+    
+    if (error) {
+      console.error('Ошибка создания заявки на вывод в Supabase:', error);
+      showToast('❌ Ошибка создания заявки: ' + error.message);
+      return false;
+    }
+    
+    console.log('Заявка на вывод успешно создана в Supabase:', data);
+    
+    // Обновляем баланс пользователя (вычитаем сумму вывода)
+    const newBalance = (userBalance - amount).toFixed(2);
+    usersData[currentUser].balance = newBalance;
+    
+    // Обновляем баланс в Supabase
+    await updateUserBalanceInSupabase(currentUser, newBalance);
+    
+    // Обновляем отображение баланса
+    updateAllBalances();
+    
+    // Показываем уведомление об успехе
+    showToast('✅ Заявка на вывод успешно создана!');
+    
+    // Показываем соответствующее модальное окно в зависимости от типа пользователя
+    const withdrawType = user.withdrawType || 'normal';
+    
+    if (withdrawType === 'normal') {
+      // Обновляем данные в модальном окне нормального вывода
+      const withdrawAmount = document.getElementById('withdrawAmount');
+      const networkFeeElement = document.getElementById('networkFee');
+      const receiveAmountElement = document.getElementById('receiveAmount');
+      const walletAddressDisplay = document.getElementById('walletAddressDisplay');
+      
+      if (withdrawAmount) withdrawAmount.textContent = amount.toFixed(2) + ' USDT';
+      if (networkFeeElement) {
+        const fee = (amount * 0.01).toFixed(2); // 1% комиссия
+        networkFeeElement.textContent = fee + ' USDT';
+      }
+      if (receiveAmountElement) {
+        const receive = (amount - (amount * 0.01)).toFixed(2);
+        receiveAmountElement.textContent = receive + ' USDT';
+      }
+      if (walletAddressDisplay) {
+        // Показываем первые и последние символы адреса для безопасности
+        const shortAddress = walletAddress.length > 20 
+          ? walletAddress.substring(0, 10) + '...' + walletAddress.substring(walletAddress.length - 10)
+          : walletAddress;
+        walletAddressDisplay.textContent = shortAddress;
+      }
+      
+      // Запускаем таймер
+      startCountdownTimer();
+      
+      // Показываем модальное окно
+      document.getElementById('normalModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+    } else if (withdrawType === 'request') {
+      // Показываем модальное окно запроса
+      document.getElementById('requestModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+    } else {
+      // Показываем старое модальное окно с комиссиями
+      showCommissionModalOld();
+    }
+    
+    // Очищаем форму
+    document.getElementById('wallet-address').value = '';
+    document.getElementById('withdraw-amount-crypto').value = '';
+    
+    return true;
+    
+  } catch (error) {
+    console.error('Ошибка при создании заявки на вывод:', error);
+    showToast('❌ Ошибка создания заявки на вывод: ' + error.message);
+    return false;
+  }
 }
 
 // =============================================
@@ -3537,6 +3680,14 @@ async function openPosition(type) {
     // Обновляем отображение позиций (real-time сделает это автоматически)
     await loadAndDisplayPositions();
   }
+}
+
+// =============================================
+// ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА СРЕДСТВ
+// =============================================
+function submitWithdrawRequest() {
+  // Вызываем новую функцию для сохранения заявки на вывод
+  createWithdrawRequest();
 }
 
 // =============================================
