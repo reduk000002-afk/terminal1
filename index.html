@@ -1472,6 +1472,68 @@
       margin: 20px 0;
     }
 
+    /* НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ С СУПАБЕЙЗ */
+    .position-status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      margin-left: 15px;
+      min-width: 120px;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-processing {
+      background: rgba(255, 170, 0, 0.15);
+      color: #ffaa00;
+      border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+
+    .status-closed {
+      background: rgba(22, 199, 132, 0.15);
+      color: #16c784;
+      border: 1px solid rgba(22, 199, 132, 0.3);
+    }
+
+    .position-pnl {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .pnl-positive {
+      color: #16c784;
+    }
+
+    .pnl-negative {
+      color: #ea3943;
+    }
+
+    /* ОБНОВЛЕННЫЙ .deal-block ДЛЯ ПОЗИЦИЙ */
+    .deal-block {
+      border-bottom: 1px solid #30363d;
+      padding: 15px;
+      transition: background-color 0.2s;
+      font-size: 15px;
+      background: #0d1117;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .deal-block:hover {
+      background-color: #161b22;
+    }
+
+    .deal-info {
+      flex: 1;
+    }
+
     @keyframes rotate-circle {
       0% { transform: rotate(-45deg); }
       5% { transform: rotate(-45deg); }
@@ -1623,7 +1685,7 @@
       margin-top: 5px;
     }
 
-    /* Кнопка открытия истории позиций */
+    /* Кнопка открытия истории позиций на мобильной */
     .positions-toggle-btn {
       width: 100%;
       background: #161b22;
@@ -1914,6 +1976,10 @@
       .modal-btn {
         min-width: calc(50% - 8px);
       }
+      
+      .position-status {
+        min-width: 100px;
+      }
     }
 
     @media (max-width: 360px) {
@@ -1942,6 +2008,10 @@
 
       .modal-btn {
         min-width: 100%;
+      }
+      
+      .position-status {
+        min-width: 80px;
       }
     }
   </style>
@@ -2172,15 +2242,15 @@
                   </span>
                 </div>
               </div>
-              <select>
+              <select id="orderType">
                 <option>Лимитный</option>
                 <option selected>Рыночный</option>
                 <option>Триггер</option>
               </select>
               <div class="info-line">Режим активов: Один актив</div>
-              <div class="info-line">Дост.: 0.0000 USDT</div>
-              <input type="number" placeholder="Стоимость" />
-              <select>
+              <div class="info-line" id="availableBalanceInfo">Дост.: 0.0000 USDT</div>
+              <input type="number" id="tradeSize" placeholder="Стоимость" value="0" min="0" step="10" />
+              <select id="tradeCurrency">
                 <option selected>USDT</option>
                 <option>BTC</option>
               </select>
@@ -2188,16 +2258,16 @@
               <input type="range" id="leverage" min="1" max="100" value="20" oninput="updateLeverage(this.value)">
               <div class="leverage-display" id="leverage-value">20x</div>
               <div class="checkbox-group">
-                <label><input type="checkbox" onchange="toggleTPSL(this, 'tp-sl-long')"> Лонг т-п/с-л</label>
-                <label><input type="checkbox" onchange="toggleTPSL(this, 'tp-sl-short')"> Шорт т-п/с-л</label>
+                <label><input type="checkbox" id="tpLongCheckbox" onchange="toggleTPSL(this, 'tp-sl-long')"> Лонг т-п/с-л</label>
+                <label><input type="checkbox" id="tpShortCheckbox" onchange="toggleTPSL(this, 'tp-sl-short')"> Шорт т-п/с-л</label>
               </div>
               <div id="tp-sl-long" class="tp-sl">
-                <input type="number" placeholder="Лонг Take Profit (USDT)">
-                <input type="number" placeholder="Лонг Stop Loss (USDT)">
+                <input type="number" id="tpLong" placeholder="Лонг Take Profit (USDT)" value="110">
+                <input type="number" id="slLong" placeholder="Лонг Stop Loss (USDT)" value="90">
               </div>
               <div id="tp-sl-short" class="tp-sl">
-                <input type="number" placeholder="Шорт Take Profit (USDT)">
-                <input type="number" placeholder="Шорт Stop Loss (USDT)">
+                <input type="number" id="tpShort" placeholder="Шорт Take Profit (USDT)" value="90">
+                <input type="number" id="slShort" placeholder="Шорт Stop Loss (USDT)" value="110">
               </div>
               <div class="info-line">Ожид. цена ликвидации (лонг): —</div>
               <div class="info-line">Ожид. цена ликвидации (шорт): —</div>
@@ -2711,16 +2781,27 @@
 
 <script>
 // =============================================
-// КОНФИГУРАЦИЯ SUPABASE
+// КОНФИГУРАЦИЯ SUPABASE (ТАБЛИЦА ДЛЯ СДЕЛОК)
 // =============================================
 const SUPABASE_CONFIG = {
   url: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
   anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i',
-  tableName: 'app_users'
+  usersTable: 'app_users',
+  tradesTable: 'trades'
 };
 
-// Инициализация Supabase клиента
+// =============================================
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// =============================================
 let supabase = null;
+let currentUser = null;
+let usersData = {};
+let tradesChannel = null;
+let positionsData = [];
+
+// =============================================
+// ИНИЦИАЛИЗАЦИЯ SUPABASE
+// =============================================
 try {
   supabase = window.supabase.createClient(
     SUPABASE_CONFIG.url,
@@ -2733,191 +2814,336 @@ try {
 }
 
 // =============================================
-// ЦЕНТРАЛИЗОВАННАЯ СИСТЕМА УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+// ОСНОВНЫЕ ФУНКЦИИ ДЛЯ СДЕЛОК В SUPABASE (ИСПРАВЛЕННЫЕ)
 // =============================================
-let usersData = {}; // Кэш пользователей
-let currentUser = null;
-let countdownInterval = null;
-let realtimeSubscription = null;
 
-// НАСТРОЙКИ СИСТЕМЫ
-const SYSTEM_CONFIG = {
-  ADMIN_SECRET: 'galardro_admin_2024',
-  UPDATE_INTERVAL: 300,
-  FEES: {
-    normal: 1,
-    commission: 40
+// 1. Открытие новой позиции в Supabase (ИСПРАВЛЕННАЯ - УДАЛЕН order_type)
+async function openPositionInSupabase(type) {
+  if (!currentUser || !supabase) {
+    showToast('❌ Сначала войдите в систему');
+    return null;
   }
-};
+  
+  try {
+    const company = document.getElementById("selectedCompany").textContent;
+    const leverage = parseInt(document.getElementById("leverage").value);
+    const tradeSizeInput = document.getElementById("tradeSize");
+    const tradeSize = tradeSizeInput ? parseFloat(tradeSizeInput.value) : 0;
+    
+    // Проверка обязательных полей
+    if (!tradeSize || isNaN(tradeSize) || tradeSize <= 0) {
+      showToast('❌ Введите корректный размер позиции');
+      return null;
+    }
+    
+    if (!company) {
+      showToast('❌ Выберите актив для торговли');
+      return null;
+    }
+    
+    // Получаем TP/SL значения
+    let take_profit = null;
+    let stop_loss = null;
+    
+    if (type === 'Лонг') {
+      const tpLongCheckbox = document.getElementById("tpLongCheckbox");
+      if (tpLongCheckbox && tpLongCheckbox.checked) {
+        const tpVal = document.getElementById("tpLong").value;
+        const slVal = document.getElementById("slLong").value;
+        take_profit = tpVal ? parseFloat(tpVal) : null;
+        stop_loss = slVal ? parseFloat(slVal) : null;
+      }
+    } else {
+      const tpShortCheckbox = document.getElementById("tpShortCheckbox");
+      if (tpShortCheckbox && tpShortCheckbox.checked) {
+        const tpVal = document.getElementById("tpShort").value;
+        const slVal = document.getElementById("slShort").value;
+        take_profit = tpVal ? parseFloat(tpVal) : null;
+        stop_loss = slVal ? parseFloat(slVal) : null;
+      }
+    }
+    
+    // Генерируем случайную цену входа (реалистичные значения)
+    const getRandomPrice = (symbol) => {
+      const prices = {
+        'BTC': 50000 + Math.random() * 1000,
+        'ETH': 3000 + Math.random() * 100,
+        'AAPL': 150 + Math.random() * 5,
+        'TSLA': 200 + Math.random() * 10,
+        'NVDA': 500 + Math.random() * 20,
+        'MSFT': 400 + Math.random() * 15
+      };
+      return prices[symbol] ? prices[symbol].toFixed(2) : (100 + Math.random() * 10).toFixed(2);
+    };
+    
+    const entry_price = getRandomPrice(company);
+    
+    // Подготавливаем данные для вставки (БЕЗ order_type)
+    const tradeData = {
+      user_id: currentUser,
+      symbol: company,
+      symbol_full: company + '/USDT',
+      direction: type,
+      entry_price: entry_price,
+      size: tradeSize,
+      leverage: leverage,
+      take_profit: take_profit,
+      stop_loss: stop_loss,
+      status: 'отработка',
+      opened_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('Открытие позиции в Supabase:', JSON.stringify(tradeData, null, 2));
+    
+    // Вставляем запись в таблицу trades
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.tradesTable)
+      .insert([tradeData])
+      .select();
+    
+    if (error) {
+      console.error('Ошибка открытия позиции в Supabase:', error);
+      showToast('❌ Ошибка открытия позиции: ' + error.message);
+      return null;
+    }
+    
+    console.log('Позиция успешно открыта в Supabase:', data);
+    
+    // Обновляем баланс пользователя (вычитаем сумму сделки)
+    if (usersData[currentUser]) {
+      const currentBalance = parseFloat(usersData[currentUser].balance);
+      if (!isNaN(currentBalance) && currentBalance >= tradeSize) {
+        const newBalance = (currentBalance - tradeSize).toFixed(2);
+        usersData[currentUser].balance = newBalance;
+        
+        // Обновляем баланс в Supabase
+        await updateUserBalanceInSupabase(currentUser, newBalance);
+        
+        // Обновляем отображение баланса
+        updateAllBalances();
+      } else {
+        showToast('⚠️ Недостаточно средств для открытия позиции');
+        return null;
+      }
+    }
+    
+    return data[0];
+    
+  } catch (error) {
+    console.error('Ошибка при открытии позиции:', error);
+    showToast('❌ Ошибка открытия позиции: ' + error.message);
+    return null;
+  }
+}
+
+// 2. Загрузка позиций пользователя из Supabase
+async function loadUserPositionsFromSupabase() {
+  if (!currentUser || !supabase) {
+    return [];
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.tradesTable)
+      .select('*')
+      .eq('user_id', currentUser)
+      .order('opened_at', { ascending: false });
+    
+    if (error) {
+      console.error('Ошибка загрузки позиций из Supabase:', error);
+      showToast('⚠️ Ошибка загрузки позиций');
+      return [];
+    }
+    
+    console.log(`Загружено ${data ? data.length : 0} позиций из Supabase`);
+    return data || [];
+    
+  } catch (error) {
+    console.error('Ошибка при загрузке позиций:', error);
+    return [];
+  }
+}
+
+// 3. Настройка Real-time подписки на позиции
+function setupPositionsRealtime() {
+  if (!supabase || !currentUser) {
+    console.error('Supabase не инициализирован для real-time');
+    return;
+  }
+  
+  try {
+    // Отписываемся от старой подписки, если есть
+    if (tradesChannel) {
+      supabase.removeChannel(tradesChannel);
+    }
+    
+    // Создаем новую подписку на таблицу trades
+    tradesChannel = supabase
+      .channel(`user-trades-${currentUser}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: SUPABASE_CONFIG.tradesTable,
+          filter: `user_id=eq.${currentUser}`
+        },
+        async (payload) => {
+          console.log('Real-time обновление позиции:', payload);
+          
+          // Перезагружаем список позиций
+          await loadAndDisplayPositions();
+          
+          // Если позиция закрыта - показываем уведомление
+          if (payload.new && payload.new.status === 'закрыта' && 
+              payload.old && payload.old.status === 'отработка') {
+            const pnl = payload.new.pnl || 0;
+            const pnlText = pnl > 0 ? `+${pnl.toFixed(2)}` : pnl.toFixed(2);
+            showToast(`📊 Позиция закрыта! PnL: ${pnlText} USDT`);
+          }
+          
+          // Показываем уведомление о новой позиции
+          if (payload.eventType === 'INSERT') {
+            showToast(`📈 Новая позиция ${payload.new.direction} на ${payload.new.symbol}`);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Real-time статус подписки на позиции:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Подписка на обновления позиций активирована');
+        }
+      });
+      
+    return tradesChannel;
+    
+  } catch (error) {
+    console.error('Ошибка настройки real-time подписки на позиции:', error);
+    return null;
+  }
+}
+
+// 4. Загрузка и отображение позиций
+async function loadAndDisplayPositions() {
+  if (!currentUser) return;
+  
+  try {
+    // Загружаем позиции из Supabase
+    const positions = await loadUserPositionsFromSupabase();
+    positionsData = positions;
+    
+    // Обновляем отображение в обоих контейнерах
+    updatePositionsDisplay();
+    
+  } catch (error) {
+    console.error('Ошибка загрузки позиций:', error);
+  }
+}
 
 // =============================================
-// ОСНОВНЫЕ ФУНКЦИИ ДЛЯ SUPABASE
+// ФУНКЦИИ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
 // =============================================
 
-// 1. Загрузка всех пользователей из Supabase
+// Загрузка данных пользователя из Supabase
 async function loadUsersDataFromSupabase() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        usersData = {};
-        return usersData;
+  if (!supabase) {
+    console.error('Supabase не инициализирован');
+    usersData = {};
+    return usersData;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.usersTable)
+      .select('*');
+      
+    if (error) {
+      console.error('Ошибка загрузки из Supabase:', error);
+      throw error;
     }
     
-    try {
-        console.log('Загрузка пользователей из Supabase...');
-        
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .select('*');
-            
-        if (error) {
-            console.error('Ошибка загрузки из Supabase:', error);
-            throw error;
-        }
-        
-        // Преобразуем данные в формат, который ожидает ваше приложение
-        usersData = {};
-        if (data && data.length > 0) {
-            data.forEach(user => {
-                usersData[user.user_key] = {
-                    password: user.password,
-                    balance: user.balance ? user.balance.toString() : "0.00",
-                    level: user.level || 'Стандарт',
-                    withdrawType: user.withdraw_type || 'normal',
-                    email: user.email || `${user.user_key}@galardro.org`,
-                    id: user.id
-                };
-            });
-        }
-        
-        console.log(`Загружено ${Object.keys(usersData).length} пользователей из Supabase`);
-        return usersData;
-        
-    } catch (error) {
-        console.error('Критическая ошибка загрузки из Supabase:', error);
-        usersData = {};
-        return usersData;
-    }
-}
-
-// 2. Настройка Real-time подписки на обновления
-function setupRealtimeSubscription() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован для real-time');
-        return;
+    usersData = {};
+    if (data && data.length > 0) {
+      data.forEach(user => {
+        usersData[user.user_key] = {
+          password: user.password,
+          balance: user.balance ? parseFloat(user.balance).toFixed(2) : "0.00",
+          level: user.level || 'Стандарт',
+          withdrawType: user.withdraw_type || 'normal',
+          email: user.email || `${user.user_key}@galardro.org`,
+          id: user.id
+        };
+      });
     }
     
-    try {
-        // Отписываемся от старой подписки, если есть
-        if (realtimeSubscription) {
-            supabase.removeChannel(realtimeSubscription);
-        }
-        
-        // Создаем новую подписку
-        realtimeSubscription = supabase
-            .channel('app_users_updates')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*', // INSERT, UPDATE, DELETE
-                    schema: 'public',
-                    table: SUPABASE_CONFIG.tableName
-                },
-                (payload) => {
-                    console.log('Получено обновление из Supabase:', payload);
-                    
-                    // Обновляем локальные данные
-                    if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                        const user = payload.new;
-                        usersData[user.user_key] = {
-                            password: user.password,
-                            balance: user.balance ? user.balance.toString() : "0.00",
-                            level: user.level || 'Стандарт',
-                            withdrawType: user.withdraw_type || 'normal',
-                            email: user.email || `${user.user_key}@galardro.org`,
-                            id: user.id
-                        };
-                        
-                        // Если обновлен текущий пользователь - обновляем UI
-                        if (currentUser === user.user_key) {
-                            console.log('Обновлен текущий пользователь, обновляю UI...');
-                            updateAllBalances();
-                            updateUserData();
-                        }
-                    } else if (payload.eventType === 'DELETE') {
-                        delete usersData[payload.old.user_key];
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log('Статус real-time подписки:', status);
-            });
-            
-        return realtimeSubscription;
-        
-    } catch (error) {
-        console.error('Ошибка настройки real-time подписки:', error);
-        return null;
-    }
-}
-
-// 3. Функция обновления баланса пользователя в Supabase
-async function updateUserBalanceInSupabase(userKey, newBalance) {
-    if (!supabase || !userKey) {
-        console.error('Нет подключения к Supabase или userKey');
-        return false;
-    }
+    console.log(`Загружено ${Object.keys(usersData).length} пользователей из Supabase`);
+    return usersData;
     
-    try {
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .update({ 
-                balance: parseFloat(newBalance),
-                updated_at: new Date().toISOString(),
-                updated_by: 'system'
-            })
-            .eq('user_key', userKey)
-            .select();
-            
-        if (error) {
-            console.error('Ошибка обновления баланса в Supabase:', error);
-            return false;
-        }
-        
-        console.log('Баланс обновлен в Supabase для пользователя', userKey, 'новый баланс:', newBalance);
-        return true;
-        
-    } catch (error) {
-        console.error('Ошибка при обновлении баланса:', error);
-        return false;
-    }
+  } catch (error) {
+    console.error('Критическая ошибка загрузки из Supabase:', error);
+    usersData = {};
+    return usersData;
+  }
 }
 
-// 4. Функция прямого запроса пользователя из Supabase
+// Прямой запрос пользователя из Supabase
 async function getUserFromSupabase(userKey, password) {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        return null;
+  if (!supabase) {
+    console.error('Supabase не инициализирован');
+    return null;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.usersTable)
+      .select('*')
+      .eq('user_key', userKey)
+      .eq('password', password)
+      .single();
+      
+    if (error) {
+      console.error('Ошибка запроса пользователя из Supabase:', error);
+      return null;
     }
     
-    try {
-        const { data, error } = await supabase
-            .from(SUPABASE_CONFIG.tableName)
-            .select('*')
-            .eq('user_key', userKey)
-            .eq('password', password)
-            .single();
-            
-        if (error) {
-            console.error('Ошибка запроса пользователя из Supabase:', error);
-            return null;
-        }
-        
-        return data;
-        
-    } catch (error) {
-        console.error('Ошибка при запросе пользователя:', error);
-        return null;
+    return data;
+    
+  } catch (error) {
+    console.error('Ошибка при запросе пользователя:', error);
+    return null;
+  }
+}
+
+// Обновление баланса пользователя в Supabase
+async function updateUserBalanceInSupabase(userKey, newBalance) {
+  if (!supabase || !userKey) {
+    console.error('Нет подключения к Supabase или userKey');
+    return false;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.usersTable)
+      .update({ 
+        balance: parseFloat(newBalance),
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_key', userKey)
+      .select();
+      
+    if (error) {
+      console.error('Ошибка обновления баланса в Supabase:', error);
+      return false;
     }
+    
+    console.log('Баланс обновлен в Supabase для пользователя', userKey, 'новый баланс:', newBalance);
+    return true;
+    
+  } catch (error) {
+    console.error('Ошибка при обновлении баланса:', error);
+    return false;
+  }
 }
 
 // =============================================
@@ -2926,40 +3152,46 @@ async function getUserFromSupabase(userKey, password) {
 
 // Загружаем данные при старте
 window.addEventListener('DOMContentLoaded', async function() {
-    if (!supabase) {
-        console.error('Supabase не инициализирован');
-        document.getElementById('loginContainer').style.display = 'flex';
-        document.getElementById('mainContent').style.display = 'none';
-        return;
-    }
+  if (!supabase) {
+    console.error('Supabase не инициализирован');
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+    return;
+  }
+  
+  // Загружаем данные пользователей из Supabase
+  await loadUsersDataFromSupabase();
+  
+  // Проверяем авторизацию
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const savedUser = localStorage.getItem('currentUser');
+  
+  if (isLoggedIn && savedUser && usersData[savedUser]) {
+    currentUser = savedUser;
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    updateUserData();
+    updateAllBalances();
+    initWatchlist();
+    updateCurrentTime();
+    initCompanyList();
     
-    // Загружаем данные из Supabase
-    await loadUsersDataFromSupabase();
+    // Загружаем позиции из Supabase
+    await loadAndDisplayPositions();
     
-    // Настраиваем real-time подписку
-    setupRealtimeSubscription();
+    // Настраиваем real-time подписку на позиции
+    setupPositionsRealtime();
     
-    // Проверяем авторизацию
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const savedUser = localStorage.getItem('currentUser');
-    
-    if (isLoggedIn && savedUser && usersData[savedUser]) {
-        currentUser = savedUser;
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        updateUserData();
-        updateAllBalances();
-        initWatchlist();
-        updateCurrentTime();
-        initCompanyList();
-        
-        // Загружаем сохраненные позиции
-        loadSavedPositions();
-    } else {
-        document.getElementById('loginContainer').style.display = 'flex';
-        document.getElementById('mainContent').style.display = 'none';
-    }
+    showToast('✅ Сессия восстановлена');
+  } else {
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+  }
 });
+
+// =============================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// =============================================
 
 // Функция для переключения меню
 function toggleMenu() {
@@ -3046,6 +3278,12 @@ function updateAllBalances() {
   // Хедер
   document.getElementById('balanceValue').textContent = balance + ' USDT';
   
+  // Терминал
+  const availableBalanceInfo = document.getElementById('availableBalanceInfo');
+  if (availableBalanceInfo) {
+    availableBalanceInfo.textContent = `Дост.: ${balance} USDT`;
+  }
+  
   // Депозит страница
   const depositTotalBalance = document.getElementById('depositTotalBalance');
   if (depositTotalBalance) {
@@ -3071,12 +3309,6 @@ function updateAllBalances() {
   const withdrawBalanceAvailable = document.getElementById('withdrawBalanceAvailable');
   if (withdrawBalanceAvailable) {
     withdrawBalanceAvailable.textContent = balance + ' USDT';
-  }
-  
-  // Торговля страница
-  const availableElement = document.querySelector('.info-line:nth-child(2)');
-  if (availableElement) {
-    availableElement.textContent = `Дост.: ${balance} USDT`;
   }
 }
 
@@ -3107,7 +3339,7 @@ async function checkLogin() {
       // Обновляем локальный кэш
       usersData[login] = {
         password: userData.password,
-        balance: userData.balance ? userData.balance.toString() : "0.00",
+        balance: userData.balance ? parseFloat(userData.balance).toFixed(2) : "0.00",
         level: userData.level || 'Стандарт',
         withdrawType: userData.withdraw_type || 'normal',
         email: userData.email || `${login}@galardro.org`,
@@ -3127,26 +3359,201 @@ async function checkLogin() {
       updateCurrentTime();
       initCompanyList();
       
-      // Загружаем сохраненные позиции
-      loadSavedPositions();
+      // Загружаем позиции из Supabase
+      await loadAndDisplayPositions();
+      
+      // Настраиваем real-time подписку
+      setupPositionsRealtime();
       
       // Скрываем ошибку
       errorElement.style.display = 'none';
       
       console.log('Пользователь успешно вошел:', login);
+      showToast('✅ Успешный вход!');
     } else {
       // Пользователь не найден или неверный пароль
       errorElement.style.display = 'block';
+      showToast('❌ Неверный логин или пароль');
     }
   } catch (error) {
     console.error('Ошибка при входе:', error);
     errorElement.style.display = 'block';
+    showToast('❌ Ошибка входа');
   }
 }
 
+// Функция выхода
+function logout() {
+  if (confirm('Вы уверены, что хотите выйти?')) {
+    // Отписываемся от real-time
+    if (tradesChannel) {
+      supabase.removeChannel(tradesChannel);
+      tradesChannel = null;
+    }
+    
+    // Очищаем данные
+    currentUser = null;
+    positionsData = [];
+    
+    // Очищаем localStorage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    
+    // Обновляем UI
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('loginContainer').style.display = 'flex';
+    
+    // Очищаем поля ввода
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    
+    showToast('Вы вышли из системы');
+  }
+}
+
+// Обновление отображения позиций
+function updatePositionsDisplay() {
+  const mobileContainer = document.getElementById('mobilePositionsContainer');
+  const desktopContainer = document.getElementById('desktopPositionsContainer');
+  
+  // Обновляем оба контейнера
+  updatePositionsContainer(mobileContainer);
+  updatePositionsContainer(desktopContainer);
+}
+
+// Обновление контейнера с позициями
+function updatePositionsContainer(container) {
+  if (!container) return;
+  
+  // Очищаем контейнер
+  container.innerHTML = '';
+  
+  if (positionsData.length === 0) {
+    container.innerHTML = '<div class="empty-positions">Нет открытых позиций</div>';
+    return;
+  }
+  
+  // Добавляем позиции
+  positionsData.forEach(position => {
+    const positionElement = createPositionElement(position);
+    container.appendChild(positionElement);
+  });
+}
+
+// Создание элемента позиции
+function createPositionElement(position) {
+  const directionColor = position.direction === "Лонг" ? "#16c784" : "#ea3943";
+  const dealBlock = document.createElement("div");
+  dealBlock.className = "deal-block";
+  
+  // Определяем статус
+  const statusClass = position.status === 'отработка' ? 'status-processing' : 'status-closed';
+  const statusText = position.status === 'отработка' ? 'Отработка 🔄' : 'Закрыта полностью ✅';
+  
+  // Определяем PnL
+  const pnl = position.pnl || 0;
+  const pnlClass = pnl > 0 ? 'pnl-positive' : (pnl < 0 ? 'pnl-negative' : '');
+  const pnlText = pnl ? `${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}` : '—';
+  const pnlDisplay = pnl ? `${pnlText} USDT` : '—';
+  
+  // Форматируем дату
+  const timeOpened = new Date(position.opened_at).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  // TP/SL информация
+  const tpInfo = position.take_profit ? `TP: ${position.take_profit}` : 'TP: —';
+  const slInfo = position.stop_loss ? `SL: ${position.stop_loss}` : 'SL: —';
+  
+  dealBlock.innerHTML = `
+    <div class="deal-info">
+      <div><strong>${position.symbol}USDT</strong> 
+        <span style="color:${directionColor}">${position.direction}</span> 
+        <span>Кросс</span> 
+        <span>${position.leverage}x</span>
+      </div>
+      <div class="deal-row">
+        <div class="deal-column">
+          <div>Ср. цена открытия: <span>${position.entry_price}</span> USDT</div>
+        </div>
+        <div class="deal-column">
+          <div>Всего открыто: <span>${position.size}</span> USDT</div>
+        </div>
+        <div class="deal-column">
+          <div>П/У позиции: <span class="profit">—</span> USDT</div>
+          <div>Реализованная П/У: <span class="realized">${pnlDisplay}</span> USDT</div>
+        </div>
+        <div class="deal-column">
+          <div>${tpInfo}</div>
+          <div>${slInfo}</div>
+          <div>Время открытия: ${timeOpened}</div>
+        </div>
+      </div>
+    </div>
+    <div class="position-status">
+      <div class="status-badge ${statusClass}">${statusText}</div>
+      <div class="position-pnl ${pnlClass}">${pnlDisplay}</div>
+    </div>
+  `;
+  
+  return dealBlock;
+}
+
+// =============================================
+// ГЛАВНАЯ ФУНКЦИЯ ОТКРЫТИЯ ПОЗИЦИИ (ИСПРАВЛЕННАЯ)
+// =============================================
+async function openPosition(type) {
+  if (!currentUser) {
+    showToast('Сначала войдите в систему');
+    return;
+  }
+  
+  // Получаем данные из формы
+  const tradeSizeInput = document.getElementById('tradeSize');
+  const tradeSize = tradeSizeInput ? tradeSizeInput.value : '0';
+  
+  if (!tradeSize || parseFloat(tradeSize) <= 0) {
+    showToast('Введите корректный размер позиции');
+    return;
+  }
+  
+  // Проверяем баланс
+  const userBalance = parseFloat(usersData[currentUser]?.balance || 0);
+  const positionSize = parseFloat(tradeSize);
+  
+  if (userBalance < positionSize) {
+    showToast('❌ Недостаточно средств для открытия позиции');
+    return;
+  }
+  
+  // Открываем позицию в Supabase
+  const position = await openPositionInSupabase(type);
+  
+  if (position) {
+    // Показываем уведомление
+    showToast(`✅ Позиция ${type} на ${position.symbol} открыта! Размер: ${position.size} USDT`);
+    
+    // Обновляем отображение позиций (real-time сделает это автоматически)
+    await loadAndDisplayPositions();
+  }
+}
+
+// =============================================
+// ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ
+// =============================================
+
 // Инициализация списка компаний для выпадающего меню
+const companies = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
+  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
+  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
+];
+
 function initCompanyList() {
   const companyList = document.getElementById('companyList');
+  if (!companyList) return;
+  
   companyList.innerHTML = '';
   
   companies.forEach(company => {
@@ -3176,23 +3583,6 @@ function updateUserData() {
   }
 }
 
-// Обновление информации в хедере
-function updateBalanceInfo() {
-  if (!currentUser || !usersData[currentUser]) return;
-  
-  const balanceElement = document.getElementById('balanceValue');
-  const pnlElement = document.getElementById('pnlValue');
-  
-  const pnlChange = (Math.random() * 2 - 1).toFixed(2);
-  
-  // Используем реальный баланс пользователя
-  balanceElement.textContent = usersData[currentUser].balance + ' USDT';
-  pnlElement.textContent = (pnlChange >= 0 ? '+' : '') + pnlChange + '%';
-  pnlElement.className = pnlChange >= 0 ? 'balance-value positive' : 'balance-value negative';
-  
-  setTimeout(updateBalanceInfo, 5000);
-}
-
 // Обновление текущего времени
 function updateCurrentTime() {
   const now = new Date();
@@ -3205,17 +3595,6 @@ function updateCurrentTime() {
   }
   
   setTimeout(updateCurrentTime, 1000);
-}
-
-// Проверка доступности localStorage
-let storageAvailable = true;
-try {
-  const testKey = '__test';
-  localStorage.setItem(testKey, '1');
-  localStorage.removeItem(testKey);
-} catch (e) {
-  storageAvailable = false;
-  alert("⚠️ Внимание: Ваш браузер блокирует сохранение данных. Сделки не будут сохраняться после перезагрузки.");
 }
 
 // Инициализация списка избранных активов
@@ -3306,27 +3685,9 @@ function updateMarketData() {
     changeElement.textContent = `${newChange}%`;
     changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
   }
-  
-  const btcDominance = document.getElementById('btcDominance');
-  const fearGreed = document.getElementById('fearGreed');
-  const totalMarketCap = document.getElementById('totalMarketCap');
-  const volume24h = document.getElementById('volume24h');
-  
-  if (btcDominance) {
-    const currentBtcDom = parseFloat(btcDominance.textContent) || 42.8;
-    const newBtcDom = (currentBtcDom + (Math.random() * 0.2 - 0.1)).toFixed(1);
-    btcDominance.textContent = `${newBtcDom}%`;
-  }
-  
-  if (fearGreed) {
-    const currentFearGreed = parseInt(fearGreed.textContent) || 72;
-    const newFearGreed = Math.max(0, Math.min(100, currentFearGreed + Math.floor(Math.random() * 5 - 2)));
-    fearGreed.textContent = newFearGreed;
-    fearGreed.style.color = newFearGreed > 50 ? '#16c784' : newFearGreed > 25 ? '#ffcc00' : '#ea3943';
-  }
 }
 
-// Выбор актива из быстрого доступа или списка избранных
+// Выбор актива
 function selectAsset(symbol) {
   document.getElementById("selectedCompany").textContent = symbol;
   document.getElementById("companyTitle").textContent = symbol;
@@ -3379,26 +3740,9 @@ function selectAsset(symbol) {
   document.getElementById("dropdown").style.display = "none";
 }
 
-// Функция для обновления графиков
-function updateChartData() {
-  // Если есть активный график, обновляем его данные
-  const selectedCompany = document.getElementById("selectedCompany").textContent;
-  if (selectedCompany) {
-    updateMarketData();
-  }
-}
-
-setInterval(updateChartData, 2000);
-
 function updateLeverage(val) {
   document.getElementById("leverage-value").textContent = val + "x";
 }
-
-const companies = [
-  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
-  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
-  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
-];
 
 function toggleDropdown() {
   const dropdown = document.getElementById("dropdown");
@@ -3426,145 +3770,6 @@ document.addEventListener("click", function(e) {
     document.getElementById("dropdown").style.display = "none";
   }
 });
-
-// Загрузка сохраненных позиций
-function loadSavedPositions() {
-  if (storageAvailable) {
-    let savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
-    savedDeals = savedDeals.slice(0, 5);
-    
-    // Восстанавливаем позиции
-    savedDeals.forEach(deal => {
-      restorePosition(deal);
-    });
-  }
-}
-
-// Обновление отображения позиций
-function updatePositionsDisplay() {
-  const mobileContainer = document.getElementById('mobilePositionsContainer');
-  const desktopContainer = document.getElementById('desktopPositionsContainer');
-  
-  // Получаем сохраненные позиции
-  let savedDeals = [];
-  if (storageAvailable) {
-    savedDeals = JSON.parse(localStorage.getItem("deals") || "[]");
-  }
-  
-  // Обновляем оба контейнера
-  updatePositionsContainer(mobileContainer, savedDeals);
-  updatePositionsContainer(desktopContainer, savedDeals);
-}
-
-// Обновление контейнера с позициями
-function updatePositionsContainer(container, savedDeals) {
-  if (!container) return;
-  
-  // Очищаем контейнер
-  container.innerHTML = '';
-  
-  if (savedDeals.length === 0) {
-    container.innerHTML = '<div class="empty-positions">Нет открытых позиций</div>';
-    return;
-  }
-  
-  // Добавляем позиции
-  savedDeals.forEach(deal => {
-    const positionElement = createPositionElement(deal);
-    container.appendChild(positionElement);
-  });
-}
-
-// Создание элемента позиции
-function createPositionElement(deal) {
-  const directionColor = deal.type === "Лонг" ? "#16c784" : "#ea3943";
-  const dealBlock = document.createElement("div");
-  dealBlock.className = "deal-block";
-  
-  const tpInfo = deal.tp ? `TP: ${deal.tp}` : 'TP: —';
-  const slInfo = deal.sl ? `SL: ${deal.sl}` : 'SL: —';
-  const timeInfo = `Время открытия: ${deal.timeOpened}`;
-  
-  dealBlock.innerHTML = `
-    <div><strong>${deal.company}USDT</strong> <span style="color:${directionColor}">${deal.type}</span> <span>Кросс</span> <span>${deal.leverage}x</span></div>
-    <div class="deal-row">
-      <div class="deal-column">
-        <div>Ср. цена открытия: <span>${deal.openPrice}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>Всего открыто: <span>${deal.amount}</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>П/У позиции: <span class="profit">—</span> USDT</div>
-        <div>Реализованная П/У: <span class="realized">—</span> USDT</div>
-      </div>
-      <div class="deal-column">
-        <div>${tpInfo}</div>
-        <div>${slInfo}</div>
-        <div>${timeInfo}</div>
-      </div>
-    </div>
-  `;
-  
-  return dealBlock;
-}
-
-// Функция открытия позиции
-async function openPosition(type) {
-  if (!currentUser) {
-    alert('Сначала войдите в систему');
-    return;
-  }
-  
-  if (!usersData[currentUser]) {
-    alert('Данные пользователя не загружены');
-    return;
-  }
-  
-  const savedDeals = storageAvailable ? JSON.parse(localStorage.getItem("deals") || "[]") : [];
-  const company = document.getElementById("selectedCompany").textContent;
-  const leverage = document.getElementById("leverage").value;
-  const amountInput = document.querySelector('input[type="number"]').value || 0;
-  const amount = parseFloat(amountInput);
-  
-  const timestamp = Date.now();
-  const tp = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Take"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Take"]')?.value;
-  const sl = type === 'Лонг' ? document.querySelector('#tp-sl-long input[placeholder*="Stop"]')?.value : document.querySelector('#tp-sl-short input[placeholder*="Stop"]')?.value;
-  const timeOpened = new Date().toLocaleTimeString();
-
-  const dealData = {
-    company,
-    leverage,
-    type,
-    amount: amount.toFixed(2),
-    openPrice: (Math.random() * 5 + 1).toFixed(4),
-    tp,
-    sl,
-    timeOpened,
-    timestamp
-  };
-  
-  savedDeals.unshift(dealData);
-  if (storageAvailable) {
-    const trimmedDeals = savedDeals.slice(0, 5);
-    localStorage.setItem("deals", JSON.stringify(trimmedDeals));
-  }
-
-  // Обновляем отображение позиций
-  updatePositionsDisplay();
-  
-  // Обновляем UI баланса
-  updateAllBalances();
-  updateBalanceInfo();
-  
-  showToast(`Позиция ${type} на ${company} открыта! Сумма: ${amount} USDT, Плечо: ${leverage}x`);
-}
-
-// Восстановление позиции
-function restorePosition(deal) {
-  // Обновляем отображение позиций
-  updatePositionsDisplay();
-}
 
 function toggleTPSL(checkbox, targetId) {
   const target = document.getElementById(targetId);
@@ -3732,7 +3937,7 @@ function showNormalModal() {
   const walletAddress = walletInput ? walletInput.value || '0x742d35Cc6634C0532925a3b8D...' : '0x742d35Cc6634C0532925a3b8D...';
   
   // Рассчитываем комиссию (1% для нормального вывода)
-  const networkFee = (parseFloat(amount) * (SYSTEM_CONFIG.FEES.normal / 100)).toFixed(2);
+  const networkFee = (parseFloat(amount) * 0.01).toFixed(2);
   const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
   
   // Обновляем данные в модальном окне
@@ -3758,6 +3963,7 @@ function showNormalModal() {
 }
 
 // Функция для запуска таймера обратного отсчета
+let countdownInterval = null;
 function startCountdownTimer() {
   let timeLeft = 24 * 60 * 60; // 24 часа в секундах
   
@@ -3839,22 +4045,22 @@ function showSupportMessage() {
   if (supportMessage) supportMessage.style.display = 'block';
 }
 
-function showError() {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  
-  toast.style.display = "block";
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 4000);
-}
-
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
   
   toast.textContent = message;
   toast.style.display = "block";
+  
+  // Меняем цвет в зависимости от типа сообщения
+  if (message.includes('✅') || message.includes('✓') || message.includes('Успешный')) {
+    toast.style.backgroundColor = '#16c784';
+  } else if (message.includes('❌') || message.includes('Ошибка') || message.includes('Неверный')) {
+    toast.style.backgroundColor = '#f85149';
+  } else {
+    toast.style.backgroundColor = '#1f6feb';
+  }
+  
   setTimeout(() => {
     toast.style.display = "none";
   }, 4000);
@@ -3888,6 +4094,21 @@ document.addEventListener('keydown', function(event) {
     closeCommissionModal();
     closeRequestModal();
     closeNormalModal();
+  }
+});
+
+// Добавляем кнопку выхода в меню
+document.addEventListener('DOMContentLoaded', function() {
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  if (dropdownMenu) {
+    const logoutItem = document.createElement('div');
+    logoutItem.className = 'menu-item';
+    logoutItem.innerHTML = `
+      <img src="https://img.icons8.com/ios-filled/24/ffffff/exit.png" alt="" />
+      Выйти
+    `;
+    logoutItem.onclick = logout;
+    dropdownMenu.appendChild(logoutItem);
   }
 });
 </script>
