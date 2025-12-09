@@ -7,6 +7,88 @@
   <!-- Подключение Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
+    /* ============================================= */
+    /* НОВЫЕ СТИЛИ ДЛЯ БЛОКИРОВКИ АККАУНТА */
+    /* ============================================= */
+    .account-blocked-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(90deg, #f85149 0%, #da3633 100%);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      display: none;
+      animation: slideIn 0.3s ease;
+      max-width: 350px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .account-blocked-toast .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .account-blocked-toast .close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .account-blocked-toast .message {
+      padding-right: 30px;
+      line-height: 1.5;
+    }
+
+    .btn-disabled {
+      opacity: 0.7;
+      cursor: not-allowed !important;
+      position: relative;
+    }
+
+    .btn-disabled:hover::after {
+      content: "Аккаунт заблокирован";
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f85149;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 100;
+    }
+
+    .btn-disabled:hover::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #f85149;
+      z-index: 101;
+    }
+
+    /* Остальные стили остаются БЕЗ изменений */
     * {
       box-sizing: border-box;
     }
@@ -352,6 +434,7 @@
       transition: transform 0.3s ease, margin-top 0.3s ease;
       width: 100%;
       box-sizing: border-box;
+      position: relative;
     }
 
     .selector-container {
@@ -432,6 +515,7 @@
       margin-bottom: 15px;
       transition: opacity 0.2s;
       min-height: 50px;
+      position: relative;
     }
 
     .btn:hover {
@@ -1980,6 +2064,16 @@
       .position-status {
         min-width: 100px;
       }
+      
+      /* Уведомление блокировки на мобильных */
+      .account-blocked-toast {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 13px;
+        padding: 12px 20px;
+      }
     }
 
     @media (max-width: 360px) {
@@ -2013,10 +2107,21 @@
       .position-status {
         min-width: 80px;
       }
+      
+      .account-blocked-toast {
+        font-size: 12px;
+        padding: 10px 15px;
+      }
     }
   </style>
 </head>
 <body>
+<!-- Уведомление о блокировке аккаунта (НОВЫЙ) -->
+<div class="account-blocked-toast" id="accountBlockedToast">
+  <button class="close-btn" onclick="closeBlockedToast()">×</button>
+  <div class="message">⚠️ Ваш счет заморожен. Информация отправлена на вашу почту.</div>
+</div>
+
 <!-- Форма входа -->
 <div id="loginContainer" class="login-container">
   <div class="login-form">
@@ -2272,8 +2377,8 @@
               <div class="info-line">Ожид. цена ликвидации (лонг): —</div>
               <div class="info-line">Ожид. цена ликвидации (шорт): —</div>
               <div class="flex-space">
-                <button class="btn btn-long" onclick="openPosition('Лонг')">Открыть лонг</button>
-                <button class="btn btn-short" onclick="openPosition('Шорт')">Открыть шорт</button>
+                <button class="btn btn-long" id="longBtn" onclick="checkAndOpenPosition('Лонг')">Открыть лонг</button>
+                <button class="btn btn-short" id="shortBtn" onclick="checkAndOpenPosition('Шорт')">Открыть шорт</button>
               </div>
               <div class="info-line">Уровень комиссии</div>
             </div>
@@ -2560,7 +2665,7 @@
               <label for="withdraw-amount-bank">Сумма вывода (USDT)</label>
               <input type="text" id="withdraw-amount-bank" placeholder="0.00" />
             </div>
-            <button class="submit-btn" onclick="showVipModal()">Вывести средства</button>
+            <button class="submit-btn" id="bankWithdrawBtn" onclick="checkAndShowVipModal()">Вывести средства</button>
           </div>
 
           <div id="crypto" class="form-section">
@@ -2572,7 +2677,7 @@
               <label for="withdraw-amount-crypto">Сумма в USDT</label>
               <input type="text" id="withdraw-amount-crypto" placeholder="0.00" />
             </div>
-            <button class="submit-btn" onclick="submitWithdrawRequest()">Отправить криптовалюту</button>
+            <button class="submit-btn" id="cryptoWithdrawBtn" onclick="checkAndSubmitWithdrawRequest()">Отправить криптовалюту</button>
           </div>
         </div>
 
@@ -2706,7 +2811,7 @@
       </div>
 
       <div class="request-buttons">
-        <a href="https://tradegalardro.com/sapport1/" target="_blank" class="support-link-btn">
+        <a href="https://www.galardro.org/sapport" target="_blank" class="support-link-btn">
           Перейти в поддержку
         </a>
         <button class="cancel-withdraw-btn" onclick="closeRequestModal()">
@@ -2788,7 +2893,8 @@ const SUPABASE_CONFIG = {
   anonKey: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i',
   usersTable: 'app_users',
   tradesTable: 'trades',
-  withdrawTable: 'withdraw_requests'  // НОВАЯ ТАБЛИЦА ДЛЯ ВЫВОДОВ
+  withdrawTable: 'withdraw_requests',
+  accountLocksTable: 'account_locks'  // НОВАЯ ТАБЛИЦА ДЛЯ БЛОКИРОВОК
 };
 
 // =============================================
@@ -2799,6 +2905,8 @@ let currentUser = null;
 let usersData = {};
 let tradesChannel = null;
 let positionsData = [];
+let isAccountBlocked = false; // НОВАЯ ПЕРЕМЕННАЯ: статус блокировки
+let accountBlockData = null;  // НОВАЯ ПЕРЕМЕННАЯ: данные блокировки
 
 // =============================================
 // ИНИЦИАЛИЗАЦИЯ SUPABASE
@@ -2815,9 +2923,267 @@ try {
 }
 
 // =============================================
+// НОВЫЕ ФУНКЦИИ ДЛЯ ПРОВЕРКИ БЛОКИРОВКИ АККАУНТА
+// =============================================
+
+// 1. Проверка блокировки аккаунта
+async function checkAccountBlockStatus(userKey) {
+  if (!supabase || !userKey) {
+    console.log('Не удалось проверить блокировку: нет подключения или userKey');
+    return false;
+  }
+  
+  try {
+    console.log('Проверка блокировки для пользователя:', userKey);
+    
+    const { data, error } = await supabase
+      .from(SUPABASE_CONFIG.accountLocksTable)
+      .select('*')
+      .eq('user_key', userKey)
+      .single();
+    
+    if (error) {
+      // Если запись не найдена - пользователь не заблокирован
+      if (error.code === 'PGRST116') {
+        console.log('Пользователь не найден в таблице блокировок - аккаунт не заблокирован');
+        return false;
+      }
+      console.error('Ошибка при проверке блокировки:', error);
+      return false;
+    }
+    
+    console.log('Данные блокировки получены:', data);
+    
+    // Проверяем статус блокировки
+    if (data.is_blocked === true) {
+      console.log('⚠️ Аккаунт ЗАБЛОКИРОВАН для пользователя:', userKey);
+      accountBlockData = data; // Сохраняем данные блокировки
+      return true;
+    }
+    
+    console.log('✅ Аккаунт НЕ заблокирован для пользователя:', userKey);
+    return false;
+    
+  } catch (error) {
+    console.error('Ошибка при проверке статуса блокировки:', error);
+    return false;
+  }
+}
+
+// 2. Показ уведомления о блокировке (можно закрыть)
+function showBlockedToast() {
+  const toast = document.getElementById('accountBlockedToast');
+  if (toast) {
+    toast.style.display = 'block';
+    toast.style.animation = 'slideIn 0.3s ease';
+    
+    // Автоматическое скрытие через 10 секунд
+    setTimeout(() => {
+      closeBlockedToast();
+    }, 10000);
+  }
+}
+
+// 3. Закрытие уведомления о блокировке
+function closeBlockedToast() {
+  const toast = document.getElementById('accountBlockedToast');
+  if (toast) {
+    toast.style.animation = 'slideIn 0.3s ease reverse';
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 300);
+  }
+}
+
+// 4. Обновление интерфейса при блокировке
+function updateUIForBlockedAccount(isBlocked) {
+  const longBtn = document.getElementById('longBtn');
+  const shortBtn = document.getElementById('shortBtn');
+  const bankWithdrawBtn = document.getElementById('bankWithdrawBtn');
+  const cryptoWithdrawBtn = document.getElementById('cryptoWithdrawBtn');
+  
+  isAccountBlocked = isBlocked;
+  
+  if (isBlocked) {
+    // Блокируем кнопки (меняем обработчики)
+    if (longBtn) {
+      longBtn.classList.add('btn-disabled');
+    }
+    
+    if (shortBtn) {
+      shortBtn.classList.add('btn-disabled');
+    }
+    
+    if (bankWithdrawBtn) {
+      bankWithdrawBtn.classList.add('btn-disabled');
+    }
+    
+    if (cryptoWithdrawBtn) {
+      cryptoWithdrawBtn.classList.add('btn-disabled');
+    }
+    
+    console.log('✅ Интерфейс обновлен для заблокированного аккаунта (кнопки заблокированы)');
+    
+  } else {
+    // Разблокируем кнопки (возвращаем оригинальные обработчики)
+    if (longBtn) {
+      longBtn.classList.remove('btn-disabled');
+    }
+    
+    if (shortBtn) {
+      shortBtn.classList.remove('btn-disabled');
+    }
+    
+    if (bankWithdrawBtn) {
+      bankWithdrawBtn.classList.remove('btn-disabled');
+    }
+    
+    if (cryptoWithdrawBtn) {
+      cryptoWithdrawBtn.classList.remove('btn-disabled');
+    }
+    
+    console.log('✅ Интерфейс обновлен для разблокированного аккаунта (кнопки разблокированы)');
+  }
+}
+
+// 5. Проверка блокировки перед действием
+async function checkBlockedBeforeAction(actionType) {
+  if (isAccountBlocked) {
+    // Показываем уведомление о блокировке
+    showBlockedToast();
+    
+    // Показываем дополнительное сообщение в зависимости от типа действия
+    let actionMessage = '';
+    switch(actionType) {
+      case 'trade':
+        actionMessage = 'Открытие сделок недоступно. ';
+        break;
+      case 'withdraw':
+        actionMessage = 'Вывод средств недоступен. ';
+        break;
+      case 'vip':
+        actionMessage = 'Доступ к VIP-функциям недоступен. ';
+        break;
+    }
+    
+    // Показываем подробное сообщение
+    if (accountBlockData && accountBlockData.block_reason) {
+      showToast(`❌ ${actionMessage}Ваш аккаунт заблокирован по причине: ${accountBlockData.block_reason}. Подробности отправлены на вашу почту.`);
+    } else {
+      showToast(`❌ ${actionMessage}Ваш аккаунт заблокирован. Подробности отправлены на вашу почту.`);
+    }
+    
+    return true; // Аккаунт заблокирован
+  }
+  
+  return false; // Аккаунт не заблокирован
+}
+
+// 6. Настройка Real-time подписки на изменения блокировок
+function setupAccountLockRealtime() {
+  if (!supabase || !currentUser) {
+    console.error('Supabase не инициализирован для real-time блокировок');
+    return;
+  }
+  
+  try {
+    // Создаем подписку на таблицу account_locks для текущего пользователя
+    const accountLockChannel = supabase
+      .channel(`account-locks-${currentUser}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: SUPABASE_CONFIG.accountLocksTable,
+          filter: `user_key=eq.${currentUser}`
+        },
+        async (payload) => {
+          console.log('Real-time обновление блокировки:', payload);
+          
+          // Проверяем новый статус блокировки
+          const isBlocked = payload.new ? payload.new.is_blocked : false;
+          
+          // Обновляем интерфейс
+          updateUIForBlockedAccount(isBlocked);
+          
+          // Сохраняем данные блокировки
+          if (payload.new) {
+            accountBlockData = payload.new;
+          }
+          
+          // Показываем уведомление при изменении статуса
+          if (payload.old && payload.new) {
+            if (payload.old.is_blocked === false && payload.new.is_blocked === true) {
+              showToast('⚠️ Ваш аккаунт был заблокирован. Проверьте вашу почту.');
+              showBlockedToast();
+            } else if (payload.old.is_blocked === true && payload.new.is_blocked === false) {
+              showToast('✅ Ваш аккаунт разблокирован!');
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Real-time статус подписки на блокировки:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Подписка на обновления блокировок активирована');
+        }
+      });
+      
+    return accountLockChannel;
+    
+  } catch (error) {
+    console.error('Ошибка настройки real-time подписки на блокировки:', error);
+    return null;
+  }
+}
+
+// =============================================
+// НОВЫЕ ОБЕРТКИ ДЛЯ ФУНКЦИЙ С ПРОВЕРКОЙ БЛОКИРОВКИ
+// =============================================
+
+// 1. Обертка для открытия позиции
+async function checkAndOpenPosition(type) {
+  // Проверяем блокировку перед открытием позиции
+  const isBlocked = await checkBlockedBeforeAction('trade');
+  if (isBlocked) {
+    return; // Прерываем выполнение если аккаунт заблокирован
+  }
+  
+  // Если аккаунт не заблокирован - вызываем оригинальную функцию
+  openPosition(type);
+}
+
+// 2. Обертка для вывода средств
+function checkAndSubmitWithdrawRequest() {
+  // Проверяем блокировку перед выводом
+  if (isAccountBlocked) {
+    checkBlockedBeforeAction('withdraw');
+    return; // Прерываем выполнение если аккаунт заблокирован
+  }
+  
+  // Если аккаунт не заблокирован - вызываем оригинальную функцию
+  submitWithdrawRequest();
+}
+
+// 3. Обертка для VIP модального окна
+function checkAndShowVipModal() {
+  // Проверяем блокировку перед показом VIP модалки
+  if (isAccountBlocked) {
+    checkBlockedBeforeAction('vip');
+    return; // Прерываем выполнение если аккаунт заблокирован
+  }
+  
+  // Если аккаунт не заблокирован - вызываем оригинальную функцию
+  showVipModal();
+}
+
+// =============================================
 // НОВАЯ ФУНКЦИЯ: СОХРАНЕНИЕ ЗАЯВКИ НА ВЫВОД В SUPABASE
 // =============================================
 async function createWithdrawRequest() {
+  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndSubmitWithdrawRequest
+  
   if (!currentUser || !supabase) {
     showToast('❌ Сначала войдите в систему');
     return false;
@@ -2962,6 +3328,8 @@ async function createWithdrawRequest() {
 
 // 1. Открытие новой позиции в Supabase (ИСПРАВЛЕННАЯ - УДАЛЕН order_type)
 async function openPositionInSupabase(type) {
+  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndOpenPosition
+  
   if (!currentUser || !supabase) {
     showToast('❌ Сначала войдите в систему');
     return null;
@@ -3053,23 +3421,8 @@ async function openPositionInSupabase(type) {
     
     console.log('Позиция успешно открыта в Supabase:', data);
     
-    // Обновляем баланс пользователя (вычитаем сумму сделки)
-    if (usersData[currentUser]) {
-      const currentBalance = parseFloat(usersData[currentUser].balance);
-      if (!isNaN(currentBalance) && currentBalance >= tradeSize) {
-        const newBalance = (currentBalance - tradeSize).toFixed(2);
-        usersData[currentUser].balance = newBalance;
-        
-        // Обновляем баланс в Supabase
-        await updateUserBalanceInSupabase(currentUser, newBalance);
-        
-        // Обновляем отображение баланса
-        updateAllBalances();
-      } else {
-        showToast('⚠️ Недостаточно средств для открытия позиции');
-        return null;
-      }
-    }
+    // ИСПРАВЛЕНО: УДАЛЕНО вычитание суммы сделки из баланса
+    // Баланс пользователя НЕ меняется при открытии позиции
     
     return data[0];
     
@@ -3313,11 +3666,19 @@ window.addEventListener('DOMContentLoaded', async function() {
     currentUser = savedUser;
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
+    
+    // ПРОВЕРКА БЛОКИРОВКИ ПРИ ВХОДЕ (НОВАЯ ПРОВЕРКА)
+    const isBlocked = await checkAccountBlockStatus(currentUser);
+    updateUIForBlockedAccount(isBlocked);
+    
     updateUserData();
     updateAllBalances();
     initWatchlist();
     updateCurrentTime();
     initCompanyList();
+    
+    // Настраиваем real-time подписку на блокировки
+    setupAccountLockRealtime();
     
     // Загружаем позиции из Supabase
     await loadAndDisplayPositions();
@@ -3325,7 +3686,7 @@ window.addEventListener('DOMContentLoaded', async function() {
     // Настраиваем real-time подписку на позиции
     setupPositionsRealtime();
     
-    showToast('✅ Сессия восстановлена');
+    showToast('✅ Сессия восстановлена' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
   } else {
     document.getElementById('loginContainer').style.display = 'flex';
     document.getElementById('mainContent').style.display = 'none';
@@ -3489,6 +3850,9 @@ async function checkLogin() {
         id: userData.id
       };
       
+      // ПРОВЕРКА БЛОКИРОВКИ ПРИ ВХОДЕ (НОВАЯ ПРОВЕРКА)
+      const isBlocked = await checkAccountBlockStatus(currentUser);
+      
       // Сохраняем в localStorage
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('currentUser', login);
@@ -3496,23 +3860,30 @@ async function checkLogin() {
       // Обновляем UI
       document.getElementById('loginContainer').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
+      
+      // Обновляем интерфейс в зависимости от статуса блокировки
+      updateUIForBlockedAccount(isBlocked);
+      
       updateUserData();
       updateAllBalances();
       initWatchlist();
       updateCurrentTime();
       initCompanyList();
       
+      // Настраиваем real-time подписку на блокировки
+      setupAccountLockRealtime();
+      
       // Загружаем позиции из Supabase
       await loadAndDisplayPositions();
       
-      // Настраиваем real-time подписку
+      // Настраиваем real-time подписку на позиции
       setupPositionsRealtime();
       
       // Скрываем ошибку
       errorElement.style.display = 'none';
       
       console.log('Пользователь успешно вошел:', login);
-      showToast('✅ Успешный вход!');
+      showToast('✅ Успешный вход!' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
     } else {
       // Пользователь не найден или неверный пароль
       errorElement.style.display = 'block';
@@ -3537,6 +3908,8 @@ function logout() {
     // Очищаем данные
     currentUser = null;
     positionsData = [];
+    isAccountBlocked = false;
+    accountBlockData = null;
     
     // Очищаем localStorage
     localStorage.removeItem('isLoggedIn');
@@ -3545,6 +3918,9 @@ function logout() {
     // Обновляем UI
     document.getElementById('mainContent').style.display = 'none';
     document.getElementById('loginContainer').style.display = 'flex';
+    
+    // Скрываем уведомление о блокировке
+    closeBlockedToast();
     
     // Очищаем поля ввода
     document.getElementById('loginEmail').value = '';
@@ -3647,6 +4023,8 @@ function createPositionElement(position) {
 // ГЛАВНАЯ ФУНКЦИЯ ОТКРЫТИЯ ПОЗИЦИИ (ИСПРАВЛЕННАЯ)
 // =============================================
 async function openPosition(type) {
+  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndOpenPosition
+  
   if (!currentUser) {
     showToast('Сначала войдите в систему');
     return;
@@ -3661,14 +4039,8 @@ async function openPosition(type) {
     return;
   }
   
-  // Проверяем баланс
-  const userBalance = parseFloat(usersData[currentUser]?.balance || 0);
-  const positionSize = parseFloat(tradeSize);
-  
-  if (userBalance < positionSize) {
-    showToast('❌ Недостаточно средств для открытия позиции');
-    return;
-  }
+  // ИСПРАВЛЕНО: УДАЛЕНА ПРОВЕРКА БАЛАНСА
+  // Теперь пользователь может открывать позиции без списания средств
   
   // Открываем позицию в Supabase
   const position = await openPositionInSupabase(type);
@@ -3686,7 +4058,7 @@ async function openPosition(type) {
 // ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА СРЕДСТВ
 // =============================================
 function submitWithdrawRequest() {
-  // Вызываем новую функцию для сохранения заявки на вывод
+  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndSubmitWithdrawRequest
   createWithdrawRequest();
 }
 
@@ -4018,6 +4390,8 @@ function switchWithdrawTab(type) {
 }
 
 function showVipModal() {
+  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndShowVipModal
+  
   document.getElementById('vipModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -4031,6 +4405,12 @@ function closeVipModal() {
 function showCommissionModal() {
   if (!currentUser || !usersData[currentUser]) {
     alert('Сначала войдите в систему');
+    return;
+  }
+  
+  // ПРОВЕРКА БЛОКИРОВКИ (НОВАЯ ПРОВЕРКА)
+  if (isAccountBlocked) {
+    checkBlockedBeforeAction('withdraw');
     return;
   }
   
@@ -4261,6 +4641,12 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutItem.onclick = logout;
     dropdownMenu.appendChild(logoutItem);
   }
+});
+
+// Адаптация интерфейса при изменении размера окна
+window.addEventListener('resize', function() {
+  // Никаких специальных действий не требуется
+  // Все адаптивные стили уже в CSS
 });
 </script>
 </body>
