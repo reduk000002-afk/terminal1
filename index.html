@@ -2128,7 +2128,7 @@
     <h2>Вход в терминал</h2>
     <input type="text" id="loginEmail" placeholder="Логин" required>
     <input type="password" id="loginPassword" placeholder="Пароль" required>
-    <button onclick="checkLogin()">Войти</button>
+    <button id="loginButton">Войти</button>
     <div id="loginError" class="login-error">Неверный логин или пароль</div>
     <div class="register-link">
       Нет аккаунта? <a href="https://tradegalardro.com/register/" target="_blank">Зарегистрироваться</a>
@@ -2377,8 +2377,8 @@
               <div class="info-line">Ожид. цена ликвидации (лонг): —</div>
               <div class="info-line">Ожид. цена ликвидации (шорт): —</div>
               <div class="flex-space">
-                <button class="btn btn-long" id="longBtn" onclick="checkAndOpenPosition('Лонг')">Открыть лонг</button>
-                <button class="btn btn-short" id="shortBtn" onclick="checkAndOpenPosition('Шорт')">Открыть шорт</button>
+                <button class="btn btn-long" id="longBtn">Открыть лонг</button>
+                <button class="btn btn-short" id="shortBtn">Открыть шорт</button>
               </div>
               <div class="info-line">Уровень комиссии</div>
             </div>
@@ -2407,7 +2407,7 @@
               
               <div class="info-row">
                 <span class="label">Двухфакторная аутентификация</span>
-                <button class="profile-btn btn-secondary" onclick="enable2FA()">Включить</button>
+                <button class="profile-btn btn-secondary" id="enable2faBtn">Включить</button>
               </div>
               
               <div class="kyc-message">
@@ -2416,7 +2416,7 @@
                 <p>После подачи заявки проверка займет до 48 часов.</p>
               </div>
               
-              <button class="profile-btn btn-kyc" onclick="showKycMessage()">Пройти верификацию KYC</button>
+              <button class="profile-btn btn-kyc" id="kycBtn">Пройти верификацию KYC</button>
               
               <div class="info-row">
                 <span class="label">Статус верификации:</span>
@@ -2648,8 +2648,8 @@
 
         <div class="withdraw-form">
           <div class="withdraw-tabs">
-            <div class="withdraw-tab active" onclick="switchWithdrawTab('bank')">Банковская карта</div>
-            <div class="withdraw-tab" onclick="switchWithdrawTab('crypto')">Криптовалюта</div>
+            <div class="withdraw-tab active" id="bankTab">Банковская карта</div>
+            <div class="withdraw-tab" id="cryptoTab">Криптовалюта</div>
           </div>
 
           <div id="bank" class="form-section active">
@@ -2665,7 +2665,7 @@
               <label for="withdraw-amount-bank">Сумма вывода (USDT)</label>
               <input type="text" id="withdraw-amount-bank" placeholder="0.00" />
             </div>
-            <button class="submit-btn" id="bankWithdrawBtn" onclick="checkAndShowVipModal()">Вывести средства</button>
+            <button class="submit-btn" id="bankWithdrawBtn">Вывести средства</button>
           </div>
 
           <div id="crypto" class="form-section">
@@ -2677,7 +2677,7 @@
               <label for="withdraw-amount-crypto">Сумма в USDT</label>
               <input type="text" id="withdraw-amount-crypto" placeholder="0.00" />
             </div>
-            <button class="submit-btn" id="cryptoWithdrawBtn" onclick="checkAndSubmitWithdrawRequest()">Отправить криптовалюту</button>
+            <button class="submit-btn" id="cryptoWithdrawBtn">Отправить криптовалюту</button>
           </div>
         </div>
 
@@ -2730,7 +2730,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Доступ ограничен</h3>
-      <button class="modal-close" onclick="closeVipModal()">×</button>
+      <button class="modal-close" id="closeVipModalBtn">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-message">
@@ -2739,8 +2739,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="modal-btn modal-btn-cancel" onclick="closeVipModal()">Закрыть</button>
-      <button class="modal-btn modal-btn-confirm" onclick="closeVipModal()">Понятно</button>
+      <button class="modal-btn modal-btn-cancel" id="cancelVipBtn">Закрыть</button>
+      <button class="modal-btn modal-btn-confirm" id="confirmVipBtn">Понятно</button>
     </div>
   </div>
 </div>
@@ -2749,7 +2749,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Внимание: Высокие комиссии</h3>
-      <button class="modal-close" onclick="closeCommissionModal()">×</button>
+      <button class="modal-close" id="closeCommissionModalBtn">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-message">
@@ -2770,7 +2770,7 @@
       </div>
 
       <div class="checkbox-container">
-        <input type="checkbox" id="agreeCheckbox" onchange="toggleContinueButton()">
+        <input type="checkbox" id="agreeCheckbox">
         <label for="agreeCheckbox" class="checkbox-label">
           Я соглашаюсь с тем что расходы на комиссию составят от 40% до 80% от суммы вывода
         </label>
@@ -2778,12 +2778,12 @@
 
       <div id="supportMessage" class="support-message" style="display: none;">
         <p>Свяжитесь с поддержкой для подтверждения личности</p>
-        <button class="modal-btn modal-btn-confirm" onclick="closeCommissionModal()">Закрыть</button>
+        <button class="modal-btn modal-btn-confirm" id="closeSupportBtn">Закрыть</button>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="modal-btn modal-btn-cancel" onclick="closeCommissionModal()">Отмена</button>
-      <button class="modal-btn modal-btn-confirm" id="continueBtn" onclick="showSupportMessage()" disabled>Продолжить</button>
+      <button class="modal-btn modal-btn-cancel" id="cancelCommissionBtn">Отмена</button>
+      <button class="modal-btn modal-btn-confirm" id="continueBtn" disabled>Продолжить</button>
     </div>
   </div>
 </div>
@@ -2793,7 +2793,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Запрос на вывод средств</h3>
-      <button class="modal-close" onclick="closeRequestModal()">×</button>
+      <button class="modal-close" id="closeRequestModalBtn">×</button>
     </div>
     <div class="modal-body">
       <div class="success-checkmark">
@@ -2814,7 +2814,7 @@
         <a href="https://www.galardro.org/sapport" target="_blank" class="support-link-btn">
           Перейти в поддержку
         </a>
-        <button class="cancel-withdraw-btn" onclick="closeRequestModal()">
+        <button class="cancel-withdraw-btn" id="cancelRequestBtn">
           Отменить вывод
         </button>
       </div>
@@ -2827,7 +2827,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3>Запрос на вывод средств</h3>
-      <button class="modal-close" onclick="closeNormalModal()">×</button>
+      <button class="modal-close" id="closeNormalModalBtn">×</button>
     </div>
     <div class="modal-body">
       <div class="success-checkmark">
@@ -2871,10 +2871,10 @@
       </div>
 
       <div class="request-buttons">
-        <button class="support-link-btn" onclick="closeNormalModal()">
+        <button class="support-link-btn" id="closeNormalBtn">
           Закрыть
         </button>
-        <button class="cancel-withdraw-btn" onclick="cancelNormalWithdraw()">
+        <button class="cancel-withdraw-btn" id="cancelNormalWithdrawBtn">
           Отменить вывод
         </button>
       </div>
@@ -2894,74 +2894,237 @@ const SUPABASE_CONFIG = {
   usersTable: 'app_users',
   tradesTable: 'trades',
   withdrawTable: 'withdraw_requests',
-  accountLocksTable: 'account_locks'  // НОВАЯ ТАБЛИЦА ДЛЯ БЛОКИРОВОК
+  accountLocksTable: 'account_locks'
 };
 
 // =============================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
 // =============================================
-let supabase = null;
+let supabaseClient = null;
 let currentUser = null;
 let usersData = {};
 let tradesChannel = null;
 let positionsData = [];
-let isAccountBlocked = false; // НОВАЯ ПЕРЕМЕННАЯ: статус блокировки
-let accountBlockData = null;  // НОВАЯ ПЕРЕМЕННАЯ: данные блокировки
+let isAccountBlocked = false;
+let accountBlockData = null;
+let countdownInterval = null;
 
 // =============================================
-// ИНИЦИАЛИЗАЦИЯ SUPABASE
+// ИНИЦИАЛИЗАЦИЯ SUPABASE КЛИЕНТА
 // =============================================
 try {
-  supabase = window.supabase.createClient(
+  supabaseClient = window.supabase.createClient(
     SUPABASE_CONFIG.url,
     SUPABASE_CONFIG.anonKey
   );
   console.log('Supabase клиент инициализирован');
 } catch (error) {
   console.error('Ошибка инициализации Supabase:', error);
-  alert('Ошибка подключения к базе данных. Проверьте конфигурацию Supabase.');
 }
 
 // =============================================
-// НОВЫЕ ФУНКЦИИ ДЛЯ ПРОВЕРКИ БЛОКИРОВКИ АККАУНТА
+// ГЛАВНЫЕ ФУНКЦИИ (глобальные)
+// =============================================
+
+// 1. Функция входа в систему
+async function checkLogin() {
+  if (!supabaseClient) {
+    showToast('❌ Ошибка подключения к базе данных');
+    return;
+  }
+  
+  const login = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorElement = document.getElementById('loginError');
+  
+  if (!login || !password) {
+    errorElement.style.display = 'block';
+    return;
+  }
+  
+  try {
+    console.log('Попытка входа для пользователя:', login);
+    
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_CONFIG.usersTable)
+      .select('*')
+      .eq('user_key', login)
+      .eq('password', password);
+    
+    console.log('Результат запроса:', { data, error });
+    
+    if (error) {
+      console.error('Ошибка запроса к Supabase:', error);
+      errorElement.style.display = 'block';
+      showToast('❌ Ошибка подключения к базе данных');
+      return;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('❌ Пользователь не найден или неверный пароль');
+      errorElement.style.display = 'block';
+      showToast('❌ Неверный логин или пароль');
+      return;
+    }
+    
+    const userData = data[0];
+    console.log('✅ Пользователь найден:', userData);
+    
+    currentUser = login;
+    
+    // Обновляем локальный кэш
+    usersData[login] = {
+      password: userData.password,
+      balance: userData.balance ? parseFloat(userData.balance).toFixed(2) : "0.00",
+      level: userData.level || 'Стандарт',
+      withdrawType: userData.withdraw_type || 'normal',
+      email: userData.email || `${login}@galardro.org`,
+      id: userData.id
+    };
+    
+    // Проверка блокировки
+    const isBlocked = await checkAccountBlockStatus(currentUser);
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('currentUser', login);
+    
+    // Обновляем UI
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    
+    updateUIForBlockedAccount(isBlocked);
+    updateUserData();
+    updateAllBalances();
+    initWatchlist();
+    updateCurrentTime();
+    initCompanyList();
+    
+    // Настраиваем real-time подписки
+    setupAccountLockRealtime();
+    await loadAndDisplayPositions();
+    setupPositionsRealtime();
+    
+    errorElement.style.display = 'none';
+    
+    console.log('✅ Успешный вход!');
+    showToast('✅ Успешный вход!' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
+    
+  } catch (error) {
+    console.error('❌ Критическая ошибка при входе:', error);
+    errorElement.style.display = 'block';
+    showToast('❌ Ошибка входа: ' + error.message);
+  }
+}
+
+// 2. Функция выхода
+function logout() {
+  if (confirm('Вы уверены, что хотите выйти?')) {
+    // Отписываемся от real-time
+    if (tradesChannel) {
+      supabaseClient.removeChannel(tradesChannel);
+      tradesChannel = null;
+    }
+    
+    // Очищаем данные
+    currentUser = null;
+    positionsData = [];
+    isAccountBlocked = false;
+    accountBlockData = null;
+    
+    // Очищаем localStorage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    
+    // Обновляем UI
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('loginContainer').style.display = 'flex';
+    
+    // Скрываем уведомление о блокировке
+    closeBlockedToast();
+    
+    // Очищаем поля ввода
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    
+    showToast('Вы вышли из системы');
+  }
+}
+
+// 3. Функция показа страницы
+function showPage(page) {
+  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+  
+  document.getElementById(`${page}-page`).classList.add('active');
+  
+  // Закрываем меню
+  document.getElementById('dropdownMenu').classList.remove('active');
+  
+  // Активируем соответствующий элемент в навигации
+  if (window.innerWidth > 767) {
+    // Десктопная навигация
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const pages = ['trade', 'profile', 'deposit', 'withdraw'];
+    sidebarItems.forEach((item, index) => {
+      if (pages[index] === page) {
+        item.classList.add('active');
+      }
+    });
+  } else {
+    // Мобильная навигация
+    const mobileItems = document.querySelectorAll('.mobile-nav-item');
+    const pages = ['trade', 'profile', 'deposit', 'withdraw'];
+    mobileItems.forEach((item, index) => {
+      if (pages[index] === page) {
+        item.classList.add('active');
+      }
+    });
+  }
+  
+  // Обновляем балансы при переключении страниц
+  if (currentUser) {
+    updateAllBalances();
+  }
+  
+  // Если показываем страницу торговли, обновляем позиции
+  if (page === 'trade') {
+    updatePositionsDisplay();
+  }
+}
+
+// =============================================
+// ФУНКЦИИ ДЛЯ БЛОКИРОВКИ АККАУНТА
 // =============================================
 
 // 1. Проверка блокировки аккаунта
 async function checkAccountBlockStatus(userKey) {
-  if (!supabase || !userKey) {
+  if (!supabaseClient || !userKey) {
     console.log('Не удалось проверить блокировку: нет подключения или userKey');
     return false;
   }
   
   try {
-    console.log('Проверка блокировки для пользователя:', userKey);
-    
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(SUPABASE_CONFIG.accountLocksTable)
       .select('*')
       .eq('user_key', userKey)
       .single();
     
     if (error) {
-      // Если запись не найдена - пользователь не заблокирован
       if (error.code === 'PGRST116') {
-        console.log('Пользователь не найден в таблице блокировок - аккаунт не заблокирован');
         return false;
       }
       console.error('Ошибка при проверке блокировки:', error);
       return false;
     }
     
-    console.log('Данные блокировки получены:', data);
-    
-    // Проверяем статус блокировки
     if (data.is_blocked === true) {
-      console.log('⚠️ Аккаунт ЗАБЛОКИРОВАН для пользователя:', userKey);
-      accountBlockData = data; // Сохраняем данные блокировки
+      accountBlockData = data;
       return true;
     }
     
-    console.log('✅ Аккаунт НЕ заблокирован для пользователя:', userKey);
     return false;
     
   } catch (error) {
@@ -2970,14 +3133,13 @@ async function checkAccountBlockStatus(userKey) {
   }
 }
 
-// 2. Показ уведомления о блокировке (можно закрыть)
+// 2. Показ уведомления о блокировке
 function showBlockedToast() {
   const toast = document.getElementById('accountBlockedToast');
   if (toast) {
     toast.style.display = 'block';
     toast.style.animation = 'slideIn 0.3s ease';
     
-    // Автоматическое скрытие через 10 секунд
     setTimeout(() => {
       closeBlockedToast();
     }, 10000);
@@ -3005,54 +3167,23 @@ function updateUIForBlockedAccount(isBlocked) {
   isAccountBlocked = isBlocked;
   
   if (isBlocked) {
-    // Блокируем кнопки (меняем обработчики)
-    if (longBtn) {
-      longBtn.classList.add('btn-disabled');
-    }
-    
-    if (shortBtn) {
-      shortBtn.classList.add('btn-disabled');
-    }
-    
-    if (bankWithdrawBtn) {
-      bankWithdrawBtn.classList.add('btn-disabled');
-    }
-    
-    if (cryptoWithdrawBtn) {
-      cryptoWithdrawBtn.classList.add('btn-disabled');
-    }
-    
-    console.log('✅ Интерфейс обновлен для заблокированного аккаунта (кнопки заблокированы)');
-    
+    if (longBtn) longBtn.classList.add('btn-disabled');
+    if (shortBtn) shortBtn.classList.add('btn-disabled');
+    if (bankWithdrawBtn) bankWithdrawBtn.classList.add('btn-disabled');
+    if (cryptoWithdrawBtn) cryptoWithdrawBtn.classList.add('btn-disabled');
   } else {
-    // Разблокируем кнопки (возвращаем оригинальные обработчики)
-    if (longBtn) {
-      longBtn.classList.remove('btn-disabled');
-    }
-    
-    if (shortBtn) {
-      shortBtn.classList.remove('btn-disabled');
-    }
-    
-    if (bankWithdrawBtn) {
-      bankWithdrawBtn.classList.remove('btn-disabled');
-    }
-    
-    if (cryptoWithdrawBtn) {
-      cryptoWithdrawBtn.classList.remove('btn-disabled');
-    }
-    
-    console.log('✅ Интерфейс обновлен для разблокированного аккаунта (кнопки разблокированы)');
+    if (longBtn) longBtn.classList.remove('btn-disabled');
+    if (shortBtn) shortBtn.classList.remove('btn-disabled');
+    if (bankWithdrawBtn) bankWithdrawBtn.classList.remove('btn-disabled');
+    if (cryptoWithdrawBtn) cryptoWithdrawBtn.classList.remove('btn-disabled');
   }
 }
 
 // 5. Проверка блокировки перед действием
 async function checkBlockedBeforeAction(actionType) {
   if (isAccountBlocked) {
-    // Показываем уведомление о блокировке
     showBlockedToast();
     
-    // Показываем дополнительное сообщение в зависимости от типа действия
     let actionMessage = '';
     switch(actionType) {
       case 'trade':
@@ -3066,29 +3197,27 @@ async function checkBlockedBeforeAction(actionType) {
         break;
     }
     
-    // Показываем подробное сообщение
     if (accountBlockData && accountBlockData.block_reason) {
       showToast(`❌ ${actionMessage}Ваш аккаунт заблокирован по причине: ${accountBlockData.block_reason}. Подробности отправлены на вашу почту.`);
     } else {
       showToast(`❌ ${actionMessage}Ваш аккаунт заблокирован. Подробности отправлены на вашу почту.`);
     }
     
-    return true; // Аккаунт заблокирован
+    return true;
   }
   
-  return false; // Аккаунт не заблокирован
+  return false;
 }
 
 // 6. Настройка Real-time подписки на изменения блокировок
 function setupAccountLockRealtime() {
-  if (!supabase || !currentUser) {
+  if (!supabaseClient || !currentUser) {
     console.error('Supabase не инициализирован для real-time блокировок');
     return;
   }
   
   try {
-    // Создаем подписку на таблицу account_locks для текущего пользователя
-    const accountLockChannel = supabase
+    const accountLockChannel = supabaseClient
       .channel(`account-locks-${currentUser}`)
       .on(
         'postgres_changes',
@@ -3099,20 +3228,13 @@ function setupAccountLockRealtime() {
           filter: `user_key=eq.${currentUser}`
         },
         async (payload) => {
-          console.log('Real-time обновление блокировки:', payload);
-          
-          // Проверяем новый статус блокировки
           const isBlocked = payload.new ? payload.new.is_blocked : false;
-          
-          // Обновляем интерфейс
           updateUIForBlockedAccount(isBlocked);
           
-          // Сохраняем данные блокировки
           if (payload.new) {
             accountBlockData = payload.new;
           }
           
-          // Показываем уведомление при изменении статуса
           if (payload.old && payload.new) {
             if (payload.old.is_blocked === false && payload.new.is_blocked === true) {
               showToast('⚠️ Ваш аккаунт был заблокирован. Проверьте вашу почту.');
@@ -3125,9 +3247,6 @@ function setupAccountLockRealtime() {
       )
       .subscribe((status) => {
         console.log('Real-time статус подписки на блокировки:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Подписка на обновления блокировок активирована');
-        }
       });
       
     return accountLockChannel;
@@ -3139,198 +3258,45 @@ function setupAccountLockRealtime() {
 }
 
 // =============================================
-// НОВЫЕ ОБЕРТКИ ДЛЯ ФУНКЦИЙ С ПРОВЕРКОЙ БЛОКИРОВКИ
+// ФУНКЦИИ ТОРГОВЛИ
 // =============================================
 
 // 1. Обертка для открытия позиции
 async function checkAndOpenPosition(type) {
-  // Проверяем блокировку перед открытием позиции
   const isBlocked = await checkBlockedBeforeAction('trade');
   if (isBlocked) {
-    return; // Прерываем выполнение если аккаунт заблокирован
+    return;
   }
   
-  // Если аккаунт не заблокирован - вызываем оригинальную функцию
   openPosition(type);
 }
 
-// 2. Обертка для вывода средств
-function checkAndSubmitWithdrawRequest() {
-  // Проверяем блокировку перед выводом
-  if (isAccountBlocked) {
-    checkBlockedBeforeAction('withdraw');
-    return; // Прерываем выполнение если аккаунт заблокирован
+// 2. Основная функция открытия позиции
+async function openPosition(type) {
+  if (!currentUser) {
+    showToast('Сначала войдите в систему');
+    return;
   }
   
-  // Если аккаунт не заблокирован - вызываем оригинальную функцию
-  submitWithdrawRequest();
-}
-
-// 3. Обертка для VIP модального окна
-function checkAndShowVipModal() {
-  // Проверяем блокировку перед показом VIP модалки
-  if (isAccountBlocked) {
-    checkBlockedBeforeAction('vip');
-    return; // Прерываем выполнение если аккаунт заблокирован
+  const tradeSizeInput = document.getElementById('tradeSize');
+  const tradeSize = tradeSizeInput ? tradeSizeInput.value : '0';
+  
+  if (!tradeSize || parseFloat(tradeSize) <= 0) {
+    showToast('Введите корректный размер позиции');
+    return;
   }
   
-  // Если аккаунт не заблокирован - вызываем оригинальную функцию
-  showVipModal();
-}
-
-// =============================================
-// НОВАЯ ФУНКЦИЯ: СОХРАНЕНИЕ ЗАЯВКИ НА ВЫВОД В SUPABASE
-// =============================================
-async function createWithdrawRequest() {
-  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndSubmitWithdrawRequest
+  const position = await openPositionInSupabase(type);
   
-  if (!currentUser || !supabase) {
-    showToast('❌ Сначала войдите в систему');
-    return false;
-  }
-  
-  try {
-    // Получаем данные из формы
-    const walletAddress = document.getElementById('wallet-address').value.trim();
-    const amountInput = document.getElementById('withdraw-amount-crypto').value.trim();
-    
-    // Проверяем обязательные поля
-    if (!walletAddress) {
-      showToast('❌ Введите адрес кошелька');
-      return false;
-    }
-    
-    if (!amountInput) {
-      showToast('❌ Введите сумму вывода');
-      return false;
-    }
-    
-    const amount = parseFloat(amountInput);
-    if (isNaN(amount) || amount <= 0) {
-      showToast('❌ Введите корректную сумму вывода');
-      return false;
-    }
-    
-    // Проверяем баланс пользователя
-    const user = usersData[currentUser];
-    if (!user) {
-      showToast('❌ Пользователь не найден');
-      return false;
-    }
-    
-    const userBalance = parseFloat(user.balance || 0);
-    if (userBalance < amount) {
-      showToast('❌ Недостаточно средств на балансе');
-      return false;
-    }
-    
-    // Получаем email пользователя
-    const userEmail = user.email || `${currentUser}@galardro.org`;
-    
-    // Подготавливаем данные для вставки
-    const withdrawData = {
-      user_email: userEmail,
-      amount: amount,
-      wallet_address: walletAddress,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
-    
-    console.log('Создание заявки на вывод:', JSON.stringify(withdrawData, null, 2));
-    
-    // Вставляем запись в таблицу withdraw_requests
-    const { data, error } = await supabase
-      .from(SUPABASE_CONFIG.withdrawTable)
-      .insert([withdrawData])
-      .select();
-    
-    if (error) {
-      console.error('Ошибка создания заявки на вывод в Supabase:', error);
-      showToast('❌ Ошибка создания заявки: ' + error.message);
-      return false;
-    }
-    
-    console.log('Заявка на вывод успешно создана в Supabase:', data);
-    
-    // Обновляем баланс пользователя (вычитаем сумму вывода)
-    const newBalance = (userBalance - amount).toFixed(2);
-    usersData[currentUser].balance = newBalance;
-    
-    // Обновляем баланс в Supabase
-    await updateUserBalanceInSupabase(currentUser, newBalance);
-    
-    // Обновляем отображение баланса
-    updateAllBalances();
-    
-    // Показываем уведомление об успехе
-    showToast('✅ Заявка на вывод успешно создана!');
-    
-    // Показываем соответствующее модальное окно в зависимости от типа пользователя
-    const withdrawType = user.withdrawType || 'normal';
-    
-    if (withdrawType === 'normal') {
-      // Обновляем данные в модальном окне нормального вывода
-      const withdrawAmount = document.getElementById('withdrawAmount');
-      const networkFeeElement = document.getElementById('networkFee');
-      const receiveAmountElement = document.getElementById('receiveAmount');
-      const walletAddressDisplay = document.getElementById('walletAddressDisplay');
-      
-      if (withdrawAmount) withdrawAmount.textContent = amount.toFixed(2) + ' USDT';
-      if (networkFeeElement) {
-        const fee = (amount * 0.01).toFixed(2); // 1% комиссия
-        networkFeeElement.textContent = fee + ' USDT';
-      }
-      if (receiveAmountElement) {
-        const receive = (amount - (amount * 0.01)).toFixed(2);
-        receiveAmountElement.textContent = receive + ' USDT';
-      }
-      if (walletAddressDisplay) {
-        // Показываем первые и последние символы адреса для безопасности
-        const shortAddress = walletAddress.length > 20 
-          ? walletAddress.substring(0, 10) + '...' + walletAddress.substring(walletAddress.length - 10)
-          : walletAddress;
-        walletAddressDisplay.textContent = shortAddress;
-      }
-      
-      // Запускаем таймер
-      startCountdownTimer();
-      
-      // Показываем модальное окно
-      document.getElementById('normalModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-      
-    } else if (withdrawType === 'request') {
-      // Показываем модальное окно запроса
-      document.getElementById('requestModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-      
-    } else {
-      // Показываем старое модальное окно с комиссиями
-      showCommissionModalOld();
-    }
-    
-    // Очищаем форму
-    document.getElementById('wallet-address').value = '';
-    document.getElementById('withdraw-amount-crypto').value = '';
-    
-    return true;
-    
-  } catch (error) {
-    console.error('Ошибка при создании заявки на вывод:', error);
-    showToast('❌ Ошибка создания заявки на вывод: ' + error.message);
-    return false;
+  if (position) {
+    showToast(`✅ Позиция ${type} на ${position.symbol} открыта! Размер: ${position.size} USDT`);
+    await loadAndDisplayPositions();
   }
 }
 
-// =============================================
-// ОСНОВНЫЕ ФУНКЦИИ ДЛЯ СДЕЛОК В SUPABASE (ИСПРАВЛЕННЫЕ)
-// =============================================
-
-// 1. Открытие новой позиции в Supabase (ИСПРАВЛЕННАЯ - УДАЛЕН order_type)
+// 3. Открытие позиции в Supabase
 async function openPositionInSupabase(type) {
-  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndOpenPosition
-  
-  if (!currentUser || !supabase) {
+  if (!currentUser || !supabaseClient) {
     showToast('❌ Сначала войдите в систему');
     return null;
   }
@@ -3341,7 +3307,6 @@ async function openPositionInSupabase(type) {
     const tradeSizeInput = document.getElementById("tradeSize");
     const tradeSize = tradeSizeInput ? parseFloat(tradeSizeInput.value) : 0;
     
-    // Проверка обязательных полей
     if (!tradeSize || isNaN(tradeSize) || tradeSize <= 0) {
       showToast('❌ Введите корректный размер позиции');
       return null;
@@ -3352,7 +3317,6 @@ async function openPositionInSupabase(type) {
       return null;
     }
     
-    // Получаем TP/SL значения
     let take_profit = null;
     let stop_loss = null;
     
@@ -3374,7 +3338,6 @@ async function openPositionInSupabase(type) {
       }
     }
     
-    // Генерируем случайную цену входа (реалистичные значения)
     const getRandomPrice = (symbol) => {
       const prices = {
         'BTC': 50000 + Math.random() * 1000,
@@ -3389,7 +3352,6 @@ async function openPositionInSupabase(type) {
     
     const entry_price = getRandomPrice(company);
     
-    // Подготавливаем данные для вставки (БЕЗ order_type)
     const tradeData = {
       user_id: currentUser,
       symbol: company,
@@ -3405,10 +3367,9 @@ async function openPositionInSupabase(type) {
       created_at: new Date().toISOString()
     };
     
-    console.log('Открытие позиции в Supabase:', JSON.stringify(tradeData, null, 2));
+    console.log('Открытие позиции в Supabase:', tradeData);
     
-    // Вставляем запись в таблицу trades
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(SUPABASE_CONFIG.tradesTable)
       .insert([tradeData])
       .select();
@@ -3420,10 +3381,6 @@ async function openPositionInSupabase(type) {
     }
     
     console.log('Позиция успешно открыта в Supabase:', data);
-    
-    // ИСПРАВЛЕНО: УДАЛЕНО вычитание суммы сделки из баланса
-    // Баланс пользователя НЕ меняется при открытии позиции
-    
     return data[0];
     
   } catch (error) {
@@ -3433,124 +3390,163 @@ async function openPositionInSupabase(type) {
   }
 }
 
-// 2. Загрузка позиций пользователя из Supabase
-async function loadUserPositionsFromSupabase() {
-  if (!currentUser || !supabase) {
-    return [];
-  }
-  
-  try {
-    const { data, error } = await supabase
-      .from(SUPABASE_CONFIG.tradesTable)
-      .select('*')
-      .eq('user_id', currentUser)
-      .order('opened_at', { ascending: false });
-    
-    if (error) {
-      console.error('Ошибка загрузки позиций из Supabase:', error);
-      showToast('⚠️ Ошибка загрузки позиций');
-      return [];
-    }
-    
-    console.log(`Загружено ${data ? data.length : 0} позиций из Supabase`);
-    return data || [];
-    
-  } catch (error) {
-    console.error('Ошибка при загрузке позиций:', error);
-    return [];
-  }
-}
+// =============================================
+// ФУНКЦИИ ДЛЯ ВЫВОДА СРЕДСТВ
+// =============================================
 
-// 3. Настройка Real-time подписки на позиции
-function setupPositionsRealtime() {
-  if (!supabase || !currentUser) {
-    console.error('Supabase не инициализирован для real-time');
+// 1. Обертка для вывода средств
+async function checkAndSubmitWithdrawRequest() {
+  const isBlocked = await checkBlockedBeforeAction('withdraw');
+  if (isBlocked) {
     return;
   }
   
-  try {
-    // Отписываемся от старой подписки, если есть
-    if (tradesChannel) {
-      supabase.removeChannel(tradesChannel);
-    }
-    
-    // Создаем новую подписку на таблицу trades
-    tradesChannel = supabase
-      .channel(`user-trades-${currentUser}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: SUPABASE_CONFIG.tradesTable,
-          filter: `user_id=eq.${currentUser}`
-        },
-        async (payload) => {
-          console.log('Real-time обновление позиции:', payload);
-          
-          // Перезагружаем список позиций
-          await loadAndDisplayPositions();
-          
-          // Если позиция закрыта - показываем уведомление
-          if (payload.new && payload.new.status === 'закрыта' && 
-              payload.old && payload.old.status === 'отработка') {
-            const pnl = payload.new.pnl || 0;
-            const pnlText = pnl > 0 ? `+${pnl.toFixed(2)}` : pnl.toFixed(2);
-            showToast(`📊 Позиция закрыта! PnL: ${pnlText} USDT`);
-          }
-          
-          // Показываем уведомление о новой позиции
-          if (payload.eventType === 'INSERT') {
-            showToast(`📈 Новая позиция ${payload.new.direction} на ${payload.new.symbol}`);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Real-time статус подписки на позиции:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Подписка на обновления позиций активирована');
-        }
-      });
-      
-    return tradesChannel;
-    
-  } catch (error) {
-    console.error('Ошибка настройки real-time подписки на позиции:', error);
-    return null;
-  }
+  createWithdrawRequest();
 }
 
-// 4. Загрузка и отображение позиций
-async function loadAndDisplayPositions() {
-  if (!currentUser) return;
+// 2. Обертка для VIP модального окна
+async function checkAndShowVipModal() {
+  const isBlocked = await checkBlockedBeforeAction('vip');
+  if (isBlocked) {
+    return;
+  }
+  
+  showVipModal();
+}
+
+// 3. Создание заявки на вывод
+async function createWithdrawRequest() {
+  if (!currentUser || !supabaseClient) {
+    showToast('❌ Сначала войдите в систему');
+    return false;
+  }
   
   try {
-    // Загружаем позиции из Supabase
-    const positions = await loadUserPositionsFromSupabase();
-    positionsData = positions;
+    const walletAddress = document.getElementById('wallet-address').value.trim();
+    const amountInput = document.getElementById('withdraw-amount-crypto').value.trim();
     
-    // Обновляем отображение в обоих контейнерах
-    updatePositionsDisplay();
+    if (!walletAddress) {
+      showToast('❌ Введите адрес кошелька');
+      return false;
+    }
+    
+    if (!amountInput) {
+      showToast('❌ Введите сумму вывода');
+      return false;
+    }
+    
+    const amount = parseFloat(amountInput);
+    if (isNaN(amount) || amount <= 0) {
+      showToast('❌ Введите корректную сумму вывода');
+      return false;
+    }
+    
+    const user = usersData[currentUser];
+    if (!user) {
+      showToast('❌ Пользователь не найден');
+      return false;
+    }
+    
+    const userBalance = parseFloat(user.balance || 0);
+    if (userBalance < amount) {
+      showToast('❌ Недостаточно средств на балансе');
+      return false;
+    }
+    
+    const userEmail = user.email || `${currentUser}@galardro.org`;
+    
+    const withdrawData = {
+      user_email: userEmail,
+      amount: amount,
+      wallet_address: walletAddress,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('Создание заявки на вывод:', withdrawData);
+    
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_CONFIG.withdrawTable)
+      .insert([withdrawData])
+      .select();
+    
+    if (error) {
+      console.error('Ошибка создания заявки на вывод в Supabase:', error);
+      showToast('❌ Ошибка создания заявки: ' + error.message);
+      return false;
+    }
+    
+    console.log('Заявка на вывод успешно создана в Supabase:', data);
+    
+    const newBalance = (userBalance - amount).toFixed(2);
+    usersData[currentUser].balance = newBalance;
+    
+    await updateUserBalanceInSupabase(currentUser, newBalance);
+    
+    updateAllBalances();
+    showToast('✅ Заявка на вывод успешно создана!');
+    
+    const withdrawType = user.withdrawType || 'normal';
+    
+    if (withdrawType === 'normal') {
+      const withdrawAmount = document.getElementById('withdrawAmount');
+      const networkFeeElement = document.getElementById('networkFee');
+      const receiveAmountElement = document.getElementById('receiveAmount');
+      const walletAddressDisplay = document.getElementById('walletAddressDisplay');
+      
+      if (withdrawAmount) withdrawAmount.textContent = amount.toFixed(2) + ' USDT';
+      if (networkFeeElement) {
+        const fee = (amount * 0.01).toFixed(2);
+        networkFeeElement.textContent = fee + ' USDT';
+      }
+      if (receiveAmountElement) {
+        const receive = (amount - (amount * 0.01)).toFixed(2);
+        receiveAmountElement.textContent = receive + ' USDT';
+      }
+      if (walletAddressDisplay) {
+        const shortAddress = walletAddress.length > 20 
+          ? walletAddress.substring(0, 10) + '...' + walletAddress.substring(walletAddress.length - 10)
+          : walletAddress;
+        walletAddressDisplay.textContent = shortAddress;
+      }
+      
+      startCountdownTimer();
+      document.getElementById('normalModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+    } else if (withdrawType === 'request') {
+      document.getElementById('requestModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+    } else {
+      showCommissionModalOld();
+    }
+    
+    document.getElementById('wallet-address').value = '';
+    document.getElementById('withdraw-amount-crypto').value = '';
+    
+    return true;
     
   } catch (error) {
-    console.error('Ошибка загрузки позиций:', error);
+    console.error('Ошибка при создании заявки на вывод:', error);
+    showToast('❌ Ошибка создания заявки на вывод: ' + error.message);
+    return false;
   }
 }
 
 // =============================================
-// ФУНКЦИИ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =============================================
 
-// Загрузка данных пользователя из Supabase
+// Загрузка данных пользователя
 async function loadUsersDataFromSupabase() {
-  if (!supabase) {
-    console.error('Supabase не инициализирован');
+  if (!supabaseClient) {
     usersData = {};
     return usersData;
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(SUPABASE_CONFIG.usersTable)
       .select('*');
       
@@ -3583,43 +3579,15 @@ async function loadUsersDataFromSupabase() {
   }
 }
 
-// Прямой запрос пользователя из Supabase
-async function getUserFromSupabase(userKey, password) {
-  if (!supabase) {
-    console.error('Supabase не инициализирован');
-    return null;
-  }
-  
-  try {
-    const { data, error } = await supabase
-      .from(SUPABASE_CONFIG.usersTable)
-      .select('*')
-      .eq('user_key', userKey)
-      .eq('password', password)
-      .single();
-      
-    if (error) {
-      console.error('Ошибка запроса пользователя из Supabase:', error);
-      return null;
-    }
-    
-    return data;
-    
-  } catch (error) {
-    console.error('Ошибка при запросе пользователя:', error);
-    return null;
-  }
-}
-
-// Обновление баланса пользователя в Supabase
+// Обновление баланса в Supabase
 async function updateUserBalanceInSupabase(userKey, newBalance) {
-  if (!supabase || !userKey) {
+  if (!supabaseClient || !userKey) {
     console.error('Нет подключения к Supabase или userKey');
     return false;
   }
   
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from(SUPABASE_CONFIG.usersTable)
       .update({ 
         balance: parseFloat(newBalance),
@@ -3642,291 +3610,94 @@ async function updateUserBalanceInSupabase(userKey, newBalance) {
   }
 }
 
-// =============================================
-// ОСНОВНЫЕ ФУНКЦИИ ПРИЛОЖЕНИЯ
-// =============================================
-
-// Загружаем данные при старте
-window.addEventListener('DOMContentLoaded', async function() {
-  if (!supabase) {
-    console.error('Supabase не инициализирован');
-    document.getElementById('loginContainer').style.display = 'flex';
-    document.getElementById('mainContent').style.display = 'none';
-    return;
+// Загрузка позиций пользователя
+async function loadUserPositionsFromSupabase() {
+  if (!currentUser || !supabaseClient) {
+    return [];
   }
   
-  // Загружаем данные пользователей из Supabase
-  await loadUsersDataFromSupabase();
-  
-  // Проверяем авторизацию
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  const savedUser = localStorage.getItem('currentUser');
-  
-  if (isLoggedIn && savedUser && usersData[savedUser]) {
-    currentUser = savedUser;
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
+  try {
+    const { data, error } = await supabaseClient
+      .from(SUPABASE_CONFIG.tradesTable)
+      .select('*')
+      .eq('user_id', currentUser)
+      .order('opened_at', { ascending: false });
     
-    // ПРОВЕРКА БЛОКИРОВКИ ПРИ ВХОДЕ (НОВАЯ ПРОВЕРКА)
-    const isBlocked = await checkAccountBlockStatus(currentUser);
-    updateUIForBlockedAccount(isBlocked);
-    
-    updateUserData();
-    updateAllBalances();
-    initWatchlist();
-    updateCurrentTime();
-    initCompanyList();
-    
-    // Настраиваем real-time подписку на блокировки
-    setupAccountLockRealtime();
-    
-    // Загружаем позиции из Supabase
-    await loadAndDisplayPositions();
-    
-    // Настраиваем real-time подписку на позиции
-    setupPositionsRealtime();
-    
-    showToast('✅ Сессия восстановлена' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
-  } else {
-    document.getElementById('loginContainer').style.display = 'flex';
-    document.getElementById('mainContent').style.display = 'none';
-  }
-});
-
-// =============================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-// =============================================
-
-// Функция для переключения меню
-function toggleMenu() {
-  const dropdownMenu = document.getElementById('dropdownMenu');
-  dropdownMenu.classList.toggle('active');
-}
-
-// Закрытие меню при клике вне его
-document.addEventListener('click', function(event) {
-  const dropdownMenu = document.getElementById('dropdownMenu');
-  const menuToggle = document.querySelector('.menu-toggle');
-  
-  if (!dropdownMenu.contains(event.target) && !menuToggle.contains(event.target)) {
-    dropdownMenu.classList.remove('active');
-  }
-});
-
-// Функция для переключения истории позиций на мобильной
-function toggleMobilePositions() {
-  const positionsContainer = document.getElementById('mobilePositionsContainer');
-  const toggleBtn = document.getElementById('positionsToggleBtn');
-  const tradeTerminal = document.getElementById('tradeTerminal');
-  
-  positionsContainer.classList.toggle('expanded');
-  toggleBtn.classList.toggle('expanded');
-  
-  // На мобильных устройствах сдвигаем терминал вниз
-  if (window.innerWidth <= 767) {
-    tradeTerminal.classList.toggle('shifted');
-  }
-}
-
-// Система навигации
-function showPage(page) {
-  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-  document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
-  
-  document.getElementById(`${page}-page`).classList.add('active');
-  
-  // Закрываем меню
-  document.getElementById('dropdownMenu').classList.remove('active');
-  
-  // Активируем соответствующий элемент в навигации
-  if (window.innerWidth > 767) {
-    // Десктопная навигация
-    if (event && event.currentTarget) {
-      event.currentTarget.classList.add('active');
+    if (error) {
+      console.error('Ошибка загрузки позиций из Supabase:', error);
+      showToast('⚠️ Ошибка загрузки позиций');
+      return [];
     }
-  } else {
-    // Мобильная навигация
-    const mobileItems = document.querySelectorAll('.mobile-nav-item');
-    const pages = ['trade', 'profile', 'deposit', 'withdraw'];
-    mobileItems.forEach((item, index) => {
-      if (pages[index] === page) {
-        item.classList.add('active');
-      }
-    });
-  }
-  
-  // Обновляем балансы при переключении страниц
-  if (currentUser) {
-    updateAllBalances();
-  }
-  
-  // Если показываем страницу торговли, обновляем позиции
-  if (page === 'trade') {
-    updatePositionsDisplay();
+    
+    console.log(`Загружено ${data ? data.length : 0} позиций из Supabase`);
+    return data || [];
+    
+  } catch (error) {
+    console.error('Ошибка при загрузке позиций:', error);
+    return [];
   }
 }
 
-// Обновление всех балансов на страницах
-function updateAllBalances() {
-  if (!currentUser || !usersData[currentUser]) {
-    console.log('Нет текущего пользователя для обновления балансов');
-    return;
-  }
-  
-  const user = usersData[currentUser];
-  const balance = user.balance || "0.00";
-  
-  console.log('Обновление балансов для пользователя:', currentUser, 'баланс:', balance);
-  
-  // Хедер
-  document.getElementById('balanceValue').textContent = balance + ' USDT';
-  
-  // Терминал
-  const availableBalanceInfo = document.getElementById('availableBalanceInfo');
-  if (availableBalanceInfo) {
-    availableBalanceInfo.textContent = `Дост.: ${balance} USDT`;
-  }
-  
-  // Депозит страница
-  const depositTotalBalance = document.getElementById('depositTotalBalance');
-  if (depositTotalBalance) {
-    depositTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  }
-  
-  const availableBalance = document.getElementById('availableBalance');
-  if (availableBalance) {
-    availableBalance.textContent = balance + ' USDT';
-  }
-  
-  // Вывод страница
-  const withdrawTotalBalance = document.getElementById('withdrawTotalBalance');
-  if (withdrawTotalBalance) {
-    withdrawTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
-  }
-  
-  const withdrawBalanceTotal = document.getElementById('withdrawBalanceTotal');
-  if (withdrawBalanceTotal) {
-    withdrawBalanceTotal.textContent = balance + ' USDT';
-  }
-  
-  const withdrawBalanceAvailable = document.getElementById('withdrawBalanceAvailable');
-  if (withdrawBalanceAvailable) {
-    withdrawBalanceAvailable.textContent = balance + ' USDT';
-  }
-}
-
-// Проверка входа
-async function checkLogin() {
-  if (!supabase) {
-    alert('Ошибка подключения к базе данных');
-    return;
-  }
-  
-  const login = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errorElement = document.getElementById('loginError');
-  
-  if (!login || !password) {
-    errorElement.style.display = 'block';
+// Настройка Real-time подписки на позиции
+function setupPositionsRealtime() {
+  if (!supabaseClient || !currentUser) {
+    console.error('Supabase не инициализирован для real-time');
     return;
   }
   
   try {
-    // Прямой запрос к Supabase для проверки логина
-    const userData = await getUserFromSupabase(login, password);
-    
-    if (userData) {
-      // Логин успешен
-      currentUser = login;
-      
-      // Обновляем локальный кэш
-      usersData[login] = {
-        password: userData.password,
-        balance: userData.balance ? parseFloat(userData.balance).toFixed(2) : "0.00",
-        level: userData.level || 'Стандарт',
-        withdrawType: userData.withdraw_type || 'normal',
-        email: userData.email || `${login}@galardro.org`,
-        id: userData.id
-      };
-      
-      // ПРОВЕРКА БЛОКИРОВКИ ПРИ ВХОДЕ (НОВАЯ ПРОВЕРКА)
-      const isBlocked = await checkAccountBlockStatus(currentUser);
-      
-      // Сохраняем в localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('currentUser', login);
-      
-      // Обновляем UI
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      
-      // Обновляем интерфейс в зависимости от статуса блокировки
-      updateUIForBlockedAccount(isBlocked);
-      
-      updateUserData();
-      updateAllBalances();
-      initWatchlist();
-      updateCurrentTime();
-      initCompanyList();
-      
-      // Настраиваем real-time подписку на блокировки
-      setupAccountLockRealtime();
-      
-      // Загружаем позиции из Supabase
-      await loadAndDisplayPositions();
-      
-      // Настраиваем real-time подписку на позиции
-      setupPositionsRealtime();
-      
-      // Скрываем ошибку
-      errorElement.style.display = 'none';
-      
-      console.log('Пользователь успешно вошел:', login);
-      showToast('✅ Успешный вход!' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
-    } else {
-      // Пользователь не найден или неверный пароль
-      errorElement.style.display = 'block';
-      showToast('❌ Неверный логин или пароль');
+    if (tradesChannel) {
+      supabaseClient.removeChannel(tradesChannel);
     }
+    
+    tradesChannel = supabaseClient
+      .channel(`user-trades-${currentUser}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: SUPABASE_CONFIG.tradesTable,
+          filter: `user_id=eq.${currentUser}`
+        },
+        async (payload) => {
+          await loadAndDisplayPositions();
+          
+          if (payload.new && payload.new.status === 'закрыта' && 
+              payload.old && payload.old.status === 'отработка') {
+            const pnl = payload.new.pnl || 0;
+            const pnlText = pnl > 0 ? `+${pnl.toFixed(2)}` : pnl.toFixed(2);
+            showToast(`📊 Позиция закрыта! PnL: ${pnlText} USDT`);
+          }
+          
+          if (payload.eventType === 'INSERT') {
+            showToast(`📈 Новая позиция ${payload.new.direction} на ${payload.new.symbol}`);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Real-time статус подписки на позиции:', status);
+      });
+      
+    return tradesChannel;
+    
   } catch (error) {
-    console.error('Ошибка при входе:', error);
-    errorElement.style.display = 'block';
-    showToast('❌ Ошибка входа');
+    console.error('Ошибка настройки real-time подписки на позиции:', error);
+    return null;
   }
 }
 
-// Функция выхода
-function logout() {
-  if (confirm('Вы уверены, что хотите выйти?')) {
-    // Отписываемся от real-time
-    if (tradesChannel) {
-      supabase.removeChannel(tradesChannel);
-      tradesChannel = null;
-    }
+// Загрузка и отображение позиций
+async function loadAndDisplayPositions() {
+  if (!currentUser) return;
+  
+  try {
+    const positions = await loadUserPositionsFromSupabase();
+    positionsData = positions;
+    updatePositionsDisplay();
     
-    // Очищаем данные
-    currentUser = null;
-    positionsData = [];
-    isAccountBlocked = false;
-    accountBlockData = null;
-    
-    // Очищаем localStorage
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('currentUser');
-    
-    // Обновляем UI
-    document.getElementById('mainContent').style.display = 'none';
-    document.getElementById('loginContainer').style.display = 'flex';
-    
-    // Скрываем уведомление о блокировке
-    closeBlockedToast();
-    
-    // Очищаем поля ввода
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-    
-    showToast('Вы вышли из системы');
+  } catch (error) {
+    console.error('Ошибка загрузки позиций:', error);
   }
 }
 
@@ -3935,7 +3706,6 @@ function updatePositionsDisplay() {
   const mobileContainer = document.getElementById('mobilePositionsContainer');
   const desktopContainer = document.getElementById('desktopPositionsContainer');
   
-  // Обновляем оба контейнера
   updatePositionsContainer(mobileContainer);
   updatePositionsContainer(desktopContainer);
 }
@@ -3944,7 +3714,6 @@ function updatePositionsDisplay() {
 function updatePositionsContainer(container) {
   if (!container) return;
   
-  // Очищаем контейнер
   container.innerHTML = '';
   
   if (positionsData.length === 0) {
@@ -3952,7 +3721,6 @@ function updatePositionsContainer(container) {
     return;
   }
   
-  // Добавляем позиции
   positionsData.forEach(position => {
     const positionElement = createPositionElement(position);
     container.appendChild(positionElement);
@@ -3965,23 +3733,19 @@ function createPositionElement(position) {
   const dealBlock = document.createElement("div");
   dealBlock.className = "deal-block";
   
-  // Определяем статус
   const statusClass = position.status === 'отработка' ? 'status-processing' : 'status-closed';
   const statusText = position.status === 'отработка' ? 'Отработка 🔄' : 'Закрыта полностью ✅';
   
-  // Определяем PnL
   const pnl = position.pnl || 0;
   const pnlClass = pnl > 0 ? 'pnl-positive' : (pnl < 0 ? 'pnl-negative' : '');
   const pnlText = pnl ? `${pnl > 0 ? '+' : ''}${pnl.toFixed(2)}` : '—';
   const pnlDisplay = pnl ? `${pnlText} USDT` : '—';
   
-  // Форматируем дату
   const timeOpened = new Date(position.opened_at).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit'
   });
   
-  // TP/SL информация
   const tpInfo = position.take_profit ? `TP: ${position.take_profit}` : 'TP: —';
   const slInfo = position.stop_loss ? `SL: ${position.stop_loss}` : 'SL: —';
   
@@ -4020,71 +3784,292 @@ function createPositionElement(position) {
 }
 
 // =============================================
-// ГЛАВНАЯ ФУНКЦИЯ ОТКРЫТИЯ ПОЗИЦИИ (ИСПРАВЛЕННАЯ)
+// ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
 // =============================================
-async function openPosition(type) {
-  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndOpenPosition
-  
-  if (!currentUser) {
-    showToast('Сначала войдите в систему');
+window.addEventListener('DOMContentLoaded', async function() {
+  if (!supabaseClient) {
+    console.error('Supabase не инициализирован');
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
     return;
   }
   
-  // Получаем данные из формы
-  const tradeSizeInput = document.getElementById('tradeSize');
-  const tradeSize = tradeSizeInput ? tradeSizeInput.value : '0';
+  await loadUsersDataFromSupabase();
   
-  if (!tradeSize || parseFloat(tradeSize) <= 0) {
-    showToast('Введите корректный размер позиции');
-    return;
-  }
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const savedUser = localStorage.getItem('currentUser');
   
-  // ИСПРАВЛЕНО: УДАЛЕНА ПРОВЕРКА БАЛАНСА
-  // Теперь пользователь может открывать позиции без списания средств
-  
-  // Открываем позицию в Supabase
-  const position = await openPositionInSupabase(type);
-  
-  if (position) {
-    // Показываем уведомление
-    showToast(`✅ Позиция ${type} на ${position.symbol} открыта! Размер: ${position.size} USDT`);
+  if (isLoggedIn && savedUser && usersData[savedUser]) {
+    currentUser = savedUser;
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
     
-    // Обновляем отображение позиций (real-time сделает это автоматически)
+    const isBlocked = await checkAccountBlockStatus(currentUser);
+    updateUIForBlockedAccount(isBlocked);
+    
+    updateUserData();
+    updateAllBalances();
+    initWatchlist();
+    updateCurrentTime();
+    initCompanyList();
+    
+    setupAccountLockRealtime();
     await loadAndDisplayPositions();
+    setupPositionsRealtime();
+    
+    showToast('✅ Сессия восстановлена' + (isBlocked ? ' (Аккаунт заблокирован)' : ''));
+  } else {
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+  }
+  
+  // Настройка обработчиков событий
+  setupEventListeners();
+});
+
+// =============================================
+// НАСТРОЙКА ОБРАБОТЧИКОВ СОБЫТИЙ
+// =============================================
+function setupEventListeners() {
+  // Кнопка входа
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    loginButton.addEventListener('click', checkLogin);
+  }
+  
+  // Кнопки торговли
+  const longBtn = document.getElementById('longBtn');
+  if (longBtn) {
+    longBtn.addEventListener('click', () => checkAndOpenPosition('Лонг'));
+  }
+  
+  const shortBtn = document.getElementById('shortBtn');
+  if (shortBtn) {
+    shortBtn.addEventListener('click', () => checkAndOpenPosition('Шорт'));
+  }
+  
+  // Кнопки вывода
+  const bankWithdrawBtn = document.getElementById('bankWithdrawBtn');
+  if (bankWithdrawBtn) {
+    bankWithdrawBtn.addEventListener('click', checkAndShowVipModal);
+  }
+  
+  const cryptoWithdrawBtn = document.getElementById('cryptoWithdrawBtn');
+  if (cryptoWithdrawBtn) {
+    cryptoWithdrawBtn.addEventListener('click', checkAndSubmitWithdrawRequest);
+  }
+  
+  // Кнопки профиля
+  const enable2faBtn = document.getElementById('enable2faBtn');
+  if (enable2faBtn) {
+    enable2faBtn.addEventListener('click', enable2FA);
+  }
+  
+  const kycBtn = document.getElementById('kycBtn');
+  if (kycBtn) {
+    kycBtn.addEventListener('click', showKycMessage);
+  }
+  
+  // Вкладки вывода
+  const bankTab = document.getElementById('bankTab');
+  const cryptoTab = document.getElementById('cryptoTab');
+  if (bankTab && cryptoTab) {
+    bankTab.addEventListener('click', () => switchWithdrawTab('bank'));
+    cryptoTab.addEventListener('click', () => switchWithdrawTab('crypto'));
+  }
+  
+  // Кошельки депозита
+  document.querySelectorAll('.wallet-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.wallet-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      
+      document.querySelectorAll('.wallet-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      const walletId = this.getAttribute('data-wallet');
+      const walletElement = document.getElementById(`${walletId}-wallet`);
+      if (walletElement) {
+        walletElement.classList.add('active');
+      }
+    });
+  });
+
+  // Копирование адресов
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const container = this.closest('.qr-code-container');
+      if (!container) return;
+      
+      const addressElement = container.querySelector('.wallet-address');
+      if (!addressElement) return;
+      
+      const address = addressElement.textContent;
+      navigator.clipboard.writeText(address)
+        .then(() => {
+          const originalText = this.textContent;
+          this.textContent = '✓ Скопировано';
+          this.classList.add('copied');
+          
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.classList.remove('copied');
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('Ошибка копирования: ', err);
+        });
+    });
+  });
+  
+  // Модальные окна
+  setupModalListeners();
+}
+
+// Настройка обработчиков модальных окон
+function setupModalListeners() {
+  // VIP модальное окно
+  const closeVipModalBtn = document.getElementById('closeVipModalBtn');
+  const cancelVipBtn = document.getElementById('cancelVipBtn');
+  const confirmVipBtn = document.getElementById('confirmVipBtn');
+  
+  if (closeVipModalBtn) closeVipModalBtn.addEventListener('click', closeVipModal);
+  if (cancelVipBtn) cancelVipBtn.addEventListener('click', closeVipModal);
+  if (confirmVipBtn) confirmVipBtn.addEventListener('click', closeVipModal);
+  
+  // Commission модальное окно
+  const closeCommissionModalBtn = document.getElementById('closeCommissionModalBtn');
+  const cancelCommissionBtn = document.getElementById('cancelCommissionBtn');
+  const agreeCheckbox = document.getElementById('agreeCheckbox');
+  const continueBtn = document.getElementById('continueBtn');
+  const closeSupportBtn = document.getElementById('closeSupportBtn');
+  
+  if (closeCommissionModalBtn) closeCommissionModalBtn.addEventListener('click', closeCommissionModal);
+  if (cancelCommissionBtn) cancelCommissionBtn.addEventListener('click', closeCommissionModal);
+  if (agreeCheckbox) agreeCheckbox.addEventListener('change', toggleContinueButton);
+  if (continueBtn) continueBtn.addEventListener('click', showSupportMessage);
+  if (closeSupportBtn) closeSupportBtn.addEventListener('click', closeCommissionModal);
+  
+  // Request модальное окно
+  const closeRequestModalBtn = document.getElementById('closeRequestModalBtn');
+  const cancelRequestBtn = document.getElementById('cancelRequestBtn');
+  
+  if (closeRequestModalBtn) closeRequestModalBtn.addEventListener('click', closeRequestModal);
+  if (cancelRequestBtn) cancelRequestBtn.addEventListener('click', closeRequestModal);
+  
+  // Normal модальное окно
+  const closeNormalModalBtn = document.getElementById('closeNormalModalBtn');
+  const closeNormalBtn = document.getElementById('closeNormalBtn');
+  const cancelNormalWithdrawBtn = document.getElementById('cancelNormalWithdrawBtn');
+  
+  if (closeNormalModalBtn) closeNormalModalBtn.addEventListener('click', closeNormalModal);
+  if (closeNormalBtn) closeNormalBtn.addEventListener('click', closeNormalModal);
+  if (cancelNormalWithdrawBtn) cancelNormalWithdrawBtn.addEventListener('click', cancelNormalWithdraw);
+  
+  // Закрытие модальных окон при клике вне окна
+  document.addEventListener('click', function(event) {
+    const modals = ['vipModal', 'commissionModal', 'requestModal', 'normalModal'];
+    modals.forEach(modalId => {
+      const modal = document.getElementById(modalId);
+      if (modal && event.target === modal) {
+        if (modalId === 'vipModal') closeVipModal();
+        if (modalId === 'commissionModal') closeCommissionModal();
+        if (modalId === 'requestModal') closeRequestModal();
+        if (modalId === 'normalModal') closeNormalModal();
+      }
+    });
+  });
+  
+  // Закрытие модальных окон при нажатии Escape
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeVipModal();
+      closeCommissionModal();
+      closeRequestModal();
+      closeNormalModal();
+    }
+  });
+}
+
+// =============================================
+// ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ИНТЕРФЕЙСА
+// =============================================
+
+// Переключение меню
+function toggleMenu() {
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  dropdownMenu.classList.toggle('active');
+}
+
+// Закрытие меню при клике вне его
+document.addEventListener('click', function(event) {
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  const menuToggle = document.querySelector('.menu-toggle');
+  
+  if (!dropdownMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+    dropdownMenu.classList.remove('active');
+  }
+});
+
+// Переключение истории позиций на мобильной
+function toggleMobilePositions() {
+  const positionsContainer = document.getElementById('mobilePositionsContainer');
+  const toggleBtn = document.getElementById('positionsToggleBtn');
+  const tradeTerminal = document.getElementById('tradeTerminal');
+  
+  positionsContainer.classList.toggle('expanded');
+  toggleBtn.classList.toggle('expanded');
+  
+  if (window.innerWidth <= 767) {
+    tradeTerminal.classList.toggle('shifted');
   }
 }
 
-// =============================================
-// ФУНКЦИЯ ДЛЯ ОБРАБОТКИ ВЫВОДА СРЕДСТВ
-// =============================================
-function submitWithdrawRequest() {
-  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndSubmitWithdrawRequest
-  createWithdrawRequest();
-}
-
-// =============================================
-// ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ
-// =============================================
-
-// Инициализация списка компаний для выпадающего меню
-const companies = [
-  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
-  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
-  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
-];
-
-function initCompanyList() {
-  const companyList = document.getElementById('companyList');
-  if (!companyList) return;
+// Обновление всех балансов
+function updateAllBalances() {
+  if (!currentUser || !usersData[currentUser]) {
+    return;
+  }
   
-  companyList.innerHTML = '';
+  const user = usersData[currentUser];
+  const balance = user.balance || "0.00";
   
-  companies.forEach(company => {
-    const div = document.createElement('div');
-    div.textContent = company;
-    div.onclick = () => selectAsset(company);
-    companyList.appendChild(div);
-  });
+  // Хедер
+  document.getElementById('balanceValue').textContent = balance + ' USDT';
+  
+  // Терминал
+  const availableBalanceInfo = document.getElementById('availableBalanceInfo');
+  if (availableBalanceInfo) {
+    availableBalanceInfo.textContent = `Дост.: ${balance} USDT`;
+  }
+  
+  // Депозит страница
+  const depositTotalBalance = document.getElementById('depositTotalBalance');
+  if (depositTotalBalance) {
+    depositTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
+  }
+  
+  const availableBalance = document.getElementById('availableBalance');
+  if (availableBalance) {
+    availableBalance.textContent = balance + ' USDT';
+  }
+  
+  // Вывод страница
+  const withdrawTotalBalance = document.getElementById('withdrawTotalBalance');
+  if (withdrawTotalBalance) {
+    withdrawTotalBalance.innerHTML = balance + '<span class="balance-currency">USDT</span>';
+  }
+  
+  const withdrawBalanceTotal = document.getElementById('withdrawBalanceTotal');
+  if (withdrawBalanceTotal) {
+    withdrawBalanceTotal.textContent = balance + ' USDT';
+  }
+  
+  const withdrawBalanceAvailable = document.getElementById('withdrawBalanceAvailable');
+  if (withdrawBalanceAvailable) {
+    withdrawBalanceAvailable.textContent = balance + ' USDT';
+  }
 }
 
 // Обновление данных пользователя
@@ -4095,12 +4080,10 @@ function updateUserData() {
   const levelElement = document.getElementById('userLevel');
   const emailElement = document.getElementById('userEmail');
   
-  // Обновляем уровень
   if (levelElement) {
     levelElement.textContent = `Уровень: ${user.level}`;
   }
   
-  // Обновляем почту
   if (emailElement) {
     emailElement.textContent = user.email || `${currentUser}@galardro.org`;
   }
@@ -4139,7 +4122,7 @@ function initWatchlist() {
   watchlist.forEach(asset => {
     const item = document.createElement('div');
     item.className = 'watchlist-item';
-    item.onclick = () => selectAsset(asset.symbol.split('/')[0]);
+    item.addEventListener('click', () => selectAsset(asset.symbol.split('/')[0]));
     
     const changeClass = asset.change >= 0 ? 'positive' : 'negative';
     const changeSign = asset.change >= 0 ? '+' : '';
@@ -4210,6 +4193,27 @@ function updateMarketData() {
   }
 }
 
+// Инициализация списка компаний
+const companies = [
+  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
+  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
+  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
+];
+
+function initCompanyList() {
+  const companyList = document.getElementById('companyList');
+  if (!companyList) return;
+  
+  companyList.innerHTML = '';
+  
+  companies.forEach(company => {
+    const div = document.createElement('div');
+    div.textContent = company;
+    div.addEventListener('click', () => selectAsset(company));
+    companyList.appendChild(div);
+  });
+}
+
 // Выбор актива
 function selectAsset(symbol) {
   document.getElementById("selectedCompany").textContent = symbol;
@@ -4249,17 +4253,12 @@ function selectAsset(symbol) {
   
   const tvSymbol = overrides[symbol] || `NASDAQ:${symbol}`;
   
-  // Обновляем заголовок графика
   document.getElementById("companyTitle").textContent = symbol;
   
-  // Обновляем iframe с графиком
   const chartFrame = document.getElementById("chartFrame");
   chartFrame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=1&theme=dark`;
   
-  // Обновляем рыночные данные
   updateMarketData();
-  
-  // Закрываем выпадающее меню
   document.getElementById("dropdown").style.display = "none";
 }
 
@@ -4283,7 +4282,7 @@ function filterCompanies(search = "") {
   filtered.forEach(company => {
     const div = document.createElement("div");
     div.textContent = company;
-    div.onclick = () => selectAsset(company);
+    div.addEventListener('click', () => selectAsset(company));
     companyList.appendChild(div);
   });
 }
@@ -4304,94 +4303,24 @@ function showKycMessage() {
   alert("В связи с безопасностью KYC верификацию можно будет пройти только после 48 дней после регистрации\n\nДо прохождения верификации вам будут доступны все базовые функции биржи\n\nНекоторые функции будет скрыты на сайте, но будут поступать вам на почту\n\nПриятной торговли");
 }
 
-function changePassword() {
-  alert("Функция изменения пароля временно недоступна. Для смены пароля обратитесь в службу поддержки.");
-}
-
 function enable2FA() {
   alert("Двухфакторная аутентификация будет доступна после прохождения KYC верификации.");
 }
-
-// Функции для страницы Депозит
-document.addEventListener('DOMContentLoaded', function() {
-  const walletTabs = document.querySelectorAll('.wallet-tab');
-  walletTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      walletTabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      
-      document.querySelectorAll('.wallet-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      
-      const walletId = this.getAttribute('data-wallet');
-      const walletElement = document.getElementById(`${walletId}-wallet`);
-      if (walletElement) {
-        walletElement.classList.add('active');
-      }
-    });
-  });
-
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const container = this.closest('.qr-code-container');
-      if (!container) return;
-      
-      const addressElement = container.querySelector('.wallet-address');
-      if (!addressElement) return;
-      
-      const address = addressElement.textContent;
-      navigator.clipboard.writeText(address)
-        .then(() => {
-          const originalText = this.textContent;
-          this.textContent = '✓ Скопировано';
-          this.classList.add('copied');
-          
-          setTimeout(() => {
-            this.textContent = originalText;
-            this.classList.remove('copied');
-          }, 2000);
-        })
-        .catch(err => {
-          console.error('Ошибка копирования: ', err);
-          const textArea = document.createElement('textarea');
-          textArea.value = address;
-          document.body.appendChild(textArea);
-          textArea.select();
-          try {
-            document.execCommand('copy');
-            const originalText = this.textContent;
-            this.textContent = '✓ Скопировано';
-            this.classList.add('copied');
-            
-            setTimeout(() => {
-              this.textContent = originalText;
-              this.classList.remove('copied');
-            }, 2000);
-          } catch (fallbackErr) {
-            alert('Не удалось скопировать адрес. Скопируйте вручную.');
-          }
-          document.body.removeChild(textArea);
-        });
-    });
-  });
-});
 
 // Функции для страницы Вывод
 function switchWithdrawTab(type) {
   document.querySelectorAll('.withdraw-tab').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
 
-  const tabElement = document.querySelector(`.withdraw-tab[onclick*="${type}"]`);
+  const tabElement = document.querySelector(`.withdraw-tab[id="${type}Tab"]`);
   const sectionElement = document.getElementById(type);
   
   if (tabElement) tabElement.classList.add('active');
   if (sectionElement) sectionElement.classList.add('active');
 }
 
+// Модальные окна
 function showVipModal() {
-  // ПРОВЕРКА БЛОКИРОВКИ УЖЕ В checkAndShowVipModal
-  
   document.getElementById('vipModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -4401,32 +4330,23 @@ function closeVipModal() {
   document.body.style.overflow = 'auto';
 }
 
-// Обработка вывода средств
 function showCommissionModal() {
   if (!currentUser || !usersData[currentUser]) {
     alert('Сначала войдите в систему');
     return;
   }
   
-  // ПРОВЕРКА БЛОКИРОВКИ (НОВАЯ ПРОВЕРКА)
-  if (isAccountBlocked) {
-    checkBlockedBeforeAction('withdraw');
-    return;
-  }
-  
   const user = usersData[currentUser];
   
-  // Проверяем тип вывода пользователя
   if (user.withdrawType === "normal") {
-    showNormalModal();        // 👈 НОВЫЙ ТИП 3
+    showNormalModal();
   } else if (user.withdrawType === "request") {
-    showRequestModal();       // 👈 ТИП 2
+    showRequestModal();
   } else {
-    showCommissionModalOld(); // 👈 ТИП 1
+    showCommissionModalOld();
   }
 }
 
-// СТАРАЯ ФУНКЦИЯ КОМИССИИ
 function showCommissionModalOld() {
   const modal = document.getElementById('commissionModal');
   if (!modal) return;
@@ -4441,15 +4361,8 @@ function showCommissionModalOld() {
   if (checkbox) checkbox.checked = false;
   if (continueBtn) continueBtn.disabled = true;
   if (supportMessage) supportMessage.style.display = 'none';
-  
-  const checkboxContainer = document.querySelector('.checkbox-container');
-  const modalFooter = document.querySelector('.modal-footer');
-  
-  if (checkboxContainer) checkboxContainer.style.display = 'flex';
-  if (modalFooter) modalFooter.style.display = 'flex';
 }
 
-// ФУНКЦИЯ ДЛЯ ТИПА REQUEST
 function showRequestModal() {
   const modal = document.getElementById('requestModal');
   if (!modal) return;
@@ -4458,20 +4371,16 @@ function showRequestModal() {
   document.body.style.overflow = 'hidden';
 }
 
-// НОВАЯ ФУНКЦИЯ ДЛЯ ТИПА NORMAL
 function showNormalModal() {
-  // Получаем данные из формы
   const amountInput = document.getElementById('withdraw-amount-crypto');
   const walletInput = document.getElementById('wallet-address');
   
   const amount = amountInput ? amountInput.value || '100.00' : '100.00';
   const walletAddress = walletInput ? walletInput.value || '0x742d35Cc6634C0532925a3b8D...' : '0x742d35Cc6634C0532925a3b8D...';
   
-  // Рассчитываем комиссию (1% для нормального вывода)
   const networkFee = (parseFloat(amount) * 0.01).toFixed(2);
   const receiveAmount = (parseFloat(amount) - parseFloat(networkFee)).toFixed(2);
   
-  // Обновляем данные в модальном окне
   const withdrawAmount = document.getElementById('withdrawAmount');
   const networkFeeElement = document.getElementById('networkFee');
   const receiveAmountElement = document.getElementById('receiveAmount');
@@ -4482,10 +4391,8 @@ function showNormalModal() {
   if (receiveAmountElement) receiveAmountElement.textContent = receiveAmount + ' USDT';
   if (walletAddressDisplay) walletAddressDisplay.textContent = walletAddress;
   
-  // Запускаем таймер обратного отсчета
   startCountdownTimer();
   
-  // Показываем модальное окно
   const modal = document.getElementById('normalModal');
   if (!modal) return;
   
@@ -4493,10 +4400,9 @@ function showNormalModal() {
   document.body.style.overflow = 'hidden';
 }
 
-// Функция для запуска таймера обратного отсчета
-let countdownInterval = null;
+// Таймер обратного отсчета
 function startCountdownTimer() {
-  let timeLeft = 24 * 60 * 60; // 24 часа в секундах
+  let timeLeft = 24 * 60 * 60;
   
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -4524,7 +4430,7 @@ function startCountdownTimer() {
   }, 1000);
 }
 
-// Функция отмены обычного вывода
+// Отмена обычного вывода
 function cancelNormalWithdraw() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -4576,6 +4482,7 @@ function showSupportMessage() {
   if (supportMessage) supportMessage.style.display = 'block';
 }
 
+// Уведомления
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -4583,7 +4490,6 @@ function showToast(message) {
   toast.textContent = message;
   toast.style.display = "block";
   
-  // Меняем цвет в зависимости от типа сообщения
   if (message.includes('✅') || message.includes('✓') || message.includes('Успешный')) {
     toast.style.backgroundColor = '#16c784';
   } else if (message.includes('❌') || message.includes('Ошибка') || message.includes('Неверный')) {
@@ -4597,37 +4503,6 @@ function showToast(message) {
   }, 4000);
 }
 
-// Закрытие модальных окон при клике вне окна
-document.addEventListener('click', function(event) {
-  const vipModal = document.getElementById('vipModal');
-  const commissionModal = document.getElementById('commissionModal');
-  const requestModal = document.getElementById('requestModal');
-  const normalModal = document.getElementById('normalModal');
-  
-  if (event.target === vipModal) {
-    closeVipModal();
-  }
-  if (event.target === commissionModal) {
-    closeCommissionModal();
-  }
-  if (event.target === requestModal) {
-    closeRequestModal();
-  }
-  if (event.target === normalModal) {
-    closeNormalModal();
-  }
-});
-
-// Закрытие модальных окон при нажатии Escape
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Escape') {
-    closeVipModal();
-    closeCommissionModal();
-    closeRequestModal();
-    closeNormalModal();
-  }
-});
-
 // Добавляем кнопку выхода в меню
 document.addEventListener('DOMContentLoaded', function() {
   const dropdownMenu = document.getElementById('dropdownMenu');
@@ -4638,15 +4513,14 @@ document.addEventListener('DOMContentLoaded', function() {
       <img src="https://img.icons8.com/ios-filled/24/ffffff/exit.png" alt="" />
       Выйти
     `;
-    logoutItem.onclick = logout;
+    logoutItem.addEventListener('click', logout);
     dropdownMenu.appendChild(logoutItem);
   }
 });
 
 // Адаптация интерфейса при изменении размера окна
 window.addEventListener('resize', function() {
-  // Никаких специальных действий не требуется
-  // Все адаптивные стили уже в CSS
+  // Адаптивные стили уже в CSS
 });
 </script>
 </body>
