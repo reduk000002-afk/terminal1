@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -924,14 +923,14 @@
         const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
         
-        // Initialize Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Initialize Supabase - ИСПРАВЛЕННАЯ СТРОКА: используем другое имя переменной
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         // State variables
         let currentUserEmail = '';
         let currentUserId = '';
         let chatSubscription = null;
-        let isSendingMessage = false; // Флаг для предотвращения дублирования
+        let isSendingMessage = false;
         
         // DOM Elements
         const chatModal = document.getElementById('chatModal');
@@ -990,7 +989,7 @@
             
             // Unsubscribe from real-time updates
             if (chatSubscription) {
-                supabase.removeChannel(chatSubscription);
+                supabaseClient.removeChannel(chatSubscription);
                 chatSubscription = null;
             }
             
@@ -1051,7 +1050,7 @@
         // Load messages function
         async function loadMessages() {
             try {
-                const { data: messages, error } = await supabase
+                const { data: messages, error } = await supabaseClient
                     .from('support_chat')
                     .select('*')
                     .eq('user_id', currentUserId)
@@ -1113,9 +1112,9 @@
             return messageDiv;
         }
         
-        // Send message function - ИСПРАВЛЕНА: не добавляем сообщение вручную
+        // Send message function
         async function sendMessage() {
-            if (isSendingMessage) return; // Предотвращаем двойную отправку
+            if (isSendingMessage) return;
             
             const message = messageInput.value.trim();
             
@@ -1143,17 +1142,16 @@
                     created_at: new Date().toISOString()
                 };
                 
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('support_chat')
                     .insert([messageData]);
                 
                 if (error) throw error;
                 
-                // Только очищаем поле, НЕ добавляем сообщение вручную
-                // Real-time подписка сама добавит его
+                // Clear input field only
                 messageInput.value = '';
                 
-                // Фокус остаётся в поле ввода
+                // Keep focus in input
                 messageInput.focus();
                 
             } catch (error) {
@@ -1177,7 +1175,7 @@
         // Mark messages as read
         async function markMessagesAsRead() {
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('support_chat')
                     .update({ read: true })
                     .eq('user_id', currentUserId)
@@ -1195,11 +1193,11 @@
         function setupRealtimeUpdates() {
             // Unsubscribe from previous subscription
             if (chatSubscription) {
-                supabase.removeChannel(chatSubscription);
+                supabaseClient.removeChannel(chatSubscription);
             }
             
             // Subscribe to new messages
-            chatSubscription = supabase
+            chatSubscription = supabaseClient
                 .channel(`support_chat_${currentUserId}`)
                 .on('postgres_changes', 
                     { 
@@ -1209,7 +1207,7 @@
                         filter: `user_id=eq.${currentUserId}`
                     },
                     (payload) => {
-                        // Добавляем сообщение только если его ещё нет в чате
+                        // Add message only if it doesn't exist yet
                         const existingMessage = document.querySelector(`[data-message-id="${payload.new.id}"]`);
                         if (!existingMessage) {
                             const messageElement = createMessageElement(payload.new);
@@ -1234,7 +1232,7 @@
                         filter: `user_id=eq.${currentUserId}`
                     },
                     (payload) => {
-                        // Обновляем статус прочтения если нужно
+                        // Update read status if needed
                         console.log('Message updated:', payload.new);
                     }
                 )
@@ -1243,7 +1241,7 @@
         
         // Play notification sound (optional)
         function playNotificationSound() {
-            // Простой звук уведомления
+            // Simple notification sound
             try {
                 const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
                 audio.volume = 0.3;
@@ -1282,7 +1280,7 @@
         // Test Supabase connection
         async function testSupabaseConnection() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('support_chat')
                     .select('count', { count: 'exact', head: true })
                     .limit(1);
