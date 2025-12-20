@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Фьючерсный терминал</title>
+  <title>Фьючерсный терминал | Расширенный</title>
   <!-- Подключение Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     /* ============================================= */
-    /* НОВЫЕ СТИЛИ ДЛЯ БЛОКИРОВКИ АККАУНТА */
+    /* ОСНОВНЫЕ СТИЛИ (4500+ строк) */
     /* ============================================= */
+    
+    /* Стили для блокировки аккаунта */
     .account-blocked-toast {
       position: fixed;
       top: 20px;
@@ -88,21 +90,24 @@
       z-index: 101;
     }
 
-    /* Остальные стили остаются БЕЗ изменений */
+    /* Базовые стили */
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
       overflow-x: hidden;
-      margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #0d1117;
       color: #c9d1d9;
       -webkit-text-size-adjust: 100%;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      line-height: 1.5;
     }
 
+    /* Хедер */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -218,6 +223,7 @@
       filter: brightness(0.8);
     }
 
+    /* Цветовые классы */
     .positive {
       color: #16c784;
     }
@@ -226,6 +232,7 @@
       color: #ea3943;
     }
 
+    /* Страница входа */
     .login-container {
       position: fixed;
       top: 0;
@@ -306,11 +313,13 @@
       font-weight: 500;
     }
 
+    /* Основной контейнер */
     .main-container {
       display: flex;
       min-height: calc(100vh - 60px);
     }
 
+    /* Левая колонка с рынком */
     .market-column {
       width: 280px;
       background: #161b22;
@@ -322,12 +331,14 @@
       gap: 20px;
     }
 
+    /* Основной layout */
     .layout {
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
+    /* Боковая панель */
     .sidebar {
       display: flex;
       flex-direction: row;
@@ -365,6 +376,7 @@
       margin-bottom: 5px;
     }
 
+    /* Контент страниц */
     .page-content {
       flex: 1;
       padding: 20px;
@@ -379,6 +391,7 @@
       display: block;
     }
 
+    /* Секция графика */
     .chart-section {
       background: #0d1117;
       position: relative;
@@ -399,6 +412,7 @@
       border-radius: 0 0 8px 8px;
     }
 
+    /* Отображение сделок */
     .deal-display {
       background: #0d1117;
       border-top: 1px solid #30363d;
@@ -425,6 +439,7 @@
       gap: 3px;
     }
 
+    /* Терминал */
     .terminal-section {
       background: #0d1117;
       border: 1px solid #30363d;
@@ -437,6 +452,7 @@
       position: relative;
     }
 
+    /* Селектор компании */
     .selector-container {
       margin-bottom: 15px;
       position: relative;
@@ -464,7 +480,7 @@
       background: rgba(22, 27, 34, 0.95);
       border: 1px solid #30363d;
       border-radius: 8px;
-      max-height: 200px;
+      max-height: 300px;
       overflow-y: auto;
       display: none;
       z-index: 100;
@@ -492,6 +508,7 @@
       background: #21262d;
     }
 
+    /* Формы в терминале */
     .terminal-section select,
     .terminal-section input[type="number"] {
       width: 100%;
@@ -505,6 +522,7 @@
       min-height: 50px;
     }
 
+    /* Кнопки */
     .btn {
       width: 100%;
       padding: 15px;
@@ -532,6 +550,7 @@
       color: white;
     }
 
+    /* Группы чекбоксов */
     .checkbox-group {
       display: flex;
       flex-direction: column;
@@ -553,6 +572,7 @@
       min-width: 20px;
     }
 
+    /* TP/SL поля */
     .tp-sl {
       display: none;
       margin-bottom: 15px;
@@ -566,24 +586,28 @@
       font-size: 16px;
     }
 
+    /* Flex контейнеры */
     .flex-space {
       display: flex;
       flex-direction: column;
       gap: 15px;
     }
 
+    /* Информационные строки */
     .info-line {
       font-size: 15px;
       margin-bottom: 10px;
       line-height: 1.4;
     }
 
+    /* Плечо */
     .leverage-display {
       text-align: center;
       margin: 10px 0 20px;
       font-size: 16px;
     }
 
+    /* Информация о рынке */
     .market-info {
       background: #161b22;
       padding: 15px;
@@ -603,12 +627,14 @@
       margin-bottom: 0;
     }
 
+    /* Заголовки */
     .title {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 20px;
     }
 
+    /* Позиции */
     .positions-title {
       padding: 15px;
       font-weight: bold;
@@ -639,18 +665,27 @@
       transform: rotate(180deg);
     }
 
+    /* Блоки сделок */
     .deal-block {
       border-bottom: 1px solid #30363d;
       padding: 15px;
       transition: background-color 0.2s;
       font-size: 15px;
       background: #0d1117;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
     }
 
     .deal-block:hover {
       background-color: #161b22;
     }
 
+    .deal-info {
+      flex: 1;
+    }
+
+    /* Заголовки секций */
     .section-title {
       font-size: 16px;
       font-weight: bold;
@@ -661,6 +696,7 @@
       align-items: center;
     }
 
+    /* Избранное */
     .watchlist-item {
       display: flex;
       justify-content: space-between;
@@ -691,6 +727,7 @@
       border-radius: 4px;
     }
 
+    /* Быстрые кнопки */
     .quick-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -717,6 +754,7 @@
       background: #30363d;
     }
 
+    /* Портфель */
     .portfolio-item {
       display: flex;
       justify-content: space-between;
@@ -738,6 +776,7 @@
       border-radius: 4px;
     }
 
+    /* Статистика рынка */
     .market-stats {
       display: flex;
       justify-content: space-between;
@@ -761,6 +800,7 @@
       font-size: 13px;
     }
 
+    /* Профиль */
     .profile-container {
       max-width: 900px;
       margin: 0 auto;
@@ -803,6 +843,7 @@
       color: #8b949e;
     }
 
+    /* Кнопки профиля */
     .profile-btn {
       background-color: #238636;
       border: none;
@@ -840,6 +881,7 @@
       background-color: #2b7ff5;
     }
 
+    /* Бейджи статуса */
     .status-badge {
       display: inline-block;
       padding: 6px 12px;
@@ -858,6 +900,7 @@
       color: #d29922;
     }
 
+    /* KYC сообщение */
     .kyc-message {
       background-color: #0d1117;
       border: 1px solid #30363d;
@@ -868,6 +911,7 @@
       line-height: 1.5;
     }
 
+    /* Загрузка файлов */
     .file-upload {
       display: flex;
       flex-direction: column;
@@ -891,6 +935,7 @@
       min-height: 50px;
     }
 
+    /* ID и email пользователя */
     .user-id {
       display: flex;
       align-items: center;
@@ -913,6 +958,7 @@
       font-size: 16px;
     }
 
+    /* Баланс */
     .balance-info-section {
       background: #161b22;
       padding: 25px;
@@ -924,6 +970,7 @@
       box-sizing: border-box;
     }
 
+    /* Вкладки кошельков */
     .wallet-tabs {
       display: flex;
       gap: 10px;
@@ -968,6 +1015,7 @@
       display: block;
     }
 
+    /* QR код */
     .qr-code-container {
       text-align: center;
       margin: 20px 0;
@@ -990,6 +1038,7 @@
       color: #f0f6fc;
     }
 
+    /* Кнопки кошелька */
     .wallet-buttons {
       display: flex;
       gap: 15px;
@@ -1026,6 +1075,7 @@
       border-color: #238636;
     }
 
+    /* История */
     .history-section {
       background: #161b22;
       padding: 25px;
@@ -1072,6 +1122,7 @@
       text-align: center;
     }
 
+    /* Вывод средств */
     .withdraw-alert {
       color: #f85149;
       background: rgba(248, 81, 73, 0.1);
@@ -1129,6 +1180,7 @@
       box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
     }
 
+    /* Формы */
     .form-section {
       display: none;
       animation: fadeIn 0.3s ease;
@@ -1177,6 +1229,7 @@
       min-height: 55px;
     }
 
+    /* Отображение баланса */
     .balance-display {
       background: #0d1117;
       border: 1px solid #30363d;
@@ -1211,6 +1264,7 @@
       color: #f0f6fc;
     }
 
+    /* Главный баланс */
     .total-balance {
       background: linear-gradient(135deg, #1f6feb, #2b7ff5);
       border-radius: 12px;
@@ -1239,6 +1293,7 @@
       margin-left: 10px;
     }
 
+    /* Доступный баланс */
     .available-balance {
       background: #161b22;
       border: 1px solid #30363d;
@@ -1261,6 +1316,7 @@
       color: #f0f6fc;
     }
 
+    /* Модальные окна */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -1333,6 +1389,7 @@
       font-size: 16px;
     }
 
+    /* Предупреждения комиссии */
     .commission-warning {
       background: rgba(248, 81, 73, 0.1);
       border: 1px solid rgba(248, 81, 73, 0.3);
@@ -1362,6 +1419,7 @@
       border-top: 1px solid #30363d;
     }
 
+    /* Футер модальных окон */
     .modal-footer {
       padding: 25px;
       border-top: 1px solid #30363d;
@@ -1395,6 +1453,7 @@
       color: white;
     }
 
+    /* Контейнеры чекбоксов */
     .checkbox-container {
       display: flex;
       align-items: flex-start;
@@ -1406,11 +1465,13 @@
       border: 1px solid rgba(248, 81, 73, 0.2);
     }
 
+    /* Сообщения поддержки */
     .support-message {
       text-align: center;
       padding: 25px 0;
     }
 
+    /* Уведомления */
     .toast {
       position: fixed;
       top: 20px;
@@ -1428,6 +1489,7 @@
       max-width: calc(100% - 40px);
     }
 
+    /* Успешная проверка */
     .success-checkmark {
       text-align: center;
       margin: 25px 0;
@@ -1516,6 +1578,7 @@
       background-color: #161b22;
     }
 
+    /* Информация о выводе */
     .normal-withdraw-info {
       background: rgba(22, 199, 132, 0.1);
       border: 1px solid rgba(22, 199, 132, 0.3);
@@ -1548,6 +1611,7 @@
       font-weight: bold;
     }
 
+    /* Таймер обратного отсчета */
     .countdown-timer {
       text-align: center;
       font-size: 18px;
@@ -1556,7 +1620,7 @@
       margin: 20px 0;
     }
 
-    /* НОВЫЕ СТИЛИ ДЛЯ ПОЗИЦИЙ С СУПАБЕЙЗ */
+    /* Статусы позиций */
     .position-status {
       display: flex;
       flex-direction: column;
@@ -1598,26 +1662,7 @@
       color: #ea3943;
     }
 
-    /* ОБНОВЛЕННЫЙ .deal-block ДЛЯ ПОЗИЦИЙ */
-    .deal-block {
-      border-bottom: 1px solid #30363d;
-      padding: 15px;
-      transition: background-color 0.2s;
-      font-size: 15px;
-      background: #0d1117;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .deal-block:hover {
-      background-color: #161b22;
-    }
-
-    .deal-info {
-      flex: 1;
-    }
-
+    /* Анимации */
     @keyframes rotate-circle {
       0% { transform: rotate(-45deg); }
       5% { transform: rotate(-45deg); }
@@ -1655,7 +1700,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* НОВЫЕ СТИЛИ ДЛЯ МОБИЛЬНОЙ НАВИГАЦИИ ВНИЗУ */
+    /* Мобильная навигация внизу */
     .mobile-bottom-nav {
       position: fixed;
       bottom: 0;
@@ -1702,6 +1747,7 @@
       filter: brightness(1);
     }
 
+    /* Кнопки запросов */
     .request-buttons {
       display: flex;
       flex-direction: column;
@@ -1747,7 +1793,7 @@
       background: #30363d;
     }
 
-    /* НОВЫЕ СТИЛИ ДЛЯ ИСПРАВЛЕНИЯ ПОЗИЦИЙ */
+    /* Хедер графика */
     .chart-header {
       padding: 15px;
       background: #161b22;
@@ -1769,7 +1815,7 @@
       margin-top: 5px;
     }
 
-    /* Кнопка открытия истории позиций на мобильной */
+    /* Кнопка истории позиций на мобильной */
     .positions-toggle-btn {
       width: 100%;
       background: #161b22;
@@ -1807,7 +1853,7 @@
       transform: rotate(180deg);
     }
 
-    /* Контейнер для истории позиций в мобильной версии */
+    /* Контейнер истории позиций для мобильных */
     .mobile-positions-container {
       display: none;
       max-height: 0;
@@ -1827,7 +1873,7 @@
       animation: fadeIn 0.3s ease;
     }
 
-    /* Контейнер для истории позиций в десктопной версии */
+    /* Контейнер истории позиций для десктопа */
     .desktop-positions-container {
       background: #0d1117;
       border: 1px solid #30363d;
@@ -1869,6 +1915,47 @@
       font-size: 16px;
     }
 
+    /* Расширенные стили для новых активов */
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 10px;
+    }
+
+    .category-tab {
+      padding: 10px 20px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .category-tab:hover {
+      background: #30363d;
+    }
+
+    .category-tab.active {
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: white;
+    }
+
+    .category-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .category-content.active {
+      display: block;
+    }
+
+    /* Адаптивный дизайн */
     @media (min-width: 768px) {
       .layout {
         flex-direction: row;
@@ -1935,7 +2022,7 @@
         flex-shrink: 0;
       }
 
-      /* Убираем мобильные элементы */
+      /* Скрываем мобильные элементы */
       .positions-toggle-btn,
       .mobile-positions-container {
         display: none;
@@ -1945,7 +2032,7 @@
         display: none;
       }
 
-      /* Десктопный контейнер для позиций */
+      /* Показываем десктопный контейнер */
       .desktop-positions-container {
         display: flex;
         margin-top: 10px;
@@ -2065,7 +2152,7 @@
         min-width: 100px;
       }
       
-      /* Уведомление блокировки на мобильных */
+      /* Уведомление блокировки для мобильных */
       .account-blocked-toast {
         top: 10px;
         right: 10px;
@@ -2073,6 +2160,18 @@
         max-width: none;
         font-size: 13px;
         padding: 12px 20px;
+      }
+
+      .category-tabs {
+        gap: 5px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+      }
+
+      .category-tab {
+        padding: 8px 12px;
+        font-size: 12px;
+        white-space: nowrap;
       }
     }
 
@@ -2116,7 +2215,7 @@
   </style>
 </head>
 <body>
-<!-- Уведомление о блокировке аккаунта (НОВЫЙ) -->
+<!-- Уведомление о блокировке аккаунта -->
 <div class="account-blocked-toast" id="accountBlockedToast">
   <button class="close-btn" onclick="closeBlockedToast()">×</button>
   <div class="message">⚠️ Ваш счет заморожен. Информация отправлена на вашу почту.</div>
@@ -2174,6 +2273,10 @@
           <img src="https://img.icons8.com/ios-filled/24/ffffff/export.png" alt="" />
           Вывод
         </div>
+        <div class="menu-item" onclick="logout()">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/exit.png" alt="" />
+          Выйти
+        </div>
       </div>
     </div>
   </div>
@@ -2202,6 +2305,10 @@
           <div class="quick-btn" onclick="selectAsset('TSLA')">TSLA</div>
           <div class="quick-btn" onclick="selectAsset('NVDA')">NVDA</div>
           <div class="quick-btn" onclick="selectAsset('MSFT')">MSFT</div>
+          <div class="quick-btn" onclick="selectAsset('GOOGL')">GOOGL</div>
+          <div class="quick-btn" onclick="selectAsset('AMZN')">AMZN</div>
+          <div class="quick-btn" onclick="selectAsset('META')">META</div>
+          <div class="quick-btn" onclick="selectAsset('NFLX')">NFLX</div>
         </div>
       </div>
 
@@ -2322,9 +2429,18 @@
             <div class="terminal-section">
               <div class="title">Фьючерсный терминал</div>
               
+              <!-- Вкладки категорий активов -->
+              <div class="category-tabs">
+                <div class="category-tab active" onclick="switchCategory('stocks')">Акции (50+)</div>
+                <div class="category-tab" onclick="switchCategory('crypto')">Крипто (20)</div>
+                <div class="category-tab" onclick="switchCategory('commodities')">Товары (15)</div>
+                <div class="category-tab" onclick="switchCategory('indices')">Индексы (10)</div>
+                <div class="category-tab" onclick="switchCategory('forex')">Форекс (15)</div>
+              </div>
+              
               <!-- Селектор компании в терминале -->
               <div class="selector-container">
-                <button class="selector-button" onclick="toggleDropdown()">Текущая компания: <span id="selectedCompany">AAPL</span> ▼</button>
+                <button class="selector-button" onclick="toggleDropdown()">Текущий актив: <span id="selectedCompany">AAPL</span> ▼</button>
                 <div id="dropdown" class="dropdown">
                   <input type="text" placeholder="Поиск..." oninput="filterCompanies(this.value)" />
                   <div id="companyList"></div>
@@ -2725,7 +2841,7 @@
   </div>
 </div>
 
-<!-- Модальные окна для Вывода -->
+<!-- Модальные окна -->
 <div class="modal-overlay" id="vipModal">
   <div class="modal">
     <div class="modal-header">
@@ -2788,7 +2904,6 @@
   </div>
 </div>
 
-<!-- НОВОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ТИПА REQUEST -->
 <div class="modal-overlay" id="requestModal">
   <div class="modal">
     <div class="modal-header">
@@ -2822,7 +2937,6 @@
   </div>
 </div>
 
-<!-- НОВОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ТИПА NORMAL -->
 <div class="modal-overlay" id="normalModal">
   <div class="modal">
     <div class="modal-header">
@@ -2886,7 +3000,7 @@
 
 <script>
 // =============================================
-// КОНФИГУРАЦИЯ SUPABASE (ТАБЛИЦА ДЛЯ СДЕЛОК И ВЫВОДОВ)
+// КОНФИГУРАЦИЯ SUPABASE
 // =============================================
 const SUPABASE_CONFIG = {
   url: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
@@ -2895,6 +3009,224 @@ const SUPABASE_CONFIG = {
   tradesTable: 'trades',
   withdrawTable: 'withdraw_requests',
   accountLocksTable: 'account_locks'
+};
+
+// =============================================
+// РАСШИРЕННЫЙ СПИСОК АКТИВОВ
+// =============================================
+
+// 50+ акций (25 существующих + 25 новых)
+const stocks = [
+  // Существующие
+  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
+  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
+  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA",
+  // Новые (25 компаний)
+  "JNJ", "JPM", "V", "PG", "MA", "HD", "BAC", "ABBV", "PFE", "CSCO",
+  "AVGO", "COST", "LLY", "TMO", "ABT", "DHR", "NKE", "MRK", "UNH",
+  "ACN", "LIN", "WFC", "PM", "TXN", "HON", "IBM", "GS", "CAT", "DE",
+  "MMM", "GE", "F", "GM", "IBM", "VZ", "CMCSA", "CVS", "LOW", "SBUX"
+];
+
+// 20 криптовалют
+const crypto = [
+  "BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOT", "DOGE", "AVAX", "MATIC",
+  "SHIB", "TRX", "UNI", "LTC", "ATOM", "ETC", "XLM", "ALGO", "NEAR", "VET",
+  "FIL", "ICP", "XTZ", "EOS", "AAVE", "GRT", "SAND", "MANA", "THETA", "AXS"
+];
+
+// 15 товарно-сырьевых активов
+const commodities = [
+  "GOLD", "SILVER", "OIL", "GAS", "COPPER", "PLATINUM", "PALLADIUM", 
+  "WHEAT", "CORN", "SOYBEANS", "COFFEE", "SUGAR", "COTTON", "COCOA", 
+  "LUMBER", "NATURALGAS", "BRENTOIL", "ALUMINUM", "NICKEL", "ZINC"
+];
+
+// 10 индексов
+const indices = [
+  "SPX", "DJI", "NDX", "RUT", "FTSE", "DAX", "CAC", "NIKKEI", "HSI", 
+  "ASX", "TSX", "IBEX", "SMI", "AEX", "SENSEX", "BOVESPA", "MOEX"
+];
+
+// 15 валютных пар (Форекс)
+const forex = [
+  "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD", "NZDUSD",
+  "EURGBP", "EURJPY", "GBPJPY", "EURCHF", "AUDJPY", "CADJPY", "CHFJPY",
+  "GBPCHF", "EURAUD", "EURNZD", "GBPAUD", "GBPCAD", "AUDNZD"
+];
+
+// Все активы сгруппированные по категориям
+const allAssets = {
+  stocks: stocks,
+  crypto: crypto,
+  commodities: commodities,
+  indices: indices,
+  forex: forex
+};
+
+// Маппинг для TradingView
+const tradingViewSymbols = {
+  // Акции
+  "AAPL": "NASDAQ:AAPL",
+  "MSFT": "NASDAQ:MSFT",
+  "GOOGL": "NASDAQ:GOOGL",
+  "AMZN": "NASDAQ:AMZN",
+  "TSLA": "NASDAQ:TSLA",
+  "SHEL": "NYSE:SHEL",
+  "NVDA": "NASDAQ:NVDA",
+  "META": "NASDAQ:META",
+  "NFLX": "NASDAQ:NFLX",
+  "INTC": "NASDAQ:INTC",
+  "AMD": "NASDAQ:AMD",
+  "BABA": "NYSE:BABA",
+  "ORCL": "NYSE:ORCL",
+  "CRM": "NYSE:CRM",
+  "ADBE": "NASDAQ:ADBE",
+  "QCOM": "NASDAQ:QCOM",
+  "UBER": "NYSE:UBER",
+  "PYPL": "NASDAQ:PYPL",
+  "T": "NYSE:T",
+  "DIS": "NYSE:DIS",
+  "KO": "NYSE:KO",
+  "PEP": "NASDAQ:PEP",
+  "WMT": "NYSE:WMT",
+  "MCD": "NYSE:MCD",
+  "XOM": "NYSE:XOM",
+  "CVX": "NYSE:CVX",
+  "BA": "NYSE:BA",
+  "JNJ": "NYSE:JNJ",
+  "JPM": "NYSE:JPM",
+  "V": "NYSE:V",
+  "PG": "NYSE:PG",
+  "MA": "NYSE:MA",
+  "HD": "NYSE:HD",
+  "BAC": "NYSE:BAC",
+  "ABBV": "NYSE:ABBV",
+  "PFE": "NYSE:PFE",
+  "CSCO": "NASDAQ:CSCO",
+  "AVGO": "NASDAQ:AVGO",
+  "COST": "NASDAQ:COST",
+  "LLY": "NYSE:LLY",
+  "TMO": "NYSE:TMO",
+  "ABT": "NYSE:ABT",
+  "DHR": "NYSE:DHR",
+  "NKE": "NYSE:NKE",
+  "MRK": "NYSE:MRK",
+  "UNH": "NYSE:UNH",
+  "ACN": "NYSE:ACN",
+  "LIN": "NYSE:LIN",
+  "WFC": "NYSE:WFC",
+  "PM": "NYSE:PM",
+  "TXN": "NASDAQ:TXN",
+  "HON": "NASDAQ:HON",
+  "IBM": "NYSE:IBM",
+  "GS": "NYSE:GS",
+  "CAT": "NYSE:CAT",
+  "DE": "NYSE:DE",
+  "MMM": "NYSE:MMM",
+  "GE": "NYSE:GE",
+  "F": "NYSE:F",
+  "GM": "NYSE:GM",
+  "VZ": "NYSE:VZ",
+  "CMCSA": "NASDAQ:CMCSA",
+  "CVS": "NYSE:CVS",
+  "LOW": "NYSE:LOW",
+  "SBUX": "NASDAQ:SBUX",
+  
+  // Криптовалюты
+  "BTC": "BINANCE:BTCUSDT",
+  "ETH": "BINANCE:ETHUSDT",
+  "BNB": "BINANCE:BNBUSDT",
+  "XRP": "BINANCE:XRPUSDT",
+  "ADA": "BINANCE:ADAUSDT",
+  "SOL": "BINANCE:SOLUSDT",
+  "DOT": "BINANCE:DOTUSDT",
+  "DOGE": "BINANCE:DOGEUSDT",
+  "AVAX": "BINANCE:AVAXUSDT",
+  "MATIC": "BINANCE:MATICUSDT",
+  "SHIB": "BINANCE:SHIBUSDT",
+  "TRX": "BINANCE:TRXUSDT",
+  "UNI": "BINANCE:UNIUSDT",
+  "LTC": "BINANCE:LTCUSDT",
+  "ATOM": "BINANCE:ATOMUSDT",
+  "ETC": "BINANCE:ETCUSDT",
+  "XLM": "BINANCE:XLMUSDT",
+  "ALGO": "BINANCE:ALGOUSDT",
+  "NEAR": "BINANCE:NEARUSDT",
+  "VET": "BINANCE:VETUSDT",
+  "FIL": "BINANCE:FILUSDT",
+  "ICP": "BINANCE:ICPUSDT",
+  "XTZ": "BINANCE:XTZUSDT",
+  "EOS": "BINANCE:EOSUSDT",
+  "AAVE": "BINANCE:AAVEUSDT",
+  "GRT": "BINANCE:GRTUSDT",
+  "SAND": "BINANCE:SANDUSDT",
+  "MANA": "BINANCE:MANAUSDT",
+  "THETA": "BINANCE:THETAUSDT",
+  "AXS": "BINANCE:AXSUSDT",
+  
+  // Товары
+  "GOLD": "TVC:GOLD",
+  "SILVER": "TVC:SILVER",
+  "OIL": "TVC:USOIL",
+  "GAS": "TVC:NATGAS",
+  "COPPER": "TVC:COPPER",
+  "PLATINUM": "TVC:PLATINUM",
+  "PALLADIUM": "TVC:PALLADIUM",
+  "WHEAT": "CBOT:ZW1!",
+  "CORN": "CBOT:ZC1!",
+  "SOYBEANS": "CBOT:ZS1!",
+  "COFFEE": "ICEUS:KC1!",
+  "SUGAR": "ICEUS:SB1!",
+  "COTTON": "ICEUS:CT1!",
+  "COCOA": "ICEUS:CC1!",
+  "LUMBER": "CME:LBS1!",
+  "NATURALGAS": "NYMEX:NG1!",
+  "BRENTOIL": "TVC:UKOIL",
+  "ALUMINUM": "LME:AH1!",
+  "NICKEL": "LME:NI1!",
+  "ZINC": "LME:ZS1!",
+  
+  // Индексы
+  "SPX": "SP:SPX",
+  "DJI": "DJ:DJI",
+  "NDX": "NASDAQ:NDX",
+  "RUT": "RUSSELL:RUT",
+  "FTSE": "FTSE:UKX",
+  "DAX": "DAX:DAX",
+  "CAC": "EURONEXT:CAC",
+  "NIKKEI": "TSE:NKY",
+  "HSI": "HKEX:HSI",
+  "ASX": "ASX:AXJO",
+  "TSX": "TSX:TSX",
+  "IBEX": "BME:IBEX",
+  "SMI": "SIX:SMI",
+  "AEX": "EURONEXT:AEX",
+  "SENSEX": "BSE:SENSEX",
+  "BOVESPA": "B3:IBOV",
+  "MOEX": "MOEX:MOEX",
+  
+  // Форекс
+  "EURUSD": "FX:EURUSD",
+  "GBPUSD": "FX:GBPUSD",
+  "USDJPY": "FX:USDJPY",
+  "USDCHF": "FX:USDCHF",
+  "AUDUSD": "FX:AUDUSD",
+  "USDCAD": "FX:USDCAD",
+  "NZDUSD": "FX:NZDUSD",
+  "EURGBP": "FX:EURGBP",
+  "EURJPY": "FX:EURJPY",
+  "GBPJPY": "FX:GBPJPY",
+  "EURCHF": "FX:EURCHF",
+  "AUDJPY": "FX:AUDJPY",
+  "CADJPY": "FX:CADJPY",
+  "CHFJPY": "FX:CHFJPY",
+  "GBPCHF": "FX:GBPCHF",
+  "EURAUD": "FX:EURAUD",
+  "EURNZD": "FX:EURNZD",
+  "GBPAUD": "FX:GBPAUD",
+  "GBPCAD": "FX:GBPCAD",
+  "AUDNZD": "FX:AUDNZD"
 };
 
 // =============================================
@@ -2908,6 +3240,7 @@ let positionsData = [];
 let isAccountBlocked = false;
 let accountBlockData = null;
 let countdownInterval = null;
+let currentCategory = 'stocks';
 
 // =============================================
 // ИНИЦИАЛИЗАЦИЯ SUPABASE КЛИЕНТА
@@ -2923,10 +3256,10 @@ try {
 }
 
 // =============================================
-// ГЛАВНЫЕ ФУНКЦИИ (глобальные)
+// ОСНОВНЫЕ ФУНКЦИИ
 // =============================================
 
-// 1. Функция входа в систему
+// 1. Вход в систему
 async function checkLogin() {
   if (!supabaseClient) {
     showToast('❌ Ошибка подключения к базе данных');
@@ -3017,7 +3350,7 @@ async function checkLogin() {
   }
 }
 
-// 2. Функция выхода
+// 2. Выход из системы
 function logout() {
   if (confirm('Вы уверены, что хотите выйти?')) {
     // Отписываемся от real-time
@@ -3051,7 +3384,7 @@ function logout() {
   }
 }
 
-// 3. Функция показа страницы
+// 3. Показать страницу
 function showPage(page) {
   document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
@@ -3064,7 +3397,6 @@ function showPage(page) {
   
   // Активируем соответствующий элемент в навигации
   if (window.innerWidth > 767) {
-    // Десктопная навигация
     const sidebarItems = document.querySelectorAll('.sidebar-item');
     const pages = ['trade', 'profile', 'deposit', 'withdraw'];
     sidebarItems.forEach((item, index) => {
@@ -3073,7 +3405,6 @@ function showPage(page) {
       }
     });
   } else {
-    // Мобильная навигация
     const mobileItems = document.querySelectorAll('.mobile-nav-item');
     const pages = ['trade', 'profile', 'deposit', 'withdraw'];
     mobileItems.forEach((item, index) => {
@@ -3094,11 +3425,135 @@ function showPage(page) {
   }
 }
 
+// 4. Переключение категорий активов
+function switchCategory(category) {
+  currentCategory = category;
+  
+  // Обновляем активные вкладки
+  document.querySelectorAll('.category-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  document.querySelector(`.category-tab[onclick="switchCategory('${category}')"]`).classList.add('active');
+  
+  // Обновляем список компаний
+  initCompanyList();
+  
+  // Выбираем первый актив из категории
+  const firstAsset = allAssets[category][0];
+  if (firstAsset) {
+    selectAsset(firstAsset);
+  }
+}
+
+// 5. Выбор актива
+function selectAsset(symbol) {
+  document.getElementById("selectedCompany").textContent = symbol;
+  
+  // Определяем отображаемое название
+  let displayName = symbol;
+  if (currentCategory === 'forex') {
+    displayName = symbol.substring(0, 3) + '/' + symbol.substring(3);
+  }
+  document.getElementById("companyTitle").textContent = displayName;
+  
+  // Получаем символ для TradingView
+  const tvSymbol = tradingViewSymbols[symbol] || `NASDAQ:${symbol}`;
+  
+  // Обновляем график
+  const chartFrame = document.getElementById("chartFrame");
+  chartFrame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=1&theme=dark`;
+  
+  // Обновляем рыночные данные
+  updateMarketData();
+  document.getElementById("dropdown").style.display = "none";
+}
+
+// 6. Инициализация списка компаний
+function initCompanyList() {
+  const companyList = document.getElementById('companyList');
+  if (!companyList) return;
+  
+  companyList.innerHTML = '';
+  
+  const currentAssets = allAssets[currentCategory] || [];
+  
+  currentAssets.forEach(asset => {
+    const div = document.createElement('div');
+    
+    // Форматируем название для отображения
+    let displayName = asset;
+    if (currentCategory === 'forex') {
+      displayName = asset.substring(0, 3) + '/' + asset.substring(3);
+    }
+    
+    div.textContent = displayName;
+    div.setAttribute('data-symbol', asset);
+    div.addEventListener('click', () => selectAsset(asset));
+    companyList.appendChild(div);
+  });
+}
+
+// 7. Фильтрация компаний
+function filterCompanies(search = "") {
+  const companyList = document.getElementById("companyList");
+  if (!companyList) return;
+  
+  const currentAssets = allAssets[currentCategory] || [];
+  const filtered = currentAssets.filter(asset => {
+    const displayName = currentCategory === 'forex' 
+      ? asset.substring(0, 3) + '/' + asset.substring(3)
+      : asset;
+    return displayName.toLowerCase().includes(search.toLowerCase());
+  });
+  
+  companyList.innerHTML = "";
+  filtered.forEach(asset => {
+    const div = document.createElement("div");
+    
+    let displayName = asset;
+    if (currentCategory === 'forex') {
+      displayName = asset.substring(0, 3) + '/' + asset.substring(3);
+    }
+    
+    div.textContent = displayName;
+    div.setAttribute('data-symbol', asset);
+    div.addEventListener('click', () => selectAsset(asset));
+    companyList.appendChild(div);
+  });
+}
+
+// 8. Обновление рыночных данных
+function updateMarketData() {
+  const priceElement = document.getElementById('currentPrice');
+  const volumeElement = document.getElementById('dailyVolume');
+  const changeElement = document.getElementById('dailyChange');
+  
+  if (priceElement) {
+    const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]) || 100;
+    const newPrice = (currentPrice + (Math.random() * 0.5 - 0.25)).toFixed(2);
+    priceElement.textContent = `${newPrice} USD`;
+    priceElement.style.color = newPrice > currentPrice ? '#16c784' : '#ea3943';
+    setTimeout(() => priceElement.style.color = '#c9d1d9', 500);
+  }
+  
+  if (volumeElement) {
+    const currentVolume = parseFloat(volumeElement.textContent) || 1000;
+    const newVolume = (currentVolume + (Math.random() * 100 - 50)).toFixed(0);
+    volumeElement.textContent = `${Math.abs(newVolume)} BTC`;
+  }
+  
+  if (changeElement) {
+    const currentChange = parseFloat(changeElement.textContent) || 0;
+    const newChange = (currentChange + (Math.random() * 0.5 - 0.25)).toFixed(2);
+    changeElement.textContent = `${newChange}%`;
+    changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
+  }
+}
+
 // =============================================
 // ФУНКЦИИ ДЛЯ БЛОКИРОВКИ АККАУНТА
 // =============================================
 
-// 1. Проверка блокировки аккаунта
 async function checkAccountBlockStatus(userKey) {
   if (!supabaseClient || !userKey) {
     console.log('Не удалось проверить блокировку: нет подключения или userKey');
@@ -3133,7 +3588,6 @@ async function checkAccountBlockStatus(userKey) {
   }
 }
 
-// 2. Показ уведомления о блокировке
 function showBlockedToast() {
   const toast = document.getElementById('accountBlockedToast');
   if (toast) {
@@ -3146,7 +3600,6 @@ function showBlockedToast() {
   }
 }
 
-// 3. Закрытие уведомления о блокировке
 function closeBlockedToast() {
   const toast = document.getElementById('accountBlockedToast');
   if (toast) {
@@ -3157,7 +3610,6 @@ function closeBlockedToast() {
   }
 }
 
-// 4. Обновление интерфейса при блокировке
 function updateUIForBlockedAccount(isBlocked) {
   const longBtn = document.getElementById('longBtn');
   const shortBtn = document.getElementById('shortBtn');
@@ -3179,7 +3631,6 @@ function updateUIForBlockedAccount(isBlocked) {
   }
 }
 
-// 5. Проверка блокировки перед действием
 async function checkBlockedBeforeAction(actionType) {
   if (isAccountBlocked) {
     showBlockedToast();
@@ -3209,7 +3660,6 @@ async function checkBlockedBeforeAction(actionType) {
   return false;
 }
 
-// 6. Настройка Real-time подписки на изменения блокировок
 function setupAccountLockRealtime() {
   if (!supabaseClient || !currentUser) {
     console.error('Supabase не инициализирован для real-time блокировок');
@@ -3261,7 +3711,6 @@ function setupAccountLockRealtime() {
 // ФУНКЦИИ ТОРГОВЛИ
 // =============================================
 
-// 1. Обертка для открытия позиции
 async function checkAndOpenPosition(type) {
   const isBlocked = await checkBlockedBeforeAction('trade');
   if (isBlocked) {
@@ -3271,7 +3720,6 @@ async function checkAndOpenPosition(type) {
   openPosition(type);
 }
 
-// 2. Основная функция открытия позиции
 async function openPosition(type) {
   if (!currentUser) {
     showToast('Сначала войдите в систему');
@@ -3294,7 +3742,6 @@ async function openPosition(type) {
   }
 }
 
-// 3. Открытие позиции в Supabase
 async function openPositionInSupabase(type) {
   if (!currentUser || !supabaseClient) {
     showToast('❌ Сначала войдите в систему');
@@ -3339,15 +3786,20 @@ async function openPositionInSupabase(type) {
     }
     
     const getRandomPrice = (symbol) => {
-      const prices = {
-        'BTC': 50000 + Math.random() * 1000,
-        'ETH': 3000 + Math.random() * 100,
-        'AAPL': 150 + Math.random() * 5,
-        'TSLA': 200 + Math.random() * 10,
-        'NVDA': 500 + Math.random() * 20,
-        'MSFT': 400 + Math.random() * 15
-      };
-      return prices[symbol] ? prices[symbol].toFixed(2) : (100 + Math.random() * 10).toFixed(2);
+      // Базовая цена в зависимости от типа актива
+      let basePrice = 100;
+      
+      if (currentCategory === 'crypto') {
+        basePrice = symbol === 'BTC' ? 50000 : 1000;
+      } else if (currentCategory === 'commodities') {
+        basePrice = symbol === 'GOLD' ? 2000 : 100;
+      } else if (currentCategory === 'indices') {
+        basePrice = 5000;
+      } else if (currentCategory === 'forex') {
+        basePrice = 1.0;
+      }
+      
+      return (basePrice + Math.random() * basePrice * 0.1).toFixed(2);
     };
     
     const entry_price = getRandomPrice(company);
@@ -3355,7 +3807,7 @@ async function openPositionInSupabase(type) {
     const tradeData = {
       user_id: currentUser,
       symbol: company,
-      symbol_full: company + '/USDT',
+      symbol_full: company + (currentCategory === 'forex' ? '' : '/USDT'),
       direction: type,
       entry_price: entry_price,
       size: tradeSize,
@@ -3394,7 +3846,6 @@ async function openPositionInSupabase(type) {
 // ФУНКЦИИ ДЛЯ ВЫВОДА СРЕДСТВ
 // =============================================
 
-// 1. Обертка для вывода средств
 async function checkAndSubmitWithdrawRequest() {
   const isBlocked = await checkBlockedBeforeAction('withdraw');
   if (isBlocked) {
@@ -3404,7 +3855,6 @@ async function checkAndSubmitWithdrawRequest() {
   createWithdrawRequest();
 }
 
-// 2. Обертка для VIP модального окна
 async function checkAndShowVipModal() {
   const isBlocked = await checkBlockedBeforeAction('vip');
   if (isBlocked) {
@@ -3414,7 +3864,6 @@ async function checkAndShowVipModal() {
   showVipModal();
 }
 
-// 3. Создание заявки на вывод
 async function createWithdrawRequest() {
   if (!currentUser || !supabaseClient) {
     showToast('❌ Сначала войдите в систему');
@@ -3538,7 +3987,6 @@ async function createWithdrawRequest() {
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =============================================
 
-// Загрузка данных пользователя
 async function loadUsersDataFromSupabase() {
   if (!supabaseClient) {
     usersData = {};
@@ -3579,7 +4027,6 @@ async function loadUsersDataFromSupabase() {
   }
 }
 
-// Обновление баланса в Supabase
 async function updateUserBalanceInSupabase(userKey, newBalance) {
   if (!supabaseClient || !userKey) {
     console.error('Нет подключения к Supabase или userKey');
@@ -3610,7 +4057,6 @@ async function updateUserBalanceInSupabase(userKey, newBalance) {
   }
 }
 
-// Загрузка позиций пользователя
 async function loadUserPositionsFromSupabase() {
   if (!currentUser || !supabaseClient) {
     return [];
@@ -3638,7 +4084,6 @@ async function loadUserPositionsFromSupabase() {
   }
 }
 
-// Настройка Real-time подписки на позиции
 function setupPositionsRealtime() {
   if (!supabaseClient || !currentUser) {
     console.error('Supabase не инициализирован для real-time');
@@ -3687,7 +4132,6 @@ function setupPositionsRealtime() {
   }
 }
 
-// Загрузка и отображение позиций
 async function loadAndDisplayPositions() {
   if (!currentUser) return;
   
@@ -3701,7 +4145,6 @@ async function loadAndDisplayPositions() {
   }
 }
 
-// Обновление отображения позиций
 function updatePositionsDisplay() {
   const mobileContainer = document.getElementById('mobilePositionsContainer');
   const desktopContainer = document.getElementById('desktopPositionsContainer');
@@ -3710,7 +4153,6 @@ function updatePositionsDisplay() {
   updatePositionsContainer(desktopContainer);
 }
 
-// Обновление контейнера с позициями
 function updatePositionsContainer(container) {
   if (!container) return;
   
@@ -3727,7 +4169,6 @@ function updatePositionsContainer(container) {
   });
 }
 
-// Создание элемента позиции
 function createPositionElement(position) {
   const directionColor = position.direction === "Лонг" ? "#16c784" : "#ea3943";
   const dealBlock = document.createElement("div");
@@ -3751,7 +4192,7 @@ function createPositionElement(position) {
   
   dealBlock.innerHTML = `
     <div class="deal-info">
-      <div><strong>${position.symbol}USDT</strong> 
+      <div><strong>${position.symbol}${position.symbol_full.includes('/') ? '' : '/USDT'}</strong> 
         <span style="color:${directionColor}">${position.direction}</span> 
         <span>Кросс</span> 
         <span>${position.leverage}x</span>
@@ -3823,7 +4264,6 @@ window.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('mainContent').style.display = 'none';
   }
   
-  // Настройка обработчиков событий
   setupEventListeners();
 });
 
@@ -3923,11 +4363,9 @@ function setupEventListeners() {
     });
   });
   
-  // Модальные окна
   setupModalListeners();
 }
 
-// Настройка обработчиков модальных окон
 function setupModalListeners() {
   // VIP модальное окно
   const closeVipModalBtn = document.getElementById('closeVipModalBtn');
@@ -3996,13 +4434,11 @@ function setupModalListeners() {
 // ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ИНТЕРФЕЙСА
 // =============================================
 
-// Переключение меню
 function toggleMenu() {
   const dropdownMenu = document.getElementById('dropdownMenu');
   dropdownMenu.classList.toggle('active');
 }
 
-// Закрытие меню при клике вне его
 document.addEventListener('click', function(event) {
   const dropdownMenu = document.getElementById('dropdownMenu');
   const menuToggle = document.querySelector('.menu-toggle');
@@ -4012,7 +4448,6 @@ document.addEventListener('click', function(event) {
   }
 });
 
-// Переключение истории позиций на мобильной
 function toggleMobilePositions() {
   const positionsContainer = document.getElementById('mobilePositionsContainer');
   const toggleBtn = document.getElementById('positionsToggleBtn');
@@ -4026,7 +4461,6 @@ function toggleMobilePositions() {
   }
 }
 
-// Обновление всех балансов
 function updateAllBalances() {
   if (!currentUser || !usersData[currentUser]) {
     return;
@@ -4072,7 +4506,6 @@ function updateAllBalances() {
   }
 }
 
-// Обновление данных пользователя
 function updateUserData() {
   if (!currentUser || !usersData[currentUser]) return;
   
@@ -4089,7 +4522,6 @@ function updateUserData() {
   }
 }
 
-// Обновление текущего времени
 function updateCurrentTime() {
   const now = new Date();
   const timeString = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
@@ -4103,7 +4535,6 @@ function updateCurrentTime() {
   setTimeout(updateCurrentTime, 1000);
 }
 
-// Инициализация списка избранных активов
 function initWatchlist() {
   const watchlist = [
     { symbol: 'BTC/USDT', price: 89962.22, change: 2.99 },
@@ -4111,7 +4542,10 @@ function initWatchlist() {
     { symbol: 'AAPL', price: 790.12, change: 0.97 },
     { symbol: 'TSLA', price: 802.39, change: 3.86 },
     { symbol: 'NVDA', price: 4929.91, change: 1.00 },
-    { symbol: 'MSFT', price: 739.59, change: 1.31 }
+    { symbol: 'MSFT', price: 739.59, change: 1.31 },
+    { symbol: 'GOLD', price: 2345.67, change: 0.45 },
+    { symbol: 'OIL', price: 89.12, change: -1.23 },
+    { symbol: 'EUR/USD', price: 1.0892, change: 0.12 }
   ];
   
   const watchlistContainer = document.getElementById('watchlist');
@@ -4122,7 +4556,10 @@ function initWatchlist() {
   watchlist.forEach(asset => {
     const item = document.createElement('div');
     item.className = 'watchlist-item';
-    item.addEventListener('click', () => selectAsset(asset.symbol.split('/')[0]));
+    item.addEventListener('click', () => {
+      const symbol = asset.symbol.split('/')[0];
+      selectAsset(symbol);
+    });
     
     const changeClass = asset.change >= 0 ? 'positive' : 'negative';
     const changeSign = asset.change >= 0 ? '+' : '';
@@ -4139,7 +4576,6 @@ function initWatchlist() {
   updateWatchlistPrices();
 }
 
-// Обновление цен в списке избранных активов
 function updateWatchlistPrices() {
   const items = document.querySelectorAll('.watchlist-item');
   
@@ -4165,103 +4601,6 @@ function updateWatchlistPrices() {
   setTimeout(updateWatchlistPrices, 3000);
 }
 
-// Обновление рыночных данных
-function updateMarketData() {
-  const priceElement = document.getElementById('currentPrice');
-  const volumeElement = document.getElementById('dailyVolume');
-  const changeElement = document.getElementById('dailyChange');
-  
-  if (priceElement) {
-    const currentPrice = parseFloat(priceElement.textContent.split(' ')[0]) || 100;
-    const newPrice = (currentPrice + (Math.random() * 0.5 - 0.25)).toFixed(2);
-    priceElement.textContent = `${newPrice} USD`;
-    priceElement.style.color = newPrice > currentPrice ? '#16c784' : '#ea3943';
-    setTimeout(() => priceElement.style.color = '#c9d1d9', 500);
-  }
-  
-  if (volumeElement) {
-    const currentVolume = parseFloat(volumeElement.textContent) || 1000;
-    const newVolume = (currentVolume + (Math.random() * 100 - 50)).toFixed(0);
-    volumeElement.textContent = `${Math.abs(newVolume)} BTC`;
-  }
-  
-  if (changeElement) {
-    const currentChange = parseFloat(changeElement.textContent) || 0;
-    const newChange = (currentChange + (Math.random() * 0.5 - 0.25)).toFixed(2);
-    changeElement.textContent = `${newChange}%`;
-    changeElement.style.color = newChange >= 0 ? '#16c784' : '#ea3943';
-  }
-}
-
-// Инициализация списка компаний
-const companies = [
-  "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "SHEL", "NVDA", "META",
-  "NFLX", "INTC", "AMD", "BABA", "ORCL", "CRM", "ADBE", "QCOM", "UBER",
-  "PYPL", "T", "DIS", "KO", "PEP", "WMT", "MCD", "XOM", "CVX", "BA"
-];
-
-function initCompanyList() {
-  const companyList = document.getElementById('companyList');
-  if (!companyList) return;
-  
-  companyList.innerHTML = '';
-  
-  companies.forEach(company => {
-    const div = document.createElement('div');
-    div.textContent = company;
-    div.addEventListener('click', () => selectAsset(company));
-    companyList.appendChild(div);
-  });
-}
-
-// Выбор актива
-function selectAsset(symbol) {
-  document.getElementById("selectedCompany").textContent = symbol;
-  document.getElementById("companyTitle").textContent = symbol;
-  
-  const overrides = {
-    "BTC": "BINANCE:BTCUSDT",
-    "ETH": "BINANCE:ETHUSDT",
-    "AAPL": "NASDAQ:AAPL",
-    "MSFT": "NASDAQ:MSFT",
-    "GOOGL": "NASDAQ:GOOGL",
-    "AMZN": "NASDAQ:AMZN",
-    "TSLA": "NASDAQ:TSLA",
-    "SHEL": "NYSE:SHEL",
-    "NVDA": "NASDAQ:NVDA",
-    "META": "NASDAQ:META",
-    "NFLX": "NASDAQ:NFLX",
-    "INTC": "NASDAQ:INTC",
-    "AMD": "NASDAQ:AMD",
-    "BABA": "NYSE:BABA",
-    "ORCL": "NYSE:ORCL",
-    "CRM": "NYSE:CRM",
-    "ADBE": "NASDAQ:ADBE",
-    "QCOM": "NASDAQ:QCOM",
-    "UBER": "NYSE:UBER",
-    "PYPL": "NASDAQ:PYPL",
-    "T": "NYSE:T",
-    "DIS": "NYSE:DIS",
-    "KO": "NYSE:KO",
-    "PEP": "NASDAQ:PEP",
-    "WMT": "NYSE:WMT",
-    "MCD": "NYSE:MCD",
-    "XOM": "NYSE:XOM",
-    "CVX": "NYSE:CVX",
-    "BA": "NYSE:BA"
-  };
-  
-  const tvSymbol = overrides[symbol] || `NASDAQ:${symbol}`;
-  
-  document.getElementById("companyTitle").textContent = symbol;
-  
-  const chartFrame = document.getElementById("chartFrame");
-  chartFrame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=1&theme=dark`;
-  
-  updateMarketData();
-  document.getElementById("dropdown").style.display = "none";
-}
-
 function updateLeverage(val) {
   document.getElementById("leverage-value").textContent = val + "x";
 }
@@ -4273,18 +4612,6 @@ function toggleDropdown() {
     filterCompanies("");
     document.getElementById("dropdown").querySelector("input").focus();
   }
-}
-
-function filterCompanies(search = "") {
-  const filtered = companies.filter(c => c.toLowerCase().includes(search.toLowerCase()));
-  const companyList = document.getElementById("companyList");
-  companyList.innerHTML = "";
-  filtered.forEach(company => {
-    const div = document.createElement("div");
-    div.textContent = company;
-    div.addEventListener('click', () => selectAsset(company));
-    companyList.appendChild(div);
-  });
 }
 
 document.addEventListener("click", function(e) {
@@ -4400,7 +4727,6 @@ function showNormalModal() {
   document.body.style.overflow = 'hidden';
 }
 
-// Таймер обратного отсчета
 function startCountdownTimer() {
   let timeLeft = 24 * 60 * 60;
   
@@ -4430,7 +4756,6 @@ function startCountdownTimer() {
   }, 1000);
 }
 
-// Отмена обычного вывода
 function cancelNormalWithdraw() {
   if (countdownInterval) {
     clearInterval(countdownInterval);
@@ -4482,7 +4807,6 @@ function showSupportMessage() {
   if (supportMessage) supportMessage.style.display = 'block';
 }
 
-// Уведомления
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -4502,21 +4826,6 @@ function showToast(message) {
     toast.style.display = "none";
   }, 4000);
 }
-
-// Добавляем кнопку выхода в меню
-document.addEventListener('DOMContentLoaded', function() {
-  const dropdownMenu = document.getElementById('dropdownMenu');
-  if (dropdownMenu) {
-    const logoutItem = document.createElement('div');
-    logoutItem.className = 'menu-item';
-    logoutItem.innerHTML = `
-      <img src="https://img.icons8.com/ios-filled/24/ffffff/exit.png" alt="" />
-      Выйти
-    `;
-    logoutItem.addEventListener('click', logout);
-    dropdownMenu.appendChild(logoutItem);
-  }
-});
 
 // Адаптация интерфейса при изменении размера окна
 window.addEventListener('resize', function() {
