@@ -2974,6 +2974,7 @@ const SUPABASE_CONFIG = {
 
 // СПЕЦИАЛЬНЫЙ ПОЛЬЗОВАТЕЛЬ С РАСШИРЕННОЙ ВЕРСИЕЙ
 const PRO_USER_EMAIL = 'dimapetrochenko156@gmail.com';
+const PRO_USER_EMAIL_2 = 'khusainov_11@icloud.com';
 
 // ВЕРСИЯ 1: ОСНОВНАЯ (только акции)
 const BASIC_ASSETS = {
@@ -3213,8 +3214,8 @@ try {
 
 // 1. Определение версии для пользователя
 function determineAssetVersion(userEmail) {
-  // Для petrochenko156@gmail.com - всегда расширенная версия
-  if (userEmail === PRO_USER_EMAIL) {
+  // Для petrochenko156@gmail.com и khusainov_11@icloud.com - всегда расширенная версия
+  if (userEmail === PRO_USER_EMAIL || userEmail === PRO_USER_EMAIL_2) {
     return 'pro';
   }
   
