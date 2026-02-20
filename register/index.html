@@ -1194,7 +1194,7 @@
         }
 
         // ============================
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
+        // ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
         // ============================
         async function registerUser() {
             if (!validateRegistrationForm()) {
@@ -1219,64 +1219,51 @@
                 
                 console.log('🔄 Регистрация для:', email);
                 
-                const userExists = await checkUserExists(email);
-                if (userExists) {
+                // Проверяем существование пользователя
+                const { data: existingUsers } = await supabaseClient
+                    .from('app_users')
+                    .select('email')
+                    .eq('email', email);
+                
+                if (existingUsers && existingUsers.length > 0) {
                     showToast('Пользователь с таким email уже существует', 'error');
                     registerBtn.innerHTML = originalText;
                     registerBtn.disabled = false;
                     return;
                 }
                 
-                // ОТПРАВЛЯЕМ ВСЕ ПОЛЯ ЯВНО
+                // Используем прямой POST запрос с заголовками
                 const now = new Date().toISOString();
-                const userData = {
-                    user_key: userKey,
-                    password: password,
-                    email: email,
-                    balance: 0,
-                    level: 'Стандарт',
-                    withdraw_type: 'normal',
-                    created: now,
-                    updated_at: now,
-                    updated_by: 'admin',
-                    // Поля, которые могут быть проблемными - отправляем как null
-                    package_updated_at: null,
-                    stock_package: null,
-                    stock_package_type: null,
-                    is_admin: false,
-                    is_frozen: false
-                };
+                const response = await fetch(`${SUPABASE_CONFIG.URL}/rest/v1/app_users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_CONFIG.KEY,
+                        'Authorization': `Bearer ${SUPABASE_CONFIG.KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        user_key: userKey,
+                        password: password,
+                        email: email,
+                        balance: 0,
+                        level: 'Стандарт',
+                        withdraw_type: 'normal',
+                        created: now,
+                        updated_at: now,
+                        updated_by: 'admin'
+                    })
+                });
                 
-                console.log('🔄 Отправка данных:', userData);
-                
-                const { error: insertError } = await supabaseClient
-                    .from('app_users')
-                    .insert(userData);
-                
-                if (insertError) {
-                    console.error('❌ Ошибка:', insertError);
-                    
-                    // Если ошибка о несуществующей колонке, пробуем без неё
-                    if (insertError.message && insertError.message.includes('stock_package')) {
-                        console.log('🔄 Пробуем без stock_package...');
-                        delete userData.stock_package;
-                        delete userData.stock_package_type;
-                        delete userData.package_updated_at;
-                        
-                        const { error: retryError } = await supabaseClient
-                            .from('app_users')
-                            .insert(userData);
-                        
-                        if (retryError) throw retryError;
-                    } else {
-                        throw insertError;
-                    }
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Ошибка ответа:', response.status, errorText);
+                    throw new Error(`HTTP ошибка ${response.status}`);
                 }
                 
                 console.log('✅ Данные сохранены');
                 
                 // Отправка письма
-                let emailSent = false;
                 try {
                     await emailjs.send(
                         EMAILJS_CONFIG.SERVICE_ID,
@@ -1289,22 +1276,21 @@
                             login: userKey
                         }
                     );
-                    emailSent = true;
-                } catch (emailErr) {
-                    console.error('❌ Ошибка отправки письма:', emailErr);
-                }
-                
-                // Показываем результат
-                document.getElementById('registrationForm').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('registeredEmail').textContent = email;
-                
-                if (emailSent) {
+                    
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('registeredEmail').textContent = email;
                     document.getElementById('successText').innerHTML = `Регистрация успешно завершена!<br>Письмо отправлено на ${email}`;
                     document.getElementById('emailInstruction').style.display = 'block';
                     document.getElementById('loginDetails').style.display = 'none';
                     showToast('Регистрация завершена! Проверьте почту.', 'success');
-                } else {
+                    
+                } catch (emailErr) {
+                    console.error('❌ Ошибка отправки письма:', emailErr);
+                    
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('registeredEmail').textContent = email;
                     document.getElementById('successText').innerHTML = `Регистрация успешно завершена!`;
                     document.getElementById('loginDetails').style.display = 'block';
                     document.getElementById('loginDetails').innerHTML = `
@@ -1312,13 +1298,14 @@
                         <p><strong>Email:</strong> ${email}</p>
                         <p><strong>Логин (user_key):</strong> ${userKey}</p>
                         <p><strong>Пароль:</strong> указанный при регистрации</p>
+                        <p style="color: var(--warning); margin-top: 10px;">⚠️ Письмо не отправлено, сохраните данные вручную</p>
                     `;
                     showToast('Регистрация успешна! Сохраните данные.', 'warning');
                 }
                 
             } catch (error) {
                 console.error('❌ Ошибка:', error);
-                showToast(error.message || 'Ошибка при регистрации', 'error');
+                showToast('Ошибка при регистрации. Попробуйте позже.', 'error');
             } finally {
                 registerBtn.innerHTML = originalText;
                 registerBtn.disabled = false;
