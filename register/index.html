@@ -977,12 +977,12 @@
                 <p id="successText"></p>
                 <div class="login-details" id="loginDetails">
                     <h4>Ваши данные для входа:</h4>
+                    <p><strong>Логин:</strong> <span id="registeredLogin"></span></p>
                     <p><strong>Email:</strong> <span id="registeredEmail"></span></p>
                     <p><strong>Пароль:</strong> указанный при регистрации</p>
-                    <p><strong>Логин:</strong> <span id="registeredLogin"></span></p>
                 </div>
-                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;" id="emailInstruction">
-                    Нажмите кнопку "Войти" для входа в личный кабинет.
+                <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Сохраните эти данные для входа в систему.
                 </p>
                 <button class="btn btn-primary" style="margin-top: 1.5rem;" id="finishRegistrationBtn">
                     <i class="fas fa-check"></i> Понятно
@@ -1032,7 +1032,7 @@
             PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
         };
 
-        // Текст пользовательского соглашения (сокращен для читаемости, в реальном коде оставьте полную версию)
+        // Текст пользовательского соглашения
         const USER_AGREEMENT_TEXT = `
 <div class="policy-section">
     <h3>Пользовательское соглашение</h3>
@@ -1052,13 +1052,11 @@
 </div>`;
 
         // ============================
-        // ГЛОБАЛЬНЫЕ ФУНКЦИИ
+        // ИНИЦИАЛИЗАЦИЯ
         // ============================
-
-        // Инициализация приложений
         function initializeApplications() {
             try {
-                // Инициализация Supabase - точно как в рабочем коде
+                // Инициализация Supabase
                 supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
                 console.log('✅ Supabase клиент инициализирован:', SUPABASE_CONFIG.URL);
                 
@@ -1069,13 +1067,15 @@
                 isInitialized = true;
                 return true;
             } catch (error) {
-                console.error('❌ Ошибка инициализации приложений:', error);
+                console.error('❌ Ошибка инициализации:', error);
                 showToast('Ошибка инициализации системы', 'error');
                 return false;
             }
         }
 
-        // Открытие модального окна регистрации
+        // ============================
+        // УПРАВЛЕНИЕ МОДАЛЬНЫМИ ОКНАМИ
+        // ============================
         function openRegisterModal() {
             try {
                 const registerModal = document.getElementById('registerModal');
@@ -1088,7 +1088,6 @@
             }
         }
 
-        // Закрытие модального окна регистрации
         function closeRegisterModal() {
             try {
                 const registerModal = document.getElementById('registerModal');
@@ -1099,7 +1098,6 @@
             }
         }
 
-        // Открытие модального окна политики
         function openPolicyModal(content, title = 'Пользовательское соглашение') {
             try {
                 const policyModal = document.getElementById('policyModal');
@@ -1116,7 +1114,6 @@
             }
         }
 
-        // Закрытие модального окна политики
         function closePolicyModal() {
             try {
                 const policyModal = document.getElementById('policyModal');
@@ -1127,7 +1124,6 @@
             }
         }
 
-        // Сброс формы регистрации
         function resetRegistrationForm() {
             try {
                 document.getElementById('email').value = '';
@@ -1135,7 +1131,6 @@
                 document.getElementById('confirmPassword').value = '';
                 document.getElementById('agreeTerms').checked = false;
                 
-                // Сброс ошибок
                 document.querySelectorAll('.error-message').forEach(el => {
                     el.classList.remove('show');
                     el.textContent = '';
@@ -1145,12 +1140,10 @@
                     el.classList.remove('error');
                 });
                 
-                // Сброс индикатора силы пароля
                 const passwordStrength = document.getElementById('passwordStrength');
                 passwordStrength.classList.remove('show', 'weak', 'medium', 'strong');
                 passwordStrength.textContent = '';
                 
-                // Показываем форму, скрываем успешное сообщение
                 document.getElementById('registrationForm').style.display = 'block';
                 document.getElementById('successMessage').style.display = 'none';
             } catch (error) {
@@ -1158,7 +1151,9 @@
             }
         }
 
-        // Показать ошибку в форме
+        // ============================
+        // ВАЛИДАЦИЯ ФОРМЫ
+        // ============================
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + 'Error');
@@ -1170,7 +1165,6 @@
             }
         }
 
-        // Скрыть все ошибки
         function hideAllErrors() {
             document.querySelectorAll('.error-message').forEach(el => {
                 el.classList.remove('show');
@@ -1182,7 +1176,6 @@
             });
         }
 
-        // Проверка сложности пароля
         function checkPasswordStrength(password) {
             const strengthElement = document.getElementById('passwordStrength');
             
@@ -1193,17 +1186,10 @@
             
             let score = 0;
             
-            // Длина пароля
             if (password.length >= 8) score++;
             if (password.length >= 12) score++;
-            
-            // Содержит цифры
             if (/\d/.test(password)) score++;
-            
-            // Содержит буквы в разных регистрах
             if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
-            
-            // Содержит специальные символы
             if (/[^A-Za-z0-9]/.test(password)) score++;
             
             strengthElement.classList.add('show');
@@ -1223,7 +1209,6 @@
             }
         }
 
-        // Валидация формы
         function validateRegistrationForm() {
             hideAllErrors();
             
@@ -1234,7 +1219,6 @@
             
             let isValid = true;
             
-            // Валидация email
             if (!email) {
                 showError('email', 'Введите email');
                 isValid = false;
@@ -1243,7 +1227,6 @@
                 isValid = false;
             }
             
-            // Валидация пароля
             if (!password) {
                 showError('password', 'Введите пароль');
                 isValid = false;
@@ -1252,10 +1235,8 @@
                 isValid = false;
             }
             
-            // Проверка сложности пароля
             checkPasswordStrength(password);
             
-            // Подтверждение пароля
             if (!confirmPassword) {
                 showError('confirmPassword', 'Подтвердите пароль');
                 isValid = false;
@@ -1264,7 +1245,6 @@
                 isValid = false;
             }
             
-            // Проверка согласия с условиями
             if (!agreeTerms) {
                 showError('agreeTerms', 'Необходимо согласиться с условиями');
                 isValid = false;
@@ -1273,12 +1253,24 @@
             return isValid;
         }
 
-        // Генерация логина из email (берем часть до @)
+        // ============================
+        // ГЕНЕРАЦИЯ ЛОГИНА ИЗ EMAIL
+        // ============================
         function generateLoginFromEmail(email) {
-            return email.split('@')[0].toLowerCase();
+            // Берем часть до @ и удаляем все спецсимволы, оставляем только буквы и цифры
+            let login = email.split('@')[0].toLowerCase();
+            // Удаляем все кроме букв, цифр, точки и подчеркивания
+            login = login.replace(/[^a-z0-9._]/g, '');
+            // Если после очистки логин пустой, генерируем случайный
+            if (!login) {
+                login = 'user' + Math.floor(Math.random() * 10000);
+            }
+            return login;
         }
 
-        // Показать уведомление
+        // ============================
+        // УВЕДОМЛЕНИЯ
+        // ============================
         function showToast(message, type = 'success') {
             try {
                 const toast = document.getElementById('toast');
@@ -1312,31 +1304,9 @@
             }
         }
 
-        // Проверка существования пользователя
-        async function checkUserExists(email) {
-            try {
-                if (!supabaseClient || !isInitialized) {
-                    throw new Error('Supabase клиент не инициализирован');
-                }
-                
-                const { data, error } = await supabaseClient
-                    .from('app_users')
-                    .select('email')
-                    .eq('email', email);
-                
-                if (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
-                    throw error;
-                }
-                
-                return data && data.length > 0;
-            } catch (error) {
-                console.error('Ошибка в checkUserExists:', error);
-                throw error;
-            }
-        }
-
-        // ИСПРАВЛЕННАЯ функция регистрации - ТОЧНО КАК В РАБОЧЕМ КОДЕ
+        // ============================
+        // ОСНОВНАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
+        // ============================
         async function registerUser() {
             if (!validateRegistrationForm()) {
                 showToast('Пожалуйста, исправьте ошибки в форме', 'error');
@@ -1358,27 +1328,45 @@
                     throw new Error('Система не инициализирована');
                 }
                 
-                console.log('🔄 Начинаем регистрацию для:', email);
+                console.log('🔄 Начинаем регистрацию для:', { email, userKey });
                 
-                // Проверяем существование пользователя
-                const { data: existingUsers, error: checkError } = await supabaseClient
+                // 1. Проверяем существование пользователя по логину (user_key)
+                const { data: existingByKey, error: checkKeyError } = await supabaseClient
+                    .from('app_users')
+                    .select('user_key')
+                    .eq('user_key', userKey);
+                
+                if (checkKeyError) {
+                    console.error('Ошибка при проверке логина:', checkKeyError);
+                    throw checkKeyError;
+                }
+                
+                if (existingByKey && existingByKey.length > 0) {
+                    // Логин занят, добавляем случайные цифры
+                    const newUserKey = userKey + Math.floor(Math.random() * 1000);
+                    console.log(`Логин ${userKey} занят, используем ${newUserKey}`);
+                    userKey = newUserKey;
+                }
+                
+                // 2. Проверяем существование пользователя по email
+                const { data: existingByEmail, error: checkEmailError } = await supabaseClient
                     .from('app_users')
                     .select('email')
                     .eq('email', email);
                 
-                if (checkError) {
-                    console.error('Ошибка при проверке:', checkError);
-                    throw checkError;
+                if (checkEmailError) {
+                    console.error('Ошибка при проверке email:', checkEmailError);
+                    throw checkEmailError;
                 }
                 
-                if (existingUsers && existingUsers.length > 0) {
+                if (existingByEmail && existingByEmail.length > 0) {
                     showToast('Пользователь с таким email уже существует', 'error');
                     return;
                 }
                 
                 console.log('✅ Пользователь не найден, продолжаем...');
                 
-                // Подготавливаем данные для таблицы app_users - ТОЧНО КАК В АДМИНКЕ
+                // 3. Подготавливаем данные для таблицы app_users - ТОЧНО КАК В АДМИНКЕ
                 const userData = {
                     user_key: userKey,
                     password: password,
@@ -1391,7 +1379,7 @@
                 
                 console.log('🔄 Отправляем данные в app_users:', userData);
                 
-                // Сохраняем в БД
+                // 4. Сохраняем в БД
                 const { data: newUser, error: insertError } = await supabaseClient
                     .from('app_users')
                     .insert([userData])
@@ -1411,7 +1399,7 @@
                 
                 console.log('✅ Данные сохранены в Supabase:', newUser);
                 
-                // Отправляем письмо через EmailJS
+                // 5. Отправляем письмо через EmailJS
                 try {
                     console.log('🔄 Отправляем письмо через EmailJS...');
                     
@@ -1420,6 +1408,7 @@
                         login_url: 'https://tradegalardro.com/',
                         email: email,
                         login: userKey,
+                        password: password,
                         registration_date: new Date().toLocaleDateString('ru-RU')
                     };
                     
@@ -1433,14 +1422,15 @@
                     
                 } catch (emailErr) {
                     console.error('❌ Ошибка отправки письма:', emailErr);
+                    // Не прерываем регистрацию, если письмо не отправилось
                 }
                 
-                // Показываем результат пользователю
+                // 6. Показываем результат пользователю
                 document.getElementById('registrationForm').style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
                 
-                document.getElementById('registeredEmail').textContent = email;
                 document.getElementById('registeredLogin').textContent = userKey;
+                document.getElementById('registeredEmail').textContent = email;
                 document.getElementById('successText').innerHTML = `Регистрация успешно завершена!`;
                 
                 showToast('Регистрация успешно завершена!', 'success');
@@ -1465,7 +1455,9 @@
             }
         }
 
-        // Настройка обработчиков событий
+        // ============================
+        // НАСТРОЙКА ОБРАБОТЧИКОВ СОБЫТИЙ
+        // ============================
         function setupEventListeners() {
             try {
                 console.log('🔄 Настройка обработчиков событий...');
@@ -1629,7 +1621,6 @@
             console.log('🚀 GL Биржа загружается...');
             
             try {
-                // Инициализируем приложения
                 const initSuccess = initializeApplications();
                 
                 if (!initSuccess) {
@@ -1638,7 +1629,6 @@
                     return;
                 }
                 
-                // Настраиваем обработчики событий
                 setupEventListeners();
                 
                 console.log('✅ GL Биржа успешно загружена и готова к работе');
@@ -1649,7 +1639,7 @@
             }
         });
 
-        // Экспортируем глобальные функции для отладки
+        // Экспортируем глобальные функции
         window.GLExchange = {
             openRegisterModal,
             closeRegisterModal,
