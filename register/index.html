@@ -993,9 +993,6 @@
     </div>
 
     <script>
-        // ============================
-        // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-        // ============================
         let supabaseClient = null;
         let isInitialized = false;
 
@@ -1010,41 +1007,16 @@
             PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
         };
 
-        const USER_AGREEMENT_TEXT = `
-            <div class="policy-section">
-                <h3>Пользовательское соглашение</h3>
-                <p>Настоящее Соглашение определяет условия использования платформы GL Биржа.</p>
-                <p>Регистрируясь на платформе, вы соглашаетесь с условиями пользовательского соглашения.</p>
-            </div>
-        `;
+        const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Настоящее Соглашение определяет условия использования платформы GL Биржа.</p></div>';
+        const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Мы собираем и обрабатываем ваши персональные данные в соответствии с политикой конфиденциальности.</p></div>';
+        const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Торговля на финансовых рынках связана с высоким риском потери капитала.</p></div>';
 
-        const PRIVACY_POLICY_TEXT = `
-            <div class="policy-section">
-                <h3>Политика конфиденциальности</h3>
-                <p>Мы собираем и обрабатываем ваши персональные данные в соответствии с политикой конфиденциальности.</p>
-                <p>Ваши данные надежно защищены и не передаются третьим лицам.</p>
-            </div>
-        `;
-
-        const RISK_WARNING_TEXT = `
-            <div class="policy-section">
-                <h3>Предупреждение о рисках</h3>
-                <p>Торговля на финансовых рынках связана с высоким риском потери капитала.</p>
-                <p>Торгуйте только теми средствами, которые готовы потерять.</p>
-            </div>
-        `;
-
-        // ============================
-        // ИНИЦИАЛИЗАЦИЯ
-        // ============================
         function initializeApplications() {
             try {
                 supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
                 console.log('✅ Supabase клиент инициализирован');
-                
                 emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
                 console.log('✅ EmailJS инициализирован');
-                
                 isInitialized = true;
                 return true;
             } catch (error) {
@@ -1066,12 +1038,8 @@
 
         function openPolicyModal(content, title) {
             const modal = document.getElementById('policyModal');
-            const contentDiv = document.getElementById('policyContent');
-            const header = modal.querySelector('.modal-header h2');
-            
-            header.innerHTML = `<i class="fas fa-file-contract"></i> ${title}`;
-            contentDiv.innerHTML = content;
-            
+            document.getElementById('policyContent').innerHTML = content;
+            modal.querySelector('.modal-header h2').innerHTML = `<i class="fas fa-file-contract"></i> ${title}`;
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
@@ -1097,7 +1065,6 @@
             });
             
             document.getElementById('passwordStrength').classList.remove('show', 'weak', 'medium', 'strong');
-            
             document.getElementById('registrationForm').style.display = 'block';
             document.getElementById('successMessage').style.display = 'none';
         }
@@ -1105,7 +1072,6 @@
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + 'Error');
-            
             input.classList.add('error');
             errorElement.textContent = message;
             errorElement.classList.add('show');
@@ -1116,7 +1082,6 @@
                 el.classList.remove('show');
                 el.textContent = '';
             });
-            
             document.querySelectorAll('.form-control').forEach(el => {
                 el.classList.remove('error');
             });
@@ -1124,7 +1089,6 @@
 
         function checkPasswordStrength(password) {
             const strengthElement = document.getElementById('passwordStrength');
-            
             if (!password) {
                 strengthElement.classList.remove('show');
                 return;
@@ -1207,18 +1171,11 @@
             toastMessage.textContent = message;
             toast.className = `toast ${type}`;
             
-            const icons = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                warning: 'fa-exclamation-triangle'
-            };
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
             toastIcon.className = `fas ${icons[type] || 'fa-info-circle'}`;
             
             toast.style.display = 'flex';
-            
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 5000);
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
         }
 
         async function checkUserExists(email) {
@@ -1229,20 +1186,15 @@
                     .eq('email', email)
                     .limit(1);
                 
-                if (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
-                    return false;
-                }
-                
-                return data && data.length > 0;
+                return !error && data && data.length > 0;
             } catch (error) {
-                console.error('Ошибка в checkUserExists:', error);
+                console.error('Ошибка проверки:', error);
                 return false;
             }
         }
 
         // ============================
-        // ОСНОВНАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
         // ============================
         async function registerUser() {
             if (!validateRegistrationForm()) {
@@ -1268,7 +1220,6 @@
                 console.log('🔄 Регистрация для:', email);
                 
                 const userExists = await checkUserExists(email);
-                
                 if (userExists) {
                     showToast('Пользователь с таким email уже существует', 'error');
                     registerBtn.innerHTML = originalText;
@@ -1276,12 +1227,24 @@
                     return;
                 }
                 
-                // Отправляем ТОЛЬКО обязательные поля
+                // ОТПРАВЛЯЕМ ВСЕ ПОЛЯ ЯВНО
+                const now = new Date().toISOString();
                 const userData = {
                     user_key: userKey,
                     password: password,
-                    email: email
-                    // Все остальные поля имеют значения по умолчанию в БД
+                    email: email,
+                    balance: 0,
+                    level: 'Стандарт',
+                    withdraw_type: 'normal',
+                    created: now,
+                    updated_at: now,
+                    updated_by: 'admin',
+                    // Поля, которые могут быть проблемными - отправляем как null
+                    package_updated_at: null,
+                    stock_package: null,
+                    stock_package_type: null,
+                    is_admin: false,
+                    is_frozen: false
                 };
                 
                 console.log('🔄 Отправка данных:', userData);
@@ -1292,29 +1255,40 @@
                 
                 if (insertError) {
                     console.error('❌ Ошибка:', insertError);
-                    throw new Error(insertError.message);
+                    
+                    // Если ошибка о несуществующей колонке, пробуем без неё
+                    if (insertError.message && insertError.message.includes('stock_package')) {
+                        console.log('🔄 Пробуем без stock_package...');
+                        delete userData.stock_package;
+                        delete userData.stock_package_type;
+                        delete userData.package_updated_at;
+                        
+                        const { error: retryError } = await supabaseClient
+                            .from('app_users')
+                            .insert(userData);
+                        
+                        if (retryError) throw retryError;
+                    } else {
+                        throw insertError;
+                    }
                 }
                 
                 console.log('✅ Данные сохранены');
                 
                 // Отправка письма
                 let emailSent = false;
-                
                 try {
-                    const emailParams = {
-                        to_email: email,
-                        login_url: 'https://tradegalardro.com/',
-                        email: email,
-                        registration_date: new Date().toLocaleDateString('ru-RU'),
-                        login: userKey
-                    };
-                    
                     await emailjs.send(
                         EMAILJS_CONFIG.SERVICE_ID,
                         EMAILJS_CONFIG.TEMPLATE_ID,
-                        emailParams
+                        {
+                            to_email: email,
+                            login_url: 'https://tradegalardro.com/',
+                            email: email,
+                            registration_date: new Date().toLocaleDateString('ru-RU'),
+                            login: userKey
+                        }
                     );
-                    
                     emailSent = true;
                 } catch (emailErr) {
                     console.error('❌ Ошибка отправки письма:', emailErr);
@@ -1351,34 +1325,25 @@
             }
         }
 
-        // ============================
-        // НАСТРОЙКА ОБРАБОТЧИКОВ
-        // ============================
         function setupEventListeners() {
-            // Мобильное меню
             document.getElementById('mobileMenuToggle').addEventListener('click', () => {
                 const nav = document.querySelector('nav ul');
                 nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
             });
             
-            // Кнопки регистрации
             document.getElementById('desktopRegisterBtn').addEventListener('click', openRegisterModal);
             document.getElementById('mobileRegisterBtn').addEventListener('click', openRegisterModal);
             
-            // Закрытие модалок
             document.getElementById('closeModalBtn').addEventListener('click', closeRegisterModal);
             document.getElementById('cancelRegisterBtn').addEventListener('click', closeRegisterModal);
             document.getElementById('finishRegistrationBtn').addEventListener('click', closeRegisterModal);
             
-            // Кнопка регистрации
             document.getElementById('registerBtn').addEventListener('click', registerUser);
             
-            // Проверка пароля
             document.getElementById('password').addEventListener('input', function() {
                 checkPasswordStrength(this.value);
             });
             
-            // Закрытие по клику вне модалки
             document.getElementById('registerModal').addEventListener('click', function(e) {
                 if (e.target === this) closeRegisterModal();
             });
@@ -1387,7 +1352,6 @@
                 if (e.target === this) closePolicyModal();
             });
             
-            // Escape
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeRegisterModal();
@@ -1395,7 +1359,6 @@
                 }
             });
             
-            // Политики в футере
             document.getElementById('privacyPolicyLink').addEventListener('click', (e) => {
                 e.preventDefault();
                 openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
@@ -1411,7 +1374,6 @@
                 openPolicyModal(RISK_WARNING_TEXT, 'Предупреждение о рисках');
             });
             
-            // Политики в форме
             document.getElementById('showUserAgreementModal').addEventListener('click', (e) => {
                 e.preventDefault();
                 openPolicyModal(USER_AGREEMENT_TEXT, 'Пользовательское соглашение');
@@ -1429,28 +1391,21 @@
             
             document.getElementById('closePolicyModalBtn').addEventListener('click', closePolicyModal);
             
-            // Тосты
             document.getElementById('toast').addEventListener('click', function() {
                 this.style.display = 'none';
             });
         }
 
-        // ============================
-        // ЗАПУСК
-        // ============================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Загрузка...');
-            
             if (!initializeApplications()) {
                 showToast('Ошибка инициализации', 'error');
                 return;
             }
-            
             setupEventListeners();
             console.log('✅ Готово');
         });
 
-        // Для отладки
         window.GLExchange = {
             openRegisterModal,
             closeRegisterModal,
