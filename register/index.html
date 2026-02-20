@@ -42,7 +42,6 @@
             flex-direction: column;
         }
 
-        /* Header */
         header {
             background-color: var(--primary);
             padding: 1rem 2rem;
@@ -161,7 +160,6 @@
             cursor: pointer;
         }
 
-        /* Registration Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -309,7 +307,6 @@
             padding: 0.9rem;
         }
 
-        /* Checkbox для соглашения */
         .agreement-checkbox {
             margin: 1.5rem 0;
             padding: 1rem;
@@ -348,7 +345,6 @@
             border-bottom-style: solid;
         }
 
-        /* Success Message */
         .success-message {
             display: none;
             text-align: center;
@@ -393,9 +389,9 @@
 
         .login-details p {
             margin-bottom: 0.3rem;
+            word-break: break-all;
         }
 
-        /* Status Toast */
         .toast {
             position: fixed;
             top: 20px;
@@ -452,7 +448,6 @@
             color: var(--warning);
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
@@ -487,7 +482,6 @@
             margin-right: auto;
         }
 
-        /* Mobile Auth Buttons */
         .mobile-auth-buttons {
             display: none;
             justify-content: center;
@@ -549,7 +543,6 @@
             font-size: 0.9rem;
         }
 
-        /* Footer */
         footer {
             background-color: var(--secondary);
             padding: 3rem 2rem 2rem;
@@ -641,7 +634,6 @@
             text-decoration: underline;
         }
 
-        /* Модальное окно политики */
         .policy-modal-content {
             background: var(--card-bg);
             border-radius: 12px;
@@ -687,7 +679,6 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             header {
                 padding: 1rem;
@@ -790,7 +781,6 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div class="logo">
             <div class="logo-icon">GL</div>
@@ -816,13 +806,11 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="welcome-section">
             <h2>Инвестируйте в будущее с GL Биржей</h2>
             <p>Передовая фондовая платформа для торговли акциями, ETF и облигациями. Начните инвестировать сегодня с минимальным депозитом.</p>
             
-            <!-- Кнопки авторизации для мобильных устройств -->
             <div class="mobile-auth-buttons">
                 <a href="https://tradegalardro.com/" target="_blank" class="btn btn-outline">
                     <i class="fas fa-sign-in-alt"></i> Войти
@@ -865,7 +853,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
     <footer id="support">
         <div class="footer-content">
             <div class="footer-column">
@@ -916,7 +903,6 @@
         </div>
     </footer>
 
-    <!-- Registration Modal -->
     <div class="modal-overlay" id="registerModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -944,7 +930,6 @@
                     <div class="error-message" id="confirmPasswordError"></div>
                 </div>
                 
-                <!-- Чекбокс соглашения -->
                 <div class="agreement-checkbox">
                     <div class="checkbox-group">
                         <input type="checkbox" id="agreeTerms" required>
@@ -990,20 +975,16 @@
         </div>
     </div>
 
-    <!-- Modal для политики соглашения -->
     <div class="modal-overlay" id="policyModal">
         <div class="policy-modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-file-contract"></i> Пользовательское соглашение</h2>
                 <button class="close-modal" id="closePolicyModalBtn">&times;</button>
             </div>
-            <div class="policy-content" id="policyContent">
-                <!-- Контент политики будет загружен динамически -->
-            </div>
+            <div class="policy-content" id="policyContent"></div>
         </div>
     </div>
 
-    <!-- Toast Notifications -->
     <div class="toast" id="toast">
         <div class="toast-icon">
             <i class="fas fa-info-circle"></i>
@@ -1018,179 +999,118 @@
         let supabaseClient = null;
         let isInitialized = false;
 
-        // Конфигурация
         const SUPABASE_CONFIG = {
             URL: 'https://wkukgnkfbxgpvlraczeu.supabase.co',
             KEY: 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i'
         };
 
-        // EmailJS конфигурация
         const EMAILJS_CONFIG = {
             SERVICE_ID: 'service_9eygn9l',
             TEMPLATE_ID: 'template_vjlrrud',
             PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
         };
 
-        // Текст пользовательского соглашения (сокращен для экономии места, но в реальном коде должен быть полный)
         const USER_AGREEMENT_TEXT = `
-<div class="policy-section">
-    <h3>Пользовательское соглашение</h3>
-    <p>1. Общие положения</p>
-    <p>Настоящее Соглашение определяет условия использования платформы GL Биржа.</p>
-    <p>2. Термины и определения</p>
-    <p>Полная версия пользовательского соглашения доступна по ссылке.</p>
-</div>
-`;
+            <div class="policy-section">
+                <h3>Пользовательское соглашение</h3>
+                <p>Настоящее Соглашение определяет условия использования платформы GL Биржа.</p>
+                <p>Регистрируясь на платформе, вы соглашаетесь с условиями пользовательского соглашения.</p>
+            </div>
+        `;
 
         const PRIVACY_POLICY_TEXT = `
-<div class="policy-section">
-    <h3>Политика конфиденциальности</h3>
-    <p>Настоящая Политика конфиденциальности описывает, как GL Биржа (Galardro Exchange) собирает, использует и защищает вашу личную информацию.</p>
-    <p>Мы обязуемся защищать вашу конфиденциальность и обеспечивать безопасность ваших персональных данных.</p>
-    <p>При регистрации на нашей платформе мы собираем следующую информацию:</p>
-    <ul>
-        <li>Адрес электронной почты</li>
-        <li>Дату и время регистрации</li>
-        <li>IP-адрес</li>
-    </ul>
-</div>
-`;
+            <div class="policy-section">
+                <h3>Политика конфиденциальности</h3>
+                <p>Мы собираем и обрабатываем ваши персональные данные в соответствии с политикой конфиденциальности.</p>
+                <p>Ваши данные надежно защищены и не передаются третьим лицам.</p>
+            </div>
+        `;
 
         const RISK_WARNING_TEXT = `
-<div class="policy-section">
-    <h3>Предупреждение о рисках</h3>
-    <p>Торговля на финансовых рынках связана с существенными рисками, включая возможную потерю всего инвестированного капитала.</p>
-    <p>Перед началом торговли убедитесь, что вы полностью понимаете все связанные с этим риски.</p>
-    <p>Основные риски включают:</p>
-    <ul>
-        <li>Рыночный риск - возможность убытков из-за изменения рыночных цен</li>
-        <li>Кредитный риск - риск неисполнения обязательств контрагентом</li>
-        <li>Операционный риск - риск технических сбоев и ошибок</li>
-        <li>Валютный риск - риск изменения курсов валют</li>
-    </ul>
-</div>
-`;
+            <div class="policy-section">
+                <h3>Предупреждение о рисках</h3>
+                <p>Торговля на финансовых рынках связана с высоким риском потери капитала.</p>
+                <p>Торгуйте только теми средствами, которые готовы потерять.</p>
+            </div>
+        `;
 
         // ============================
-        // ГЛОБАЛЬНЫЕ ФУНКЦИИ
+        // ИНИЦИАЛИЗАЦИЯ
         // ============================
-
-        // Инициализация приложений
         function initializeApplications() {
             try {
-                // Инициализация Supabase
                 supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
-                console.log('✅ Supabase клиент инициализирован:', SUPABASE_CONFIG.URL);
+                console.log('✅ Supabase клиент инициализирован');
                 
-                // Инициализация EmailJS
                 emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
                 console.log('✅ EmailJS инициализирован');
                 
                 isInitialized = true;
                 return true;
             } catch (error) {
-                console.error('❌ Ошибка инициализации приложений:', error);
-                showToast('Ошибка инициализации системы', 'error');
+                console.error('❌ Ошибка инициализации:', error);
                 return false;
             }
         }
 
-        // Открытие модального окна регистрации
         function openRegisterModal() {
-            try {
-                const registerModal = document.getElementById('registerModal');
-                registerModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                resetRegistrationForm();
-            } catch (error) {
-                console.error('Ошибка при открытии модального окна:', error);
-                showToast('Не удалось открыть форму регистрации', 'error');
-            }
+            document.getElementById('registerModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            resetRegistrationForm();
         }
 
-        // Закрытие модального окна регистрации
         function closeRegisterModal() {
-            try {
-                const registerModal = document.getElementById('registerModal');
-                registerModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            } catch (error) {
-                console.error('Ошибка при закрытии модального окна:', error);
-            }
+            document.getElementById('registerModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
-        // Открытие модального окна политики
-        function openPolicyModal(content, title = 'Пользовательское соглашение') {
-            try {
-                const policyModal = document.getElementById('policyModal');
-                const policyContent = document.getElementById('policyContent');
-                const modalHeader = policyModal.querySelector('.modal-header h2');
-                
-                modalHeader.innerHTML = `<i class="fas fa-file-contract"></i> ${title}`;
-                policyContent.innerHTML = content;
-                
-                policyModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            } catch (error) {
-                console.error('Ошибка при открытии модального окна политики:', error);
-            }
+        function openPolicyModal(content, title) {
+            const modal = document.getElementById('policyModal');
+            const contentDiv = document.getElementById('policyContent');
+            const header = modal.querySelector('.modal-header h2');
+            
+            header.innerHTML = `<i class="fas fa-file-contract"></i> ${title}`;
+            contentDiv.innerHTML = content;
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
-        // Закрытие модального окна политики
         function closePolicyModal() {
-            try {
-                const policyModal = document.getElementById('policyModal');
-                policyModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            } catch (error) {
-                console.error('Ошибка при закрытии модального окна политики:', error);
-            }
+            document.getElementById('policyModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
-        // Сброс формы регистрации
         function resetRegistrationForm() {
-            try {
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
-                document.getElementById('confirmPassword').value = '';
-                document.getElementById('agreeTerms').checked = false;
-                
-                // Сброс ошибок
-                document.querySelectorAll('.error-message').forEach(el => {
-                    el.classList.remove('show');
-                    el.textContent = '';
-                });
-                
-                document.querySelectorAll('.form-control').forEach(el => {
-                    el.classList.remove('error');
-                });
-                
-                // Сброс индикатора силы пароля
-                const passwordStrength = document.getElementById('passwordStrength');
-                passwordStrength.classList.remove('show', 'weak', 'medium', 'strong');
-                passwordStrength.textContent = '';
-                
-                // Показываем форму, скрываем успешное сообщение
-                document.getElementById('registrationForm').style.display = 'block';
-                document.getElementById('successMessage').style.display = 'none';
-            } catch (error) {
-                console.error('Ошибка при сбросе формы:', error);
-            }
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('agreeTerms').checked = false;
+            
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+            
+            document.querySelectorAll('.form-control').forEach(el => {
+                el.classList.remove('error');
+            });
+            
+            document.getElementById('passwordStrength').classList.remove('show', 'weak', 'medium', 'strong');
+            
+            document.getElementById('registrationForm').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
         }
 
-        // Показать ошибку в форме
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + 'Error');
             
-            if (input && errorElement) {
-                input.classList.add('error');
-                errorElement.textContent = message;
-                errorElement.classList.add('show');
-            }
+            input.classList.add('error');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
         }
 
-        // Скрыть все ошибки
         function hideAllErrors() {
             document.querySelectorAll('.error-message').forEach(el => {
                 el.classList.remove('show');
@@ -1202,28 +1122,19 @@
             });
         }
 
-        // Проверка сложности пароля
         function checkPasswordStrength(password) {
             const strengthElement = document.getElementById('passwordStrength');
             
             if (!password) {
-                strengthElement.classList.remove('show', 'weak', 'medium', 'strong');
-                return 0;
+                strengthElement.classList.remove('show');
+                return;
             }
             
             let score = 0;
-            
-            // Длина пароля
             if (password.length >= 8) score++;
             if (password.length >= 12) score++;
-            
-            // Содержит цифры
             if (/\d/.test(password)) score++;
-            
-            // Содержит буквы в разных регистрах
             if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
-            
-            // Содержит специальные символы
             if (/[^A-Za-z0-9]/.test(password)) score++;
             
             strengthElement.classList.add('show');
@@ -1231,19 +1142,15 @@
             if (score <= 2) {
                 strengthElement.textContent = 'Слабый пароль';
                 strengthElement.className = 'password-strength show weak';
-                return 1;
             } else if (score <= 4) {
                 strengthElement.textContent = 'Средний пароль';
                 strengthElement.className = 'password-strength show medium';
-                return 2;
             } else {
                 strengthElement.textContent = 'Сильный пароль';
                 strengthElement.className = 'password-strength show strong';
-                return 3;
             }
         }
 
-        // Валидация формы
         function validateRegistrationForm() {
             hideAllErrors();
             
@@ -1254,7 +1161,6 @@
             
             let isValid = true;
             
-            // Валидация email
             if (!email) {
                 showError('email', 'Введите email');
                 isValid = false;
@@ -1263,7 +1169,6 @@
                 isValid = false;
             }
             
-            // Валидация пароля
             if (!password) {
                 showError('password', 'Введите пароль');
                 isValid = false;
@@ -1272,10 +1177,8 @@
                 isValid = false;
             }
             
-            // Проверка сложности пароля
             checkPasswordStrength(password);
             
-            // Подтверждение пароля
             if (!confirmPassword) {
                 showError('confirmPassword', 'Подтвердите пароль');
                 isValid = false;
@@ -1284,7 +1187,6 @@
                 isValid = false;
             }
             
-            // Проверка согласия с условиями
             if (!agreeTerms) {
                 showError('agreeTerms', 'Необходимо согласиться с условиями');
                 isValid = false;
@@ -1293,54 +1195,34 @@
             return isValid;
         }
 
-        // Генерация логина из email
         function generateLoginFromEmail(email) {
             return email.toLowerCase().trim();
         }
 
-        // Показать уведомление
         function showToast(message, type = 'success') {
-            try {
-                const toast = document.getElementById('toast');
-                const toastMessage = document.getElementById('toastMessage');
-                const toastIcon = toast.querySelector('.toast-icon i');
-                
-                if (!toast || !toastMessage) return;
-                
-                toastMessage.textContent = message;
-                toast.className = `toast ${type}`;
-                
-                // Устанавливаем иконку в зависимости от типа
-                if (toastIcon) {
-                    if (type === 'success') {
-                        toastIcon.className = 'fas fa-check-circle';
-                    } else if (type === 'error') {
-                        toastIcon.className = 'fas fa-exclamation-circle';
-                    } else if (type === 'warning') {
-                        toastIcon.className = 'fas fa-exclamation-triangle';
-                    } else {
-                        toastIcon.className = 'fas fa-info-circle';
-                    }
-                }
-                
-                toast.style.display = 'flex';
-                
-                // Автоматическое скрытие
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 5000);
-            } catch (error) {
-                console.error('Ошибка при показе уведомления:', error);
-            }
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = toast.querySelector('.toast-icon i');
+            
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+            toastIcon.className = `fas ${icons[type] || 'fa-info-circle'}`;
+            
+            toast.style.display = 'flex';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
         }
 
-        // Проверка существования пользователя
         async function checkUserExists(email) {
             try {
-                if (!supabaseClient || !isInitialized) {
-                    throw new Error('Supabase клиент не инициализирован');
-                }
-                
                 const { data, error } = await supabaseClient
                     .from('app_users')
                     .select('email')
@@ -1349,234 +1231,231 @@
                 
                 if (error) {
                     console.error('Ошибка при проверке пользователя:', error);
-                    throw error;
+                    return false;
                 }
                 
                 return data && data.length > 0;
             } catch (error) {
                 console.error('Ошибка в checkUserExists:', error);
-                throw error;
+                return false;
             }
         }
 
-       // ============================
-// ФИНАЛЬНАЯ ВЕРСИЯ РЕГИСТРАЦИИ
-// ============================
-async function registerUser() {
-    if (!validateRegistrationForm()) {
-        showToast('Пожалуйста, исправьте ошибки в форме', 'error');
-        return;
-    }
-    
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const userKey = generateLoginFromEmail(email);
-    
-    const registerBtn = document.getElementById('registerBtn');
-    const originalText = registerBtn.innerHTML;
-    
-    // Блокируем кнопку
-    registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
-    registerBtn.disabled = true;
-    
-    try {
-        // Проверяем инициализацию
-        if (!supabaseClient || !isInitialized) {
-            throw new Error('Система не инициализирована. Пожалуйста, обновите страницу.');
-        }
-        
-        console.log('🔄 Начинаем регистрацию для:', email);
-        
-        // 1. Проверяем существование пользователя
-        console.log('🔄 Проверяем существующего пользователя...');
-        const userExists = await checkUserExists(email);
-        
-        if (userExists) {
-            showToast('Пользователь с таким email уже существует', 'error');
-            registerBtn.innerHTML = originalText;
-            registerBtn.disabled = false;
-            return;
-        }
-        
-        console.log('✅ Пользователь не найден, продолжаем...');
-        
-        // 2. Отправляем ТОЛЬКО необходимые поля
-        // Все остальные поля имеют значения по умолчанию в базе
-        const userData = {
-            user_key: userKey,
-            password: password,
-            email: email
-            // id - сгенерируется автоматически
-            // balance - по умолчанию 0
-            // level - по умолчанию 'Стандарт'
-            // withdraw_type - по умолчанию 'normal'
-            // created - по умолчанию now()
-            // updated_at - по умолчанию now()
-            // updated_by - по умолчанию 'admin'
-        };
-        
-        console.log('🔄 Отправляем данные в Supabase:', userData);
-        
-        // 3. Сохраняем в БД
-        const { error: insertError } = await supabaseClient
-            .from('app_users')
-            .insert(userData);
-        
-        if (insertError) {
-            console.error('❌ Ошибка Supabase при сохранении:', insertError);
-            console.error('Детали ошибки:', JSON.stringify(insertError));
-            
-            // Если ошибка о обязательном поле, показываем её
-            if (insertError.message) {
-                throw new Error(`Ошибка: ${insertError.message}`);
-            } else {
-                throw new Error('Ошибка при сохранении данных');
+        // ============================
+        // ОСНОВНАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
+        // ============================
+        async function registerUser() {
+            if (!validateRegistrationForm()) {
+                showToast('Пожалуйста, исправьте ошибки в форме', 'error');
+                return;
             }
-        }
-        
-        console.log('✅ Данные сохранены в Supabase');
-        
-        // 4. Отправляем письмо через EmailJS
-        let emailSent = false;
-        
-        try {
-            console.log('🔄 Отправляем письмо через EmailJS...');
             
-            const emailParams = {
-                to_email: email,
-                login_url: 'https://tradegalardro.com/',
-                email: email,
-                registration_date: new Date().toLocaleDateString('ru-RU'),
-                login: userKey // Добавляем логин для информации
-            };
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const userKey = generateLoginFromEmail(email);
             
-            const emailResult = await emailjs.send(
-                EMAILJS_CONFIG.SERVICE_ID,
-                EMAILJS_CONFIG.TEMPLATE_ID,
-                emailParams
-            );
+            const registerBtn = document.getElementById('registerBtn');
+            const originalText = registerBtn.innerHTML;
             
-            console.log('✅ Письмо отправлено успешно:', emailResult);
-            emailSent = true;
-            
-        } catch (emailErr) {
-            console.error('❌ Ошибка отправки письма:', emailErr);
-        }
-        
-        // 5. Показываем результат
-        document.getElementById('registrationForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-        document.getElementById('registeredEmail').textContent = email;
-        
-        if (emailSent) {
-            document.getElementById('successText').innerHTML = `Регистрация успешно завершена!<br>Письмо отправлено на ${email}`;
-            document.getElementById('emailInstruction').style.display = 'block';
-            document.getElementById('loginDetails').style.display = 'none';
-            showToast('Регистрация завершена! Проверьте почту.', 'success');
-        } else {
-            document.getElementById('successText').innerHTML = `Регистрация успешно завершена!`;
-            document.getElementById('loginDetails').style.display = 'block';
-            document.getElementById('loginDetails').innerHTML = `
-                <h4>Ваши данные для входа:</h4>
-                <p><strong>Email/Логин:</strong> ${email}</p>
-                <p><strong>Пароль:</strong> указанный при регистрации</p>
-                <p><strong>user_key:</strong> ${userKey}</p>
-            `;
-            showToast('Регистрация успешна! Сохраните данные.', 'warning');
-        }
-        
-    } catch (error) {
-        console.error('❌ Ошибка регистрации:', error);
-        showToast(error.message || 'Ошибка при регистрации', 'error');
-    } finally {
-        registerBtn.innerHTML = originalText;
-        registerBtn.disabled = false;
-    }
-}
-
-// Обновляем функцию проверки существования пользователя
-async function checkUserExists(email) {
-    try {
-        if (!supabaseClient || !isInitialized) {
-            throw new Error('Supabase клиент не инициализирован');
-        }
-        
-        const { data, error } = await supabaseClient
-            .from('app_users')
-            .select('email')
-            .eq('email', email)
-            .limit(1);
-        
-        if (error) {
-            console.error('Ошибка при проверке пользователя:', error);
-            return false; // Если ошибка, считаем что пользователя нет
-        }
-        
-        return data && data.length > 0;
-    } catch (error) {
-        console.error('Ошибка в checkUserExists:', error);
-        return false;
-    }
-}
-
-        // ============================
-        // ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
-        // ============================
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 GL Биржа загружается...');
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Регистрация...';
+            registerBtn.disabled = true;
             
             try {
-                // Инициализируем приложения
-                const initSuccess = initializeApplications();
+                if (!supabaseClient || !isInitialized) {
+                    throw new Error('Система не инициализирована');
+                }
                 
-                if (!initSuccess) {
-                    console.error('❌ Не удалось инициализировать приложения');
-                    showToast('Ошибка инициализации. Пожалуйста, обновите страницу.', 'error');
+                console.log('🔄 Регистрация для:', email);
+                
+                const userExists = await checkUserExists(email);
+                
+                if (userExists) {
+                    showToast('Пользователь с таким email уже существует', 'error');
+                    registerBtn.innerHTML = originalText;
+                    registerBtn.disabled = false;
                     return;
                 }
                 
-                // Настраиваем обработчики событий
-                setupEventListeners();
+                // Отправляем ТОЛЬКО обязательные поля
+                const userData = {
+                    user_key: userKey,
+                    password: password,
+                    email: email
+                    // Все остальные поля имеют значения по умолчанию в БД
+                };
                 
-                // Показываем информацию о загрузке
-                console.log('✅ GL Биржа успешно загружена и готова к работе');
-                console.log('📧 EmailJS настроен с Template ID:', EMAILJS_CONFIG.TEMPLATE_ID);
-                console.log('🗄️ Supabase подключен к URL:', SUPABASE_CONFIG.URL);
+                console.log('🔄 Отправка данных:', userData);
                 
-                // Проверяем доступность Supabase
-                setTimeout(async () => {
-                    if (supabaseClient) {
-                        try {
-                            const { data, error } = await supabaseClient
-                                .from('app_users')
-                                .select('count', { count: 'exact', head: true });
-                            
-                            if (error) {
-                                console.warn('⚠️ Supabase: проблемы с подключением:', error.message);
-                            } else {
-                                console.log('✅ Supabase: подключение установлено успешно');
-                            }
-                        } catch (testError) {
-                            console.warn('⚠️ Supabase: тестовый запрос не удался:', testError.message);
-                        }
-                    }
-                }, 1000);
+                const { error: insertError } = await supabaseClient
+                    .from('app_users')
+                    .insert(userData);
+                
+                if (insertError) {
+                    console.error('❌ Ошибка:', insertError);
+                    throw new Error(insertError.message);
+                }
+                
+                console.log('✅ Данные сохранены');
+                
+                // Отправка письма
+                let emailSent = false;
+                
+                try {
+                    const emailParams = {
+                        to_email: email,
+                        login_url: 'https://tradegalardro.com/',
+                        email: email,
+                        registration_date: new Date().toLocaleDateString('ru-RU'),
+                        login: userKey
+                    };
+                    
+                    await emailjs.send(
+                        EMAILJS_CONFIG.SERVICE_ID,
+                        EMAILJS_CONFIG.TEMPLATE_ID,
+                        emailParams
+                    );
+                    
+                    emailSent = true;
+                } catch (emailErr) {
+                    console.error('❌ Ошибка отправки письма:', emailErr);
+                }
+                
+                // Показываем результат
+                document.getElementById('registrationForm').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('registeredEmail').textContent = email;
+                
+                if (emailSent) {
+                    document.getElementById('successText').innerHTML = `Регистрация успешно завершена!<br>Письмо отправлено на ${email}`;
+                    document.getElementById('emailInstruction').style.display = 'block';
+                    document.getElementById('loginDetails').style.display = 'none';
+                    showToast('Регистрация завершена! Проверьте почту.', 'success');
+                } else {
+                    document.getElementById('successText').innerHTML = `Регистрация успешно завершена!`;
+                    document.getElementById('loginDetails').style.display = 'block';
+                    document.getElementById('loginDetails').innerHTML = `
+                        <h4>Ваши данные для входа:</h4>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Логин (user_key):</strong> ${userKey}</p>
+                        <p><strong>Пароль:</strong> указанный при регистрации</p>
+                    `;
+                    showToast('Регистрация успешна! Сохраните данные.', 'warning');
+                }
                 
             } catch (error) {
-                console.error('❌ Критическая ошибка при загрузке:', error);
-                showToast('Ошибка загрузки приложения. Пожалуйста, обновите страницу.', 'error');
+                console.error('❌ Ошибка:', error);
+                showToast(error.message || 'Ошибка при регистрации', 'error');
+            } finally {
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
             }
+        }
+
+        // ============================
+        // НАСТРОЙКА ОБРАБОТЧИКОВ
+        // ============================
+        function setupEventListeners() {
+            // Мобильное меню
+            document.getElementById('mobileMenuToggle').addEventListener('click', () => {
+                const nav = document.querySelector('nav ul');
+                nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+            });
+            
+            // Кнопки регистрации
+            document.getElementById('desktopRegisterBtn').addEventListener('click', openRegisterModal);
+            document.getElementById('mobileRegisterBtn').addEventListener('click', openRegisterModal);
+            
+            // Закрытие модалок
+            document.getElementById('closeModalBtn').addEventListener('click', closeRegisterModal);
+            document.getElementById('cancelRegisterBtn').addEventListener('click', closeRegisterModal);
+            document.getElementById('finishRegistrationBtn').addEventListener('click', closeRegisterModal);
+            
+            // Кнопка регистрации
+            document.getElementById('registerBtn').addEventListener('click', registerUser);
+            
+            // Проверка пароля
+            document.getElementById('password').addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+            });
+            
+            // Закрытие по клику вне модалки
+            document.getElementById('registerModal').addEventListener('click', function(e) {
+                if (e.target === this) closeRegisterModal();
+            });
+            
+            document.getElementById('policyModal').addEventListener('click', function(e) {
+                if (e.target === this) closePolicyModal();
+            });
+            
+            // Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeRegisterModal();
+                    closePolicyModal();
+                }
+            });
+            
+            // Политики в футере
+            document.getElementById('privacyPolicyLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
+            });
+            
+            document.getElementById('userAgreementLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(USER_AGREEMENT_TEXT, 'Пользовательское соглашение');
+            });
+            
+            document.getElementById('riskWarningLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(RISK_WARNING_TEXT, 'Предупреждение о рисках');
+            });
+            
+            // Политики в форме
+            document.getElementById('showUserAgreementModal').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(USER_AGREEMENT_TEXT, 'Пользовательское соглашение');
+            });
+            
+            document.getElementById('showPrivacyPolicyModal').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
+            });
+            
+            document.getElementById('showRiskWarningModal').addEventListener('click', (e) => {
+                e.preventDefault();
+                openPolicyModal(RISK_WARNING_TEXT, 'Предупреждение о рисках');
+            });
+            
+            document.getElementById('closePolicyModalBtn').addEventListener('click', closePolicyModal);
+            
+            // Тосты
+            document.getElementById('toast').addEventListener('click', function() {
+                this.style.display = 'none';
+            });
+        }
+
+        // ============================
+        // ЗАПУСК
+        // ============================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Загрузка...');
+            
+            if (!initializeApplications()) {
+                showToast('Ошибка инициализации', 'error');
+                return;
+            }
+            
+            setupEventListeners();
+            console.log('✅ Готово');
         });
 
-        // Экспортируем глобальные функции для отладки
+        // Для отладки
         window.GLExchange = {
             openRegisterModal,
             closeRegisterModal,
             registerUser,
-            showToast,
-            checkUserExists,
-            getSupabaseClient: () => supabaseClient,
-            isInitialized: () => isInitialized
+            showToast
         };
     </script>
 </body>
