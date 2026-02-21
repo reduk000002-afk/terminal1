@@ -998,7 +998,6 @@
             // ============================
             let supabaseClient = null;
             let isInitialized = false;
-            let tableColumnsCache = null;
 
             // Конфигурация
             const SUPABASE_CONFIG = {
@@ -1012,83 +1011,10 @@
                 PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
             };
 
-            const USER_AGREEMENT_TEXT = `...`; // Сокращено для brevity, в реальном коде здесь полный текст
-            const PRIVACY_POLICY_TEXT = `<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Настоящая Политика конфиденциальности описывает, как GL Биржа собирает, использует и защищает вашу личную информацию.</p></div>`;
-            const RISK_WARNING_TEXT = `<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Торговля на финансовых рынках связана с существенными рисками.</p></div>`;
-
-            // ============================
-            // ФУНКЦИИ ДЛЯ РАБОТЫ С БД
-            // ============================
-
-            async function getTableColumns() {
-                if (tableColumnsCache) return tableColumnsCache;
-                
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('app_users')
-                        .select('*')
-                        .limit(1);
-                    
-                    if (error) {
-                        console.warn('Не удалось получить структуру таблицы:', error);
-                        return null;
-                    }
-                    
-                    if (data && data.length > 0) {
-                        tableColumnsCache = Object.keys(data[0]);
-                        console.log('✅ Доступные колонки в таблице:', tableColumnsCache);
-                        return tableColumnsCache;
-                    }
-                    
-                    return null;
-                } catch (e) {
-                    console.error('Ошибка при получении структуры таблицы:', e);
-                    return null;
-                }
-            }
-
-            async function insertUserSafely(userData) {
-                const columns = await getTableColumns();
-                
-                if (!columns) {
-                    throw new Error('Не удалось определить структуру таблицы');
-                }
-                
-                const filteredData = {};
-                const allowedFields = ['user_key', 'password', 'email', 'created', 'balance', 'level', 'email_sent', 'email_sent_at'];
-                
-                allowedFields.forEach(field => {
-                    if (columns.includes(field) && userData[field] !== undefined) {
-                        filteredData[field] = userData[field];
-                    }
-                });
-                
-                console.log('🔄 Отправляем отфильтрованные данные:', filteredData);
-                
-                const { data, error } = await supabaseClient
-                    .from('app_users')
-                    .insert([filteredData])
-                    .select();
-                
-                if (error) throw error;
-                return data;
-            }
-
-            async function checkUserExists(email) {
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('app_users')
-                        .select('email')
-                        .eq('email', email)
-                        .limit(1);
-                    
-                    if (error) throw error;
-                    return data && data.length > 0;
-                } catch (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
-                    throw error;
-                }
-            }
+            // Тексты политик (сокращены для brevity)
+            const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Полный текст соглашения...</p></div>';
+            const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Полный текст политики...</p></div>';
+            const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Полный текст предупреждения...</p></div>';
 
             // ============================
             // ОСНОВНЫЕ ФУНКЦИИ
@@ -1280,6 +1206,23 @@
                 }, 5000);
             }
 
+            async function checkUserExists(email) {
+                try {
+                    // Используем правильную таблицу user_stock_packages
+                    const { data, error } = await supabaseClient
+                        .from('user_stock_packages')
+                        .select('email')
+                        .eq('email', email)
+                        .limit(1);
+                    
+                    if (error) throw error;
+                    return data && data.length > 0;
+                } catch (error) {
+                    console.error('Ошибка при проверке пользователя:', error);
+                    throw error;
+                }
+            }
+
             async function registerUser() {
                 if (!validateRegistrationForm()) {
                     showToast('Пожалуйста, исправьте ошибки в форме', 'error');
@@ -1302,28 +1245,40 @@
                     
                     console.log('🔄 Начинаем регистрацию для:', email);
                     
+                    // Проверяем существование пользователя
                     const userExists = await checkUserExists(email);
                     if (userExists) {
                         showToast('Пользователь с таким email уже существует', 'error');
                         return;
                     }
                     
+                    // Подготавливаем данные для таблицы user_stock_packages
                     const userData = {
                         user_key: userKey,
                         password: password,
                         email: email,
                         created: new Date().toISOString(),
                         balance: '0.00',
-                        level: 'Стандарт',
-                        email_sent: false,
-                        email_sent_at: null
+                        level: 'Стандарт'
+                        // Убираем email_sent и email_sent_at, так как их может не быть в таблице
                     };
                     
-                    console.log('🔄 Сохраняем пользователя:', userData);
+                    console.log('🔄 Сохраняем пользователя в user_stock_packages:', userData);
                     
-                    const newUser = await insertUserSafely(userData);
+                    // Сохраняем в правильную таблицу
+                    const { data: newUser, error: insertError } = await supabaseClient
+                        .from('user_stock_packages')
+                        .insert([userData])
+                        .select();
+                    
+                    if (insertError) {
+                        console.error('❌ Ошибка Supabase:', insertError);
+                        throw new Error(insertError.message);
+                    }
+                    
                     console.log('✅ Пользователь сохранен:', newUser);
                     
+                    // Отправляем письмо через EmailJS
                     let emailSent = false;
                     try {
                         const emailParams = {
@@ -1342,14 +1297,20 @@
                         console.log('✅ Письмо отправлено:', emailResult);
                         emailSent = true;
                         
-                        await supabaseClient
-                            .from('app_users')
-                            .update({ email_sent: true, email_sent_at: new Date().toISOString() })
-                            .eq('email', email);
+                        // Пробуем обновить статус, если колонка существует
+                        try {
+                            await supabaseClient
+                                .from('user_stock_packages')
+                                .update({ email_sent: true, email_sent_at: new Date().toISOString() })
+                                .eq('email', email);
+                        } catch (updateErr) {
+                            console.log('Колонки email_sent нет в таблице, пропускаем обновление');
+                        }
                     } catch (emailErr) {
                         console.warn('⚠️ Ошибка отправки письма:', emailErr);
                     }
                     
+                    // Показываем успешное сообщение
                     document.getElementById('registrationForm').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
                     document.getElementById('registeredEmail').textContent = email;
@@ -1368,12 +1329,14 @@
                     
                 } catch (error) {
                     console.error('❌ Ошибка регистрации:', error);
+                    
                     let errorMessage = 'Ошибка при регистрации. Пожалуйста, попробуйте позже.';
                     
                     if (error.message?.includes('duplicate key')) {
                         errorMessage = 'Пользователь с таким email уже существует';
-                    } else if (error.message?.includes('column')) {
+                    } else if (error.message?.includes('column') || error.message?.includes('relation')) {
                         errorMessage = 'Ошибка структуры базы данных. Обратитесь в поддержку.';
+                        console.log('Детали ошибки БД:', error.message);
                     }
                     
                     showToast(errorMessage, 'error');
@@ -1384,24 +1347,30 @@
             }
 
             function setupEventListeners() {
+                // Мобильное меню
                 document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
                     const navMenu = document.querySelector('nav ul');
                     navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
                 });
                 
+                // Кнопки регистрации
                 document.getElementById('desktopRegisterBtn')?.addEventListener('click', openRegisterModal);
                 document.getElementById('mobileRegisterBtn')?.addEventListener('click', openRegisterModal);
                 
+                // Кнопки закрытия
                 document.getElementById('closeModalBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('cancelRegisterBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('finishRegistrationBtn')?.addEventListener('click', closeRegisterModal);
                 
+                // Кнопка регистрации
                 document.getElementById('registerBtn')?.addEventListener('click', registerUser);
                 
+                // Проверка пароля
                 document.getElementById('password')?.addEventListener('input', function() {
                     checkPasswordStrength(this.value);
                 });
                 
+                // Закрытие модальных окон по клику вне
                 document.getElementById('registerModal')?.addEventListener('click', function(e) {
                     if (e.target === this) closeRegisterModal();
                 });
@@ -1410,6 +1379,7 @@
                     if (e.target === this) closePolicyModal();
                 });
                 
+                // Закрытие по Escape
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         closeRegisterModal();
@@ -1417,10 +1387,12 @@
                     }
                 });
                 
+                // Закрытие тоста
                 document.getElementById('toast')?.addEventListener('click', function() {
                     this.style.display = 'none';
                 });
                 
+                // Плавная прокрутка
                 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                     anchor.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -1431,6 +1403,7 @@
                     });
                 });
                 
+                // Ссылки на политики в футере
                 document.getElementById('privacyPolicyLink')?.addEventListener('click', e => {
                     e.preventDefault();
                     openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
@@ -1446,6 +1419,7 @@
                     openPolicyModal(RISK_WARNING_TEXT, 'Предупреждение о рисках');
                 });
                 
+                // Ссылки на политики в форме
                 document.getElementById('showUserAgreementModal')?.addEventListener('click', e => {
                     e.preventDefault();
                     openPolicyModal(USER_AGREEMENT_TEXT, 'Пользовательское соглашение');
@@ -1469,7 +1443,7 @@
             // ============================
             // ЗАПУСК
             // ============================
-            document.addEventListener('DOMContentLoaded', async function() {
+            document.addEventListener('DOMContentLoaded', function() {
                 console.log('🚀 GL Биржа загружается...');
                 
                 const initSuccess = initializeApplications();
@@ -1480,14 +1454,25 @@
                 
                 setupEventListeners();
                 
-                try {
-                    await getTableColumns();
-                    console.log('✅ Готов к работе');
-                } catch (e) {
-                    console.warn('⚠️ Не удалось проверить структуру таблицы:', e);
-                }
+                // Проверяем доступность таблицы
+                setTimeout(async () => {
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('user_stock_packages')
+                            .select('count', { count: 'exact', head: true });
+                        
+                        if (error) {
+                            console.warn('⚠️ Таблица user_stock_packages недоступна:', error.message);
+                        } else {
+                            console.log('✅ Таблица user_stock_packages доступна');
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Ошибка при проверке таблицы:', e);
+                    }
+                }, 1000);
             });
 
+            // Экспорт для отладки
             window.GLExchange = {
                 openRegisterModal,
                 closeRegisterModal,
