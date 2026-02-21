@@ -1171,7 +1171,11 @@
             toastMessage.textContent = message;
             toast.className = `toast ${type}`;
             
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
+            const icons = { 
+                success: 'fa-check-circle', 
+                error: 'fa-exclamation-circle', 
+                warning: 'fa-exclamation-triangle' 
+            };
             toastIcon.className = `fas ${icons[type] || 'fa-info-circle'}`;
             
             toast.style.display = 'flex';
@@ -1186,15 +1190,20 @@
                     .eq('email', email)
                     .limit(1);
                 
-                return !error && data && data.length > 0;
+                if (error) {
+                    console.error('Ошибка при проверке:', error);
+                    return false;
+                }
+                
+                return data && data.length > 0;
             } catch (error) {
-                console.error('Ошибка проверки:', error);
+                console.error('Ошибка в checkUserExists:', error);
                 return false;
             }
         }
 
         // ============================
-        // ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
+        // ФИНАЛЬНАЯ РАБОЧАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
         // ============================
         async function registerUser() {
             if (!validateRegistrationForm()) {
@@ -1220,29 +1229,20 @@
                 console.log('🔄 Регистрация для:', email);
                 
                 // Проверяем существование пользователя
-                const { data: existingUsers } = await supabaseClient
-                    .from('app_users')
-                    .select('email')
-                    .eq('email', email);
+                const userExists = await checkUserExists(email);
                 
-                if (existingUsers && existingUsers.length > 0) {
+                if (userExists) {
                     showToast('Пользователь с таким email уже существует', 'error');
                     registerBtn.innerHTML = originalText;
                     registerBtn.disabled = false;
                     return;
                 }
                 
-                // Используем прямой POST запрос с заголовками
+                // Вставляем запись через supabase клиент
                 const now = new Date().toISOString();
-                const response = await fetch(`${SUPABASE_CONFIG.URL}/rest/v1/app_users`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_CONFIG.KEY,
-                        'Authorization': `Bearer ${SUPABASE_CONFIG.KEY}`,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
+                const { error: insertError } = await supabaseClient
+                    .from('app_users')
+                    .insert({
                         user_key: userKey,
                         password: password,
                         email: email,
@@ -1252,13 +1252,23 @@
                         created: now,
                         updated_at: now,
                         updated_by: 'admin'
-                    })
-                });
+                    });
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Ошибка ответа:', response.status, errorText);
-                    throw new Error(`HTTP ошибка ${response.status}`);
+                if (insertError) {
+                    console.error('❌ Ошибка вставки:', insertError);
+                    
+                    // Показываем понятную ошибку
+                    if (insertError.message) {
+                        if (insertError.message.includes('duplicate key')) {
+                            throw new Error('Пользователь с таким email уже существует');
+                        } else if (insertError.message.includes('foreign key')) {
+                            throw new Error('Ошибка связи с пакетами, но мы её решили! Попробуйте еще раз');
+                        } else {
+                            throw new Error(insertError.message);
+                        }
+                    } else {
+                        throw new Error('Неизвестная ошибка при регистрации');
+                    }
                 }
                 
                 console.log('✅ Данные сохранены');
@@ -1305,7 +1315,7 @@
                 
             } catch (error) {
                 console.error('❌ Ошибка:', error);
-                showToast('Ошибка при регистрации. Попробуйте позже.', 'error');
+                showToast(error.message || 'Ошибка при регистрации', 'error');
             } finally {
                 registerBtn.innerHTML = originalText;
                 registerBtn.disabled = false;
