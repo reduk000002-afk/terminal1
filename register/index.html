@@ -8,6 +8,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Все стили без изменений */
         :root {
             --primary: #0a0e17;
             --secondary: #1a2332;
@@ -1011,18 +1012,32 @@
                 PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
             };
 
-            // Тексты политик (сокращены для читаемости)
-            const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Полный текст соглашения...</p></div>';
-            const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Полный текст политики...</p></div>';
-            const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Полный текст предупреждения...</p></div>';
+            // Тексты политик
+            const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Текст соглашения...</p></div>';
+            const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Текст политики...</p></div>';
+            const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Текст предупреждения...</p></div>';
 
             // ============================
-            // ФУНКЦИИ ИНИЦИАЛИЗАЦИИ
+            // ИНИЦИАЛИЗАЦИЯ
             // ============================
 
             function initializeApplications() {
                 try {
-                    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
+                    // Важно: создаем клиент с опциями для сброса кэша
+                    supabaseClient = window.supabase.createClient(
+                        SUPABASE_CONFIG.URL, 
+                        SUPABASE_CONFIG.KEY,
+                        {
+                            auth: { persistSession: false },
+                            db: { schema: 'public' }
+                        }
+                    );
+                    
+                    // Принудительно очищаем возможный кэш
+                    if (supabaseClient.rest) {
+                        supabaseClient.rest.headers = {};
+                    }
+                    
                     emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
                     isInitialized = true;
                     console.log('✅ Приложения инициализированы');
@@ -1034,7 +1049,7 @@
             }
 
             // ============================
-            // ФУНКЦИИ РАБОТЫ С МОДАЛКАМИ
+            // ФУНКЦИИ МОДАЛОК
             // ============================
 
             function openRegisterModal() {
@@ -1089,7 +1104,7 @@
             }
 
             // ============================
-            // ФУНКЦИИ ВАЛИДАЦИИ
+            // ВАЛИДАЦИЯ
             // ============================
 
             function showError(inputId, message) {
@@ -1215,7 +1230,7 @@
             }
 
             // ============================
-            // ФУНКЦИИ РАБОТЫ С БД
+            // РАБОТА С БД
             // ============================
 
             async function checkUserExists(email) {
@@ -1226,16 +1241,44 @@
                         .eq('email', email)
                         .limit(1);
                     
-                    if (error) throw error;
+                    if (error) {
+                        console.error('Ошибка при проверке:', error);
+                        return false;
+                    }
                     return data && data.length > 0;
                 } catch (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
+                    console.error('Ошибка:', error);
                     return false;
                 }
             }
 
+            async function getTableInfo() {
+                try {
+                    // Пробуем получить информацию о таблице
+                    const { data, error } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error('Ошибка получения информации:', error);
+                        return null;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        console.log('✅ Колонки таблицы:', Object.keys(data[0]));
+                        return Object.keys(data[0]);
+                    }
+                    
+                    return null;
+                } catch (e) {
+                    console.error('Ошибка:', e);
+                    return null;
+                }
+            }
+
             // ============================
-            // ОСНОВНАЯ ФУНКЦИЯ РЕГИСТРАЦИИ
+            // РЕГИСТРАЦИЯ
             // ============================
 
             async function registerUser() {
@@ -1267,59 +1310,38 @@
                         return;
                     }
                     
-                    // ========== ВАЖНО: ТОЛЬКО СУЩЕСТВУЮЩИЕ КОЛОНКИ ==========
-                    // Из лога我们知道 реальные колонки:
-                    // id, user_key, password, balance, level, withdraw_type, email, 
-                    // created, updated_at, updated_by, is_frozen, is_admin, 
-                    // stock_package_type, stock_package, package_updated_at, agreed_at
-                    
+                    // Минимальные данные - только то, что точно должно быть
                     const userData = {
                         user_key: userKey,
                         password: password,
                         email: email,
-                        created: new Date().toISOString(),
-                        balance: '0.00',
-                        level: 'Стандарт',
-                        agreed_at: new Date().toISOString() // Используем существующую колонку
-                        // НЕ используем: email_sent, email_sent_at, agreed_to_terms
+                        created: new Date().toISOString()
                     };
                     
                     console.log('🔄 Сохраняем пользователя:', userData);
                     
-                    const { data: newUser, error: insertError } = await supabaseClient
-                        .from('app_users')
-                        .insert([userData])
-                        .select();
+                    // Используем прямой fetch для обхода возможных багов клиента
+                    const response = await fetch(`${SUPABASE_CONFIG.URL}/rest/v1/app_users`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_CONFIG.KEY,
+                            'Authorization': `Bearer ${SUPABASE_CONFIG.KEY}`,
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(userData)
+                    });
                     
-                    if (insertError) {
-                        console.error('❌ Ошибка при вставке:', insertError);
-                        
-                        // Если ошибка - пробуем минимальный набор
-                        if (insertError.message?.includes('column')) {
-                            console.log('🔄 Пробуем минимальный набор данных');
-                            
-                            const minimalData = {
-                                user_key: userKey,
-                                password: password,
-                                email: email,
-                                created: new Date().toISOString()
-                            };
-                            
-                            const { data: retryData, error: retryError } = await supabaseClient
-                                .from('app_users')
-                                .insert([minimalData])
-                                .select();
-                            
-                            if (retryError) throw retryError;
-                            console.log('✅ Пользователь сохранен (минимальные данные):', retryData);
-                        } else {
-                            throw insertError;
-                        }
-                    } else {
-                        console.log('✅ Пользователь сохранен:', newUser);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('Ошибка ответа:', errorData);
+                        throw new Error(errorData.message || 'Ошибка сохранения');
                     }
                     
-                    // Отправляем письмо через EmailJS
+                    const newUser = await response.json();
+                    console.log('✅ Пользователь сохранен:', newUser);
+                    
+                    // Отправляем письмо
                     let emailSent = false;
                     try {
                         const emailParams = {
@@ -1337,14 +1359,11 @@
                         
                         console.log('✅ Письмо отправлено');
                         emailSent = true;
-                        
-                        // НЕ обновляем статус в БД - колонки email_sent нет
-                        
                     } catch (emailErr) {
                         console.warn('⚠️ Ошибка отправки письма:', emailErr);
                     }
                     
-                    // Показываем успешное сообщение
+                    // Показываем успех
                     document.getElementById('registrationForm').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
                     document.getElementById('registeredEmail').textContent = email;
@@ -1369,7 +1388,7 @@
                     if (error.message?.includes('duplicate key')) {
                         errorMessage = 'Пользователь с таким email уже существует';
                     } else if (error.message?.includes('column')) {
-                        errorMessage = 'Ошибка структуры базы данных. Обратитесь в поддержку.';
+                        errorMessage = 'Ошибка структуры базы данных';
                     }
                     
                     showToast(errorMessage, 'error');
@@ -1384,30 +1403,24 @@
             // ============================
 
             function setupEventListeners() {
-                // Мобильное меню
                 document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
                     const navMenu = document.querySelector('nav ul');
                     navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
                 });
                 
-                // Кнопки регистрации
                 document.getElementById('desktopRegisterBtn')?.addEventListener('click', openRegisterModal);
                 document.getElementById('mobileRegisterBtn')?.addEventListener('click', openRegisterModal);
                 
-                // Кнопки закрытия
                 document.getElementById('closeModalBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('cancelRegisterBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('finishRegistrationBtn')?.addEventListener('click', closeRegisterModal);
                 
-                // Кнопка регистрации
                 document.getElementById('registerBtn')?.addEventListener('click', registerUser);
                 
-                // Проверка пароля
                 document.getElementById('password')?.addEventListener('input', function() {
                     checkPasswordStrength(this.value);
                 });
                 
-                // Закрытие модалок по клику вне
                 document.getElementById('registerModal')?.addEventListener('click', function(e) {
                     if (e.target === this) closeRegisterModal();
                 });
@@ -1416,7 +1429,6 @@
                     if (e.target === this) closePolicyModal();
                 });
                 
-                // Закрытие по Escape
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         closeRegisterModal();
@@ -1424,12 +1436,10 @@
                     }
                 });
                 
-                // Закрытие тоста
                 document.getElementById('toast')?.addEventListener('click', function() {
                     this.style.display = 'none';
                 });
                 
-                // Плавная прокрутка
                 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                     anchor.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -1440,7 +1450,6 @@
                     });
                 });
                 
-                // Ссылки на политики
                 document.getElementById('privacyPolicyLink')?.addEventListener('click', e => {
                     e.preventDefault();
                     openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
@@ -1480,7 +1489,7 @@
             // ЗАПУСК
             // ============================
 
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', async function() {
                 console.log('🚀 GL Биржа загружается...');
                 
                 const initSuccess = initializeApplications();
@@ -1491,25 +1500,12 @@
                 
                 setupEventListeners();
                 
-                // Проверяем доступность таблицы
+                // Проверяем структуру
                 setTimeout(async () => {
-                    try {
-                        const { error } = await supabaseClient
-                            .from('app_users')
-                            .select('count', { count: 'exact', head: true });
-                        
-                        if (error) {
-                            console.warn('⚠️ Таблица app_users недоступна:', error.message);
-                        } else {
-                            console.log('✅ Таблица app_users доступна');
-                        }
-                    } catch (e) {
-                        console.warn('⚠️ Ошибка при проверке таблицы:', e);
-                    }
+                    await getTableInfo();
                 }, 1000);
             });
 
-            // Экспорт для отладки
             window.GLExchange = {
                 openRegisterModal,
                 closeRegisterModal,
