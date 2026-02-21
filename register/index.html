@@ -998,6 +998,7 @@
             // ============================
             let supabaseClient = null;
             let isInitialized = false;
+            let tableColumns = [];
 
             // Конфигурация
             const SUPABASE_CONFIG = {
@@ -1011,10 +1012,118 @@
                 PUBLIC_KEY: 'f7oQF7vPq4Cq-EDDh'
             };
 
-            // Тексты политик (сокращены для brevity)
-            const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Полный текст соглашения...</p></div>';
-            const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Полный текст политики...</p></div>';
-            const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Полный текст предупреждения...</p></div>';
+            // Тексты политик (сокращены)
+            const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Текст соглашения...</p></div>';
+            const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Текст политики...</p></div>';
+            const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Текст предупреждения...</p></div>';
+
+            // ============================
+            // ФУНКЦИИ ДЛЯ РАБОТЫ С БД
+            // ============================
+
+            async function getTableColumns() {
+                try {
+                    // Пробуем получить структуру таблицы через select с limit 0
+                    const { data, error } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .limit(0);
+                    
+                    if (error) {
+                        console.error('Ошибка при получении структуры таблицы:', error);
+                        return [];
+                    }
+                    
+                    // Если есть данные, получаем ключи из первой записи
+                    if (data && data.length > 0) {
+                        tableColumns = Object.keys(data[0]);
+                    } else {
+                        // Если таблица пуста, попробуем другой подход
+                        // Пытаемся вставить временную запись и сразу удалить
+                        const testData = {
+                            user_key: 'test_' + Date.now(),
+                            password: 'test',
+                            email: 'test@test.com',
+                            created: new Date().toISOString()
+                        };
+                        
+                        const { data: insertData, error: insertError } = await supabaseClient
+                            .from('app_users')
+                            .insert([testData])
+                            .select();
+                        
+                        if (!insertError && insertData && insertData.length > 0) {
+                            tableColumns = Object.keys(insertData[0]);
+                            
+                            // Удаляем тестовую запись
+                            await supabaseClient
+                                .from('app_users')
+                                .delete()
+                                .eq('user_key', testData.user_key);
+                        }
+                    }
+                    
+                    console.log('✅ Доступные колонки в app_users:', tableColumns);
+                    return tableColumns;
+                } catch (e) {
+                    console.error('Ошибка при определении структуры таблицы:', e);
+                    return [];
+                }
+            }
+
+            function filterUserData(data) {
+                const filteredData = {};
+                
+                // Базовые поля, которые должны быть в таблице
+                const possibleFields = ['user_key', 'password', 'email', 'created', 'balance', 'level'];
+                
+                possibleFields.forEach(field => {
+                    if (data[field] !== undefined) {
+                        filteredData[field] = data[field];
+                    }
+                });
+                
+                // Добавляем только те поля, которые есть в tableColumns
+                if (tableColumns.length > 0) {
+                    Object.keys(data).forEach(key => {
+                        if (tableColumns.includes(key)) {
+                            filteredData[key] = data[key];
+                        }
+                    });
+                }
+                
+                return filteredData;
+            }
+
+            async function checkUserExists(email) {
+                try {
+                    // Проверяем, есть ли колонка email в таблице
+                    if (tableColumns.length > 0 && !tableColumns.includes('email')) {
+                        // Если нет колонки email, используем user_key
+                        const { data, error } = await supabaseClient
+                            .from('app_users')
+                            .select('user_key, email')
+                            .or(`user_key.eq.${email},email.eq.${email}`)
+                            .limit(1);
+                        
+                        if (error) throw error;
+                        return data && data.length > 0;
+                    } else {
+                        // Если есть колонка email, используем её
+                        const { data, error } = await supabaseClient
+                            .from('app_users')
+                            .select('email')
+                            .eq('email', email)
+                            .limit(1);
+                        
+                        if (error) throw error;
+                        return data && data.length > 0;
+                    }
+                } catch (error) {
+                    console.error('Ошибка при проверке пользователя:', error);
+                    throw error;
+                }
+            }
 
             // ============================
             // ОСНОВНЫЕ ФУНКЦИИ
@@ -1206,23 +1315,6 @@
                 }, 5000);
             }
 
-            async function checkUserExists(email) {
-                try {
-                    // Используем правильную таблицу user_stock_packages
-                    const { data, error } = await supabaseClient
-                        .from('user_stock_packages')
-                        .select('email')
-                        .eq('email', email)
-                        .limit(1);
-                    
-                    if (error) throw error;
-                    return data && data.length > 0;
-                } catch (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
-                    throw error;
-                }
-            }
-
             async function registerUser() {
                 if (!validateRegistrationForm()) {
                     showToast('Пожалуйста, исправьте ошибки в форме', 'error');
@@ -1252,7 +1344,7 @@
                         return;
                     }
                     
-                    // Подготавливаем данные для таблицы user_stock_packages
+                    // Базовые данные пользователя
                     const userData = {
                         user_key: userKey,
                         password: password,
@@ -1260,25 +1352,46 @@
                         created: new Date().toISOString(),
                         balance: '0.00',
                         level: 'Стандарт'
-                        // Убираем email_sent и email_sent_at, так как их может не быть в таблице
                     };
                     
-                    console.log('🔄 Сохраняем пользователя в user_stock_packages:', userData);
+                    // Фильтруем данные под структуру таблицы
+                    const filteredData = filterUserData(userData);
+                    console.log('🔄 Сохраняем данные:', filteredData);
                     
-                    // Сохраняем в правильную таблицу
+                    // Сохраняем в app_users
                     const { data: newUser, error: insertError } = await supabaseClient
-                        .from('user_stock_packages')
-                        .insert([userData])
+                        .from('app_users')
+                        .insert([filteredData])
                         .select();
                     
                     if (insertError) {
                         console.error('❌ Ошибка Supabase:', insertError);
-                        throw new Error(insertError.message);
+                        
+                        // Если ошибка связана с отсутствием колонки, пробуем минимальный набор
+                        if (insertError.message?.includes('column')) {
+                            const minimalData = {
+                                user_key: userKey,
+                                password: password,
+                                created: new Date().toISOString()
+                            };
+                            
+                            console.log('🔄 Пробуем минимальный набор:', minimalData);
+                            
+                            const { data: retryData, error: retryError } = await supabaseClient
+                                .from('app_users')
+                                .insert([minimalData])
+                                .select();
+                            
+                            if (retryError) throw retryError;
+                            console.log('✅ Пользователь сохранен (минимальные данные):', retryData);
+                        } else {
+                            throw insertError;
+                        }
+                    } else {
+                        console.log('✅ Пользователь сохранен:', newUser);
                     }
                     
-                    console.log('✅ Пользователь сохранен:', newUser);
-                    
-                    // Отправляем письмо через EmailJS
+                    // Отправляем письмо
                     let emailSent = false;
                     try {
                         const emailParams = {
@@ -1288,24 +1401,14 @@
                             registration_date: new Date().toLocaleDateString('ru-RU')
                         };
                         
-                        const emailResult = await emailjs.send(
+                        await emailjs.send(
                             EMAILJS_CONFIG.SERVICE_ID,
                             EMAILJS_CONFIG.TEMPLATE_ID,
                             emailParams
                         );
                         
-                        console.log('✅ Письмо отправлено:', emailResult);
+                        console.log('✅ Письмо отправлено');
                         emailSent = true;
-                        
-                        // Пробуем обновить статус, если колонка существует
-                        try {
-                            await supabaseClient
-                                .from('user_stock_packages')
-                                .update({ email_sent: true, email_sent_at: new Date().toISOString() })
-                                .eq('email', email);
-                        } catch (updateErr) {
-                            console.log('Колонки email_sent нет в таблице, пропускаем обновление');
-                        }
                     } catch (emailErr) {
                         console.warn('⚠️ Ошибка отправки письма:', emailErr);
                     }
@@ -1334,8 +1437,8 @@
                     
                     if (error.message?.includes('duplicate key')) {
                         errorMessage = 'Пользователь с таким email уже существует';
-                    } else if (error.message?.includes('column') || error.message?.includes('relation')) {
-                        errorMessage = 'Ошибка структуры базы данных. Обратитесь в поддержку.';
+                    } else if (error.message?.includes('column')) {
+                        errorMessage = 'Ошибка структуры базы данных. Пожалуйста, обратитесь в поддержку.';
                         console.log('Детали ошибки БД:', error.message);
                     }
                     
@@ -1347,30 +1450,24 @@
             }
 
             function setupEventListeners() {
-                // Мобильное меню
                 document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
                     const navMenu = document.querySelector('nav ul');
                     navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
                 });
                 
-                // Кнопки регистрации
                 document.getElementById('desktopRegisterBtn')?.addEventListener('click', openRegisterModal);
                 document.getElementById('mobileRegisterBtn')?.addEventListener('click', openRegisterModal);
                 
-                // Кнопки закрытия
                 document.getElementById('closeModalBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('cancelRegisterBtn')?.addEventListener('click', closeRegisterModal);
                 document.getElementById('finishRegistrationBtn')?.addEventListener('click', closeRegisterModal);
                 
-                // Кнопка регистрации
                 document.getElementById('registerBtn')?.addEventListener('click', registerUser);
                 
-                // Проверка пароля
                 document.getElementById('password')?.addEventListener('input', function() {
                     checkPasswordStrength(this.value);
                 });
                 
-                // Закрытие модальных окон по клику вне
                 document.getElementById('registerModal')?.addEventListener('click', function(e) {
                     if (e.target === this) closeRegisterModal();
                 });
@@ -1379,7 +1476,6 @@
                     if (e.target === this) closePolicyModal();
                 });
                 
-                // Закрытие по Escape
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         closeRegisterModal();
@@ -1387,12 +1483,10 @@
                     }
                 });
                 
-                // Закрытие тоста
                 document.getElementById('toast')?.addEventListener('click', function() {
                     this.style.display = 'none';
                 });
                 
-                // Плавная прокрутка
                 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                     anchor.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -1403,7 +1497,6 @@
                     });
                 });
                 
-                // Ссылки на политики в футере
                 document.getElementById('privacyPolicyLink')?.addEventListener('click', e => {
                     e.preventDefault();
                     openPolicyModal(PRIVACY_POLICY_TEXT, 'Политика конфиденциальности');
@@ -1419,7 +1512,6 @@
                     openPolicyModal(RISK_WARNING_TEXT, 'Предупреждение о рисках');
                 });
                 
-                // Ссылки на политики в форме
                 document.getElementById('showUserAgreementModal')?.addEventListener('click', e => {
                     e.preventDefault();
                     openPolicyModal(USER_AGREEMENT_TEXT, 'Пользовательское соглашение');
@@ -1443,7 +1535,7 @@
             // ============================
             // ЗАПУСК
             // ============================
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', async function() {
                 console.log('🚀 GL Биржа загружается...');
                 
                 const initSuccess = initializeApplications();
@@ -1454,30 +1546,31 @@
                 
                 setupEventListeners();
                 
+                // Получаем структуру таблицы
+                await getTableColumns();
+                
                 // Проверяем доступность таблицы
-                setTimeout(async () => {
-                    try {
-                        const { data, error } = await supabaseClient
-                            .from('user_stock_packages')
-                            .select('count', { count: 'exact', head: true });
-                        
-                        if (error) {
-                            console.warn('⚠️ Таблица user_stock_packages недоступна:', error.message);
-                        } else {
-                            console.log('✅ Таблица user_stock_packages доступна');
-                        }
-                    } catch (e) {
-                        console.warn('⚠️ Ошибка при проверке таблицы:', e);
+                try {
+                    const { error } = await supabaseClient
+                        .from('app_users')
+                        .select('count', { count: 'exact', head: true });
+                    
+                    if (error) {
+                        console.warn('⚠️ Таблица app_users недоступна:', error.message);
+                    } else {
+                        console.log('✅ Таблица app_users доступна');
                     }
-                }, 1000);
+                } catch (e) {
+                    console.warn('⚠️ Ошибка при проверке таблицы:', e);
+                }
             });
 
-            // Экспорт для отладки
             window.GLExchange = {
                 openRegisterModal,
                 closeRegisterModal,
                 registerUser,
-                showToast
+                showToast,
+                getTableColumns: () => tableColumns
             };
         })();
     </script>
