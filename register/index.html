@@ -1,49 +1,524 @@
--- Создаём функцию для безопасной регистрации пользователя
-CREATE OR REPLACE FUNCTION public.register_user(
-    p_user_key TEXT,
-    p_password TEXT,
-    p_email TEXT
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    v_result JSONB;
-    v_now TIMESTAMPTZ := NOW();
-BEGIN
-    -- Проверяем, существует ли пользователь
-    IF EXISTS (SELECT 1 FROM public.app_users WHERE email = p_email) THEN
-        RETURN jsonb_build_object('success', false, 'error', 'User already exists');
-    END IF;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GL Биржа | Galardro - Фондовая платформа</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
 
-    -- Вставляем нового пользователя
-    INSERT INTO public.app_users (
-        user_key,
-        password,
-        email,
-        balance,
-        level,
-        created,
-        updated_at,
-        updated_by
-    ) VALUES (
-        p_user_key,
-        p_password,
-        p_email,
-        0,
-        'Стандарт',
-        v_now,
-        v_now,
-        'admin'
-    );
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    RETURN jsonb_build_object('success', true, 'message', 'User registered successfully');
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN jsonb_build_object('success', false, 'error', SQLERRM);
-END;
-$$;
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+        }
 
--- Даём права на выполнение функции
-GRANT EXECUTE ON FUNCTION public.register_user TO anon;
-GRANT EXECUTE ON FUNCTION public.register_user TO authenticated;
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error {
+            border-color: #ff4757;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .password-strength {
+            height: 4px;
+            margin-top: 8px;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .password-strength.weak {
+            background: #ff4757;
+            width: 33%;
+        }
+
+        .password-strength.medium {
+            background: #ffa502;
+            width: 66%;
+        }
+
+        .password-strength.strong {
+            background: #26de81;
+            width: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+        }
+
+        .checkbox-group label {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .checkbox-group a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            margin-top: 10px;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .success-message {
+            text-align: center;
+            display: none;
+        }
+
+        .success-message h2 {
+            color: #26de81;
+            margin: 20px 0;
+        }
+
+        .success-message p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .login-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .login-details h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .login-details p {
+            color: #666;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toast.success {
+            border-left: 4px solid #26de81;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ff4757;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #ffa502;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GL Биржа</h1>
+            <p>Создайте аккаунт для начала торговли</p>
+        </div>
+
+        <!-- Форма регистрации -->
+        <div id="registrationForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="example@mail.com">
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="password" placeholder="Минимум 6 символов">
+                <div class="error-message" id="passwordError"></div>
+                <div class="password-strength" id="passwordStrength"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Подтверждение пароля</label>
+                <input type="password" id="confirmPassword" placeholder="Повторите пароль">
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="agreeTerms">
+                <label for="agreeTerms">
+                    Я согласен с <a href="#" id="showTerms">условиями использования</a> 
+                    и <a href="#" id="showPrivacy">политикой конфиденциальности</a>
+                </label>
+            </div>
+            <div class="error-message" id="agreeTermsError"></div>
+
+            <button class="btn" id="registerBtn">Зарегистрироваться</button>
+        </div>
+
+        <!-- Сообщение об успехе -->
+        <div id="successMessage" class="success-message">
+            <h2>✓ Регистрация успешна!</h2>
+            <p id="successText"></p>
+            <div class="login-details" id="loginDetails"></div>
+            <button class="btn" id="finishBtn">Войти в аккаунт</button>
+        </div>
+    </div>
+
+    <!-- Toast уведомления -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Конфигурация
+        const SUPABASE_URL = 'https://wkukgnkfbxgpvlraczeu.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_11WBFNEcbspv1yDyfxq7sQ_Nl51ew5i';
+        const EMAILJS_PUBLIC_KEY = 'f7oQF7vPq4Cq-EDDh';
+        const EMAILJS_SERVICE_ID = 'service_9eygn9l';
+        const EMAILJS_TEMPLATE_ID = 'template_vjlrrud';
+
+        // Инициализация
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+
+        // Валидация email
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // Проверка сложности пароля
+        function checkPasswordStrength(password) {
+            const strengthEl = document.getElementById('passwordStrength');
+            if (!password) {
+                strengthEl.className = 'password-strength';
+                return 0;
+            }
+            
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (password.length >= 12) score++;
+            if (/\d/.test(password)) score++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            strengthEl.className = 'password-strength';
+            if (score <= 2) {
+                strengthEl.classList.add('weak');
+                return 1;
+            } else if (score <= 4) {
+                strengthEl.classList.add('medium');
+                return 2;
+            } else {
+                strengthEl.classList.add('strong');
+                return 3;
+            }
+        }
+
+        // Показать ошибку
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorEl = document.getElementById(inputId + 'Error');
+            input.classList.add('error');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        // Скрыть все ошибки
+        function hideErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+            document.querySelectorAll('input').forEach(el => {
+                el.classList.remove('error');
+            });
+        }
+
+        // Валидация формы
+        function validateForm() {
+            hideErrors();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const agree = document.getElementById('agreeTerms').checked;
+            
+            let isValid = true;
+            
+            if (!email) {
+                showError('email', 'Введите email');
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                showError('email', 'Введите корректный email');
+                isValid = false;
+            }
+            
+            if (!password) {
+                showError('password', 'Введите пароль');
+                isValid = false;
+            } else if (password.length < 6) {
+                showError('password', 'Пароль должен быть минимум 6 символов');
+                isValid = false;
+            }
+            
+            checkPasswordStrength(password);
+            
+            if (!confirm) {
+                showError('confirmPassword', 'Подтвердите пароль');
+                isValid = false;
+            } else if (password !== confirm) {
+                showError('confirmPassword', 'Пароли не совпадают');
+                isValid = false;
+            }
+            
+            if (!agree) {
+                showError('agreeTerms', 'Необходимо согласие с условиями');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // Показать уведомление
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            document.getElementById('toastMessage').textContent = message;
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+
+        // Основная функция регистрации
+        async function registerUser() {
+            if (!validateForm()) return;
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const userKey = email.toLowerCase();
+            
+            const registerBtn = document.getElementById('registerBtn');
+            const originalText = registerBtn.textContent;
+            
+            registerBtn.textContent = 'Регистрация...';
+            registerBtn.disabled = true;
+            
+            try {
+                // Проверяем существование пользователя
+                const { data: existing } = await supabase
+                    .from('app_users')
+                    .select('email')
+                    .eq('email', email);
+                
+                if (existing && existing.length > 0) {
+                    showToast('Пользователь уже существует', 'error');
+                    return;
+                }
+                
+                // Создаем пользователя
+                const now = new Date().toISOString();
+                const { error } = await supabase
+                    .from('app_users')
+                    .insert([{
+                        user_key: userKey,
+                        password: password,
+                        email: email,
+                        balance: 0,
+                        level: 'Стандарт',
+                        created: now,
+                        updated_at: now,
+                        updated_by: 'admin'
+                    }]);
+                
+                if (error) {
+                    console.error('Ошибка:', error);
+                    showToast('Ошибка при регистрации', 'error');
+                    return;
+                }
+                
+                // Отправляем письмо
+                try {
+                    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                        to_email: email,
+                        login_url: 'https://tradegalardro.com/',
+                        email: email,
+                        login: userKey
+                    });
+                    
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('successText').textContent = `Письмо отправлено на ${email}`;
+                    showToast('Регистрация успешна!', 'success');
+                    
+                } catch (emailError) {
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('successText').textContent = 'Регистрация успешна!';
+                    document.getElementById('loginDetails').innerHTML = `
+                        <h4>Данные для входа:</h4>
+                        <p>Email: ${email}</p>
+                        <p>Пароль: указанный при регистрации</p>
+                    `;
+                    showToast('Сохраните данные для входа', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showToast('Ошибка при регистрации', 'error');
+            } finally {
+                registerBtn.textContent = originalText;
+                registerBtn.disabled = false;
+            }
+        }
+
+        // Обработчики событий
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('registerBtn').addEventListener('click', registerUser);
+            document.getElementById('finishBtn').addEventListener('click', () => {
+                window.location.href = 'https://tradegalardro.com/';
+            });
+            
+            document.getElementById('password').addEventListener('input', (e) => {
+                checkPasswordStrength(e.target.value);
+            });
+            
+            // Заглушки для политик
+            document.getElementById('showTerms').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Пользовательское соглашение будет доступно позже');
+            });
+            
+            document.getElementById('showPrivacy').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Политика конфиденциальности будет доступна позже');
+            });
+        });
+    </script>
+</body>
+</html>
