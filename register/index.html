@@ -998,7 +998,6 @@
             // ============================
             let supabaseClient = null;
             let isInitialized = false;
-            let tableColumns = [];
 
             // Конфигурация
             const SUPABASE_CONFIG = {
@@ -1016,114 +1015,6 @@
             const USER_AGREEMENT_TEXT = '<div class="policy-section"><h3>Пользовательское соглашение</h3><p>Текст соглашения...</p></div>';
             const PRIVACY_POLICY_TEXT = '<div class="policy-section"><h3>Политика конфиденциальности</h3><p>Текст политики...</p></div>';
             const RISK_WARNING_TEXT = '<div class="policy-section"><h3>Предупреждение о рисках</h3><p>Текст предупреждения...</p></div>';
-
-            // ============================
-            // ФУНКЦИИ ДЛЯ РАБОТЫ С БД
-            // ============================
-
-            async function getTableColumns() {
-                try {
-                    // Пробуем получить структуру таблицы через select с limit 0
-                    const { data, error } = await supabaseClient
-                        .from('app_users')
-                        .select('*')
-                        .limit(0);
-                    
-                    if (error) {
-                        console.error('Ошибка при получении структуры таблицы:', error);
-                        return [];
-                    }
-                    
-                    // Если есть данные, получаем ключи из первой записи
-                    if (data && data.length > 0) {
-                        tableColumns = Object.keys(data[0]);
-                    } else {
-                        // Если таблица пуста, попробуем другой подход
-                        // Пытаемся вставить временную запись и сразу удалить
-                        const testData = {
-                            user_key: 'test_' + Date.now(),
-                            password: 'test',
-                            email: 'test@test.com',
-                            created: new Date().toISOString()
-                        };
-                        
-                        const { data: insertData, error: insertError } = await supabaseClient
-                            .from('app_users')
-                            .insert([testData])
-                            .select();
-                        
-                        if (!insertError && insertData && insertData.length > 0) {
-                            tableColumns = Object.keys(insertData[0]);
-                            
-                            // Удаляем тестовую запись
-                            await supabaseClient
-                                .from('app_users')
-                                .delete()
-                                .eq('user_key', testData.user_key);
-                        }
-                    }
-                    
-                    console.log('✅ Доступные колонки в app_users:', tableColumns);
-                    return tableColumns;
-                } catch (e) {
-                    console.error('Ошибка при определении структуры таблицы:', e);
-                    return [];
-                }
-            }
-
-            function filterUserData(data) {
-                const filteredData = {};
-                
-                // Базовые поля, которые должны быть в таблице
-                const possibleFields = ['user_key', 'password', 'email', 'created', 'balance', 'level'];
-                
-                possibleFields.forEach(field => {
-                    if (data[field] !== undefined) {
-                        filteredData[field] = data[field];
-                    }
-                });
-                
-                // Добавляем только те поля, которые есть в tableColumns
-                if (tableColumns.length > 0) {
-                    Object.keys(data).forEach(key => {
-                        if (tableColumns.includes(key)) {
-                            filteredData[key] = data[key];
-                        }
-                    });
-                }
-                
-                return filteredData;
-            }
-
-            async function checkUserExists(email) {
-                try {
-                    // Проверяем, есть ли колонка email в таблице
-                    if (tableColumns.length > 0 && !tableColumns.includes('email')) {
-                        // Если нет колонки email, используем user_key
-                        const { data, error } = await supabaseClient
-                            .from('app_users')
-                            .select('user_key, email')
-                            .or(`user_key.eq.${email},email.eq.${email}`)
-                            .limit(1);
-                        
-                        if (error) throw error;
-                        return data && data.length > 0;
-                    } else {
-                        // Если есть колонка email, используем её
-                        const { data, error } = await supabaseClient
-                            .from('app_users')
-                            .select('email')
-                            .eq('email', email)
-                            .limit(1);
-                        
-                        if (error) throw error;
-                        return data && data.length > 0;
-                    }
-                } catch (error) {
-                    console.error('Ошибка при проверке пользователя:', error);
-                    throw error;
-                }
-            }
 
             // ============================
             // ОСНОВНЫЕ ФУНКЦИИ
@@ -1315,6 +1206,39 @@
                 }, 5000);
             }
 
+            async function checkTableStructure() {
+                try {
+                    // Пробуем получить список таблиц через системный запрос
+                    const { data, error } = await supabaseClient
+                        .from('app_users')
+                        .select('*')
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error('Ошибка при проверке таблицы app_users:', error);
+                        
+                        // Пробуем проверить, существует ли таблица user_stock_packages
+                        const { data: testData, error: testError } = await supabaseClient
+                            .from('user_stock_packages')
+                            .select('*')
+                            .limit(1);
+                        
+                        if (!testError) {
+                            console.log('Таблица user_stock_packages существует, колонки:', testData.length > 0 ? Object.keys(testData[0]) : 'нет данных');
+                            return 'user_stock_packages';
+                        }
+                    } else {
+                        console.log('Таблица app_users существует, колонки:', data.length > 0 ? Object.keys(data[0]) : 'нет данных');
+                        return 'app_users';
+                    }
+                    
+                    return null;
+                } catch (e) {
+                    console.error('Ошибка при проверке структуры:', e);
+                    return null;
+                }
+            }
+
             async function registerUser() {
                 if (!validateRegistrationForm()) {
                     showToast('Пожалуйста, исправьте ошибки в форме', 'error');
@@ -1337,58 +1261,69 @@
                     
                     console.log('🔄 Начинаем регистрацию для:', email);
                     
+                    // Проверяем структуру таблиц
+                    const tableName = await checkTableStructure();
+                    
+                    if (!tableName) {
+                        throw new Error('Не удалось определить структуру базы данных');
+                    }
+                    
+                    console.log('Используем таблицу:', tableName);
+                    
                     // Проверяем существование пользователя
-                    const userExists = await checkUserExists(email);
+                    let userExists = false;
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from(tableName)
+                            .select('user_key, email')
+                            .or(`user_key.eq.${email},email.eq.${email}`)
+                            .limit(1);
+                        
+                        if (!error) {
+                            userExists = data && data.length > 0;
+                        }
+                    } catch (checkError) {
+                        console.log('Ошибка при проверке пользователя:', checkError);
+                    }
+                    
                     if (userExists) {
                         showToast('Пользователь с таким email уже существует', 'error');
                         return;
                     }
                     
-                    // Базовые данные пользователя
+                    // Минимальные данные для регистрации
                     const userData = {
                         user_key: userKey,
                         password: password,
-                        email: email,
-                        created: new Date().toISOString(),
-                        balance: '0.00',
-                        level: 'Стандарт'
+                        created: new Date().toISOString()
                     };
                     
-                    // Фильтруем данные под структуру таблицы
-                    const filteredData = filterUserData(userData);
-                    console.log('🔄 Сохраняем данные:', filteredData);
-                    
-                    // Сохраняем в app_users
-                    const { data: newUser, error: insertError } = await supabaseClient
-                        .from('app_users')
-                        .insert([filteredData])
-                        .select();
-                    
-                    if (insertError) {
-                        console.error('❌ Ошибка Supabase:', insertError);
+                    // Добавляем email, если получится
+                    try {
+                        const { data: insertData, error: insertError } = await supabaseClient
+                            .from(tableName)
+                            .insert([{
+                                ...userData,
+                                email: email
+                            }])
+                            .select();
                         
-                        // Если ошибка связана с отсутствием колонки, пробуем минимальный набор
-                        if (insertError.message?.includes('column')) {
-                            const minimalData = {
-                                user_key: userKey,
-                                password: password,
-                                created: new Date().toISOString()
-                            };
-                            
-                            console.log('🔄 Пробуем минимальный набор:', minimalData);
+                        if (insertError) {
+                            console.log('Не удалось добавить email, пробуем без него');
                             
                             const { data: retryData, error: retryError } = await supabaseClient
-                                .from('app_users')
-                                .insert([minimalData])
+                                .from(tableName)
+                                .insert([userData])
                                 .select();
                             
                             if (retryError) throw retryError;
-                            console.log('✅ Пользователь сохранен (минимальные данные):', retryData);
+                            console.log('✅ Пользователь сохранен (без email):', retryData);
                         } else {
-                            throw insertError;
+                            console.log('✅ Пользователь сохранен (с email):', insertData);
                         }
-                    } else {
-                        console.log('✅ Пользователь сохранен:', newUser);
+                    } catch (insertError) {
+                        console.error('Ошибка при вставке:', insertError);
+                        throw insertError;
                     }
                     
                     // Отправляем письмо
@@ -1546,31 +1481,15 @@
                 
                 setupEventListeners();
                 
-                // Получаем структуру таблицы
-                await getTableColumns();
-                
-                // Проверяем доступность таблицы
-                try {
-                    const { error } = await supabaseClient
-                        .from('app_users')
-                        .select('count', { count: 'exact', head: true });
-                    
-                    if (error) {
-                        console.warn('⚠️ Таблица app_users недоступна:', error.message);
-                    } else {
-                        console.log('✅ Таблица app_users доступна');
-                    }
-                } catch (e) {
-                    console.warn('⚠️ Ошибка при проверке таблицы:', e);
-                }
+                // Проверяем структуру таблиц
+                await checkTableStructure();
             });
 
             window.GLExchange = {
                 openRegisterModal,
                 closeRegisterModal,
                 registerUser,
-                showToast,
-                getTableColumns: () => tableColumns
+                showToast
             };
         })();
     </script>
