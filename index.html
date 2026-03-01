@@ -273,6 +273,15 @@
       font-size: 16px;
       min-height: 50px;
     }
+    
+    /* Стили для открытого пароля - без маскировки */
+    .login-form input[type="password"],
+    .login-form input[type="text"] {
+      -webkit-text-security: none !important;
+      text-security: none !important;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
 
     .login-form button {
       width: 100%;
@@ -2185,7 +2194,8 @@
   <div class="login-form">
     <h2>Вход в терминал</h2>
     <input type="text" id="loginEmail" placeholder="Логин" required>
-    <input type="password" id="loginPassword" placeholder="Пароль" required>
+    <!-- Пароль в открытом виде, без маскировки -->
+    <input type="text" id="loginPassword" placeholder="Пароль" required>
     <button id="loginButton">Войти</button>
     <div id="loginError" class="login-error">Неверный логин или пароль</div>
     <div class="register-link">
